@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tabber.studio/schemas/remote/1/topics/markers.json",
+  "title": "Event data for the markers topic",
+  "type": "object",
+  "properties": {
+    "markers": {
+      "$ref": "../common.json#/$defs/markers"
+    }
+  },
+  "required": [
+    "markers"
+  ],
+  "additionalProperties": false
+}

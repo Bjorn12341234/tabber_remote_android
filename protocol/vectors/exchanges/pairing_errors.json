@@ -1,0 +1,291 @@
+{
+  "name": "pairing_errors",
+  "description": "Pairing is closed, then the token is expired, then it is wrong. Three failures close the connection (spec 6, 6.2).",
+  "start": "connected",
+  "host_state": {
+    "pairing": {
+      "open": false
+    },
+    "paired_devices": [],
+    "expired_tokens": [
+      "6XrqHTHFVxOgp8K3q5pnGA"
+    ]
+  },
+  "steps": [
+    {
+      "from": "remote",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "hello",
+        "params": {
+          "app": {
+            "name": "Tabber Spak",
+            "version": "1.0",
+            "build": "1",
+            "platform": "ios"
+          },
+          "protocol_versions": [
+            "1.0"
+          ]
+        }
+      }
+    },
+    {
+      "from": "host",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "result": {
+          "host": {
+            "id": "8c1f2e47-5a93-4d0b-9e26-7f3a1c4b5d60",
+            "name": "Studio Mac",
+            "app_version": "0.3.17"
+          },
+          "protocol_version": "1.0",
+          "capabilities": [
+            "transport/1",
+            "record/1",
+            "tempo_scale/1",
+            "tracks/1",
+            "tracks.monitor/1",
+            "markers/1",
+            "takes/1",
+            "takes.discard/1",
+            "takes.go_again/1",
+            "undo/1",
+            "save/1",
+            "meters/1",
+            "pair.code/1"
+          ],
+          "limits": {
+            "max_frame_bytes": 65536,
+            "requests_per_second": 20,
+            "burst": 40,
+            "heartbeat_ms": 2000,
+            "heartbeat_misses": 3,
+            "connections_per_device": 2
+          },
+          "challenge": "MPFqZ8bJSGGP0LRhOsYVN8mNZmKkdxuyTjuZEZOEfS0"
+        }
+      }
+    },
+    {
+      "from": "remote",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 2,
+        "method": "pair",
+        "params": {
+          "mode": "token",
+          "token": "JnEEUOFO1YbF8ut11rT4iA",
+          "device": {
+            "name": "Björn's iPhone",
+            "model": "iPhone",
+            "key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAELmFLfdxxNIkeJNkXdNhfQVal4qrDnl_C1tq3bYJMIbARSFIBJiHBKBXg2n0qXdRgpN7x-2sEbrFmAaCll5zfdw"
+          },
+          "signature": "MEQCIFk8KApknaXulAXmIfzTcEYut4u3Ec71vFq60FXGNUCbAiBlecUmxEyseVOILAKCk8TqxkqwfWA3bpYWd0uy9r-kug"
+        }
+      }
+    },
+    {
+      "from": "host",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 2,
+        "error": {
+          "code": 1002,
+          "message": "Pairing is not open. Click Pair iPhone in Tabber Studio.",
+          "data": {
+            "reason": "pairing_closed"
+          }
+        }
+      },
+      "note": "Nobody has clicked Pair iPhone on the computer."
+    },
+    {
+      "from": "remote",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 3,
+        "method": "hello",
+        "params": {
+          "app": {
+            "name": "Tabber Spak",
+            "version": "1.0",
+            "build": "1",
+            "platform": "ios"
+          },
+          "protocol_versions": [
+            "1.0"
+          ]
+        }
+      }
+    },
+    {
+      "from": "host",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 3,
+        "result": {
+          "host": {
+            "id": "8c1f2e47-5a93-4d0b-9e26-7f3a1c4b5d60",
+            "name": "Studio Mac",
+            "app_version": "0.3.17"
+          },
+          "protocol_version": "1.0",
+          "capabilities": [
+            "transport/1",
+            "record/1",
+            "tempo_scale/1",
+            "tracks/1",
+            "tracks.monitor/1",
+            "markers/1",
+            "takes/1",
+            "takes.discard/1",
+            "takes.go_again/1",
+            "undo/1",
+            "save/1",
+            "meters/1",
+            "pair.code/1"
+          ],
+          "limits": {
+            "max_frame_bytes": 65536,
+            "requests_per_second": 20,
+            "burst": 40,
+            "heartbeat_ms": 2000,
+            "heartbeat_misses": 3,
+            "connections_per_device": 2
+          },
+          "challenge": "Z-H9u-pKo1X4tLCZjDhFOcnI1UNElfeUKBH0BL_29IA"
+        }
+      }
+    },
+    {
+      "from": "remote",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 4,
+        "method": "pair",
+        "params": {
+          "mode": "token",
+          "token": "6XrqHTHFVxOgp8K3q5pnGA",
+          "device": {
+            "name": "Björn's iPhone",
+            "model": "iPhone",
+            "key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAELmFLfdxxNIkeJNkXdNhfQVal4qrDnl_C1tq3bYJMIbARSFIBJiHBKBXg2n0qXdRgpN7x-2sEbrFmAaCll5zfdw"
+          },
+          "signature": "MEUCIQCUBtef2nb6XCunaHelKt5085wnxFbJ05nxPRr9eMARvwIgY9znijeEukij9QiQ4AJ0uCB6HEoM2zbfhFu6ctvIDhQ"
+        }
+      }
+    },
+    {
+      "from": "host",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 4,
+        "error": {
+          "code": 1004,
+          "message": "This pairing code has expired. Scan the new one on the computer.",
+          "data": {
+            "reason": "pairing_token_expired"
+          }
+        }
+      }
+    },
+    {
+      "from": "remote",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 5,
+        "method": "hello",
+        "params": {
+          "app": {
+            "name": "Tabber Spak",
+            "version": "1.0",
+            "build": "1",
+            "platform": "ios"
+          },
+          "protocol_versions": [
+            "1.0"
+          ]
+        }
+      }
+    },
+    {
+      "from": "host",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 5,
+        "result": {
+          "host": {
+            "id": "8c1f2e47-5a93-4d0b-9e26-7f3a1c4b5d60",
+            "name": "Studio Mac",
+            "app_version": "0.3.17"
+          },
+          "protocol_version": "1.0",
+          "capabilities": [
+            "transport/1",
+            "record/1",
+            "tempo_scale/1",
+            "tracks/1",
+            "tracks.monitor/1",
+            "markers/1",
+            "takes/1",
+            "takes.discard/1",
+            "takes.go_again/1",
+            "undo/1",
+            "save/1",
+            "meters/1",
+            "pair.code/1"
+          ],
+          "limits": {
+            "max_frame_bytes": 65536,
+            "requests_per_second": 20,
+            "burst": 40,
+            "heartbeat_ms": 2000,
+            "heartbeat_misses": 3,
+            "connections_per_device": 2
+          },
+          "challenge": "OGny3wUSR3XSc9NrTnu8za_-Fod2X8UjdGImi6ab4AI"
+        }
+      }
+    },
+    {
+      "from": "remote",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 6,
+        "method": "pair",
+        "params": {
+          "mode": "token",
+          "token": "WTou5Ht6QiwOXQ_7CCSwFQ",
+          "device": {
+            "name": "Björn's iPhone",
+            "model": "iPhone",
+            "key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAELmFLfdxxNIkeJNkXdNhfQVal4qrDnl_C1tq3bYJMIbARSFIBJiHBKBXg2n0qXdRgpN7x-2sEbrFmAaCll5zfdw"
+          },
+          "signature": "MEYCIQCvSm4rkFIlh-ZpQNFAbClZmZvG1QCxlNX1BRKqqv1kCwIhAJ8N8K6kvrLWaXqOouVX1aUQz76fIAscFpYlhKNuAudy"
+        }
+      }
+    },
+    {
+      "from": "host",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 6,
+        "error": {
+          "code": 1003,
+          "message": "This pairing code does not work. Scan the code on the computer again.",
+          "data": {
+            "reason": "pairing_token_invalid"
+          }
+        }
+      }
+    },
+    {
+      "from": "host",
+      "close": 1008
+    }
+  ]
+}

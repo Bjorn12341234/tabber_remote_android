@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tabber.studio/schemas/remote/1/methods/edit.redo.json",
+  "title": "edit.redo",
+  "x-capability": "undo/1",
+  "x-changes": true,
+  "$defs": {
+    "params": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "$ref": "../common.json#/$defs/key"
+        },
+        "expect": {
+          "$ref": "../common.json#/$defs/id"
+        }
+      },
+      "required": [
+        "key",
+        "expect"
+      ],
+      "additionalProperties": false
+    },
+    "result": {
+      "type": "object",
+      "properties": {
+        "undo": {
+          "$ref": "../common.json#/$defs/undo"
+        }
+      },
+      "required": [
+        "undo"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

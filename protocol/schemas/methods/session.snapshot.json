@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tabber.studio/schemas/remote/1/methods/session.snapshot.json",
+  "title": "session.snapshot",
+  "x-capability": null,
+  "x-changes": false,
+  "$defs": {
+    "params": {
+      "$ref": "../common.json#/$defs/empty"
+    },
+    "result": {
+      "$ref": "../snapshot.json"
+    }
+  }
+}

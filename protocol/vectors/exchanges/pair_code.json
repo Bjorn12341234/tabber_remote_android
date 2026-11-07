@@ -1,0 +1,283 @@
+{
+  "name": "pair_code",
+  "description": "Pairing without the QR code (spec 4.4): declined, then timed out, then allowed.",
+  "start": "connected",
+  "host_state": {
+    "pairing": {
+      "open": false
+    },
+    "paired_devices": []
+  },
+  "steps": [
+    {
+      "from": "remote",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "hello",
+        "params": {
+          "app": {
+            "name": "Tabber Spak",
+            "version": "1.0",
+            "build": "1",
+            "platform": "ios"
+          },
+          "protocol_versions": [
+            "1.0"
+          ]
+        }
+      }
+    },
+    {
+      "from": "host",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "result": {
+          "host": {
+            "id": "8c1f2e47-5a93-4d0b-9e26-7f3a1c4b5d60",
+            "name": "Studio Mac",
+            "app_version": "0.3.17"
+          },
+          "protocol_version": "1.0",
+          "capabilities": [
+            "transport/1",
+            "record/1",
+            "tempo_scale/1",
+            "tracks/1",
+            "tracks.monitor/1",
+            "markers/1",
+            "takes/1",
+            "takes.discard/1",
+            "takes.go_again/1",
+            "undo/1",
+            "save/1",
+            "meters/1",
+            "pair.code/1"
+          ],
+          "limits": {
+            "max_frame_bytes": 65536,
+            "requests_per_second": 20,
+            "burst": 40,
+            "heartbeat_ms": 2000,
+            "heartbeat_misses": 3,
+            "connections_per_device": 2
+          },
+          "challenge": "Z-H9u-pKo1X4tLCZjDhFOcnI1UNElfeUKBH0BL_29IA"
+        }
+      }
+    },
+    {
+      "from": "remote",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 2,
+        "method": "pair",
+        "params": {
+          "mode": "code",
+          "device": {
+            "name": "Björn's iPhone",
+            "model": "iPhone",
+            "key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAELmFLfdxxNIkeJNkXdNhfQVal4qrDnl_C1tq3bYJMIbARSFIBJiHBKBXg2n0qXdRgpN7x-2sEbrFmAaCll5zfdw"
+          },
+          "signature": "MEUCIQDOseAGN8RFUd2zurqBTKnSTE1zlSiJUN9i2gb9XxkQogIgD0m2yrwjFAI46EkZQ7NCQjJdouZO8dp7PYnnEd_QQ48"
+        }
+      }
+    },
+    {
+      "from": "host",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 2,
+        "error": {
+          "code": 1005,
+          "message": "Pairing was declined on the computer.",
+          "data": {
+            "reason": "pairing_declined"
+          }
+        }
+      },
+      "note": "Both screens showed 151942. The user clicked Deny on the computer."
+    },
+    {
+      "from": "remote",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 3,
+        "method": "hello",
+        "params": {
+          "app": {
+            "name": "Tabber Spak",
+            "version": "1.0",
+            "build": "1",
+            "platform": "ios"
+          },
+          "protocol_versions": [
+            "1.0"
+          ]
+        }
+      }
+    },
+    {
+      "from": "host",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 3,
+        "result": {
+          "host": {
+            "id": "8c1f2e47-5a93-4d0b-9e26-7f3a1c4b5d60",
+            "name": "Studio Mac",
+            "app_version": "0.3.17"
+          },
+          "protocol_version": "1.0",
+          "capabilities": [
+            "transport/1",
+            "record/1",
+            "tempo_scale/1",
+            "tracks/1",
+            "tracks.monitor/1",
+            "markers/1",
+            "takes/1",
+            "takes.discard/1",
+            "takes.go_again/1",
+            "undo/1",
+            "save/1",
+            "meters/1",
+            "pair.code/1"
+          ],
+          "limits": {
+            "max_frame_bytes": 65536,
+            "requests_per_second": 20,
+            "burst": 40,
+            "heartbeat_ms": 2000,
+            "heartbeat_misses": 3,
+            "connections_per_device": 2
+          },
+          "challenge": "OGny3wUSR3XSc9NrTnu8za_-Fod2X8UjdGImi6ab4AI"
+        }
+      }
+    },
+    {
+      "from": "remote",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 4,
+        "method": "pair",
+        "params": {
+          "mode": "code",
+          "device": {
+            "name": "Björn's iPhone",
+            "model": "iPhone",
+            "key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAELmFLfdxxNIkeJNkXdNhfQVal4qrDnl_C1tq3bYJMIbARSFIBJiHBKBXg2n0qXdRgpN7x-2sEbrFmAaCll5zfdw"
+          },
+          "signature": "MEUCIF1Y8lKqqSz98Yi9le4asAY_za6W9n-a6mWfeCQ7fPvyAiEAnMZNfGhDVL11j2d4fAxIcTI05uLtSxc2MFKyNuwyVJo"
+        }
+      }
+    },
+    {
+      "from": "host",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 4,
+        "error": {
+          "code": 1006,
+          "message": "Nobody allowed the pairing on the computer in time.",
+          "data": {
+            "reason": "pairing_timeout"
+          }
+        }
+      },
+      "note": "Nobody answered on the computer for 120 seconds."
+    },
+    {
+      "from": "remote",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 5,
+        "method": "hello",
+        "params": {
+          "app": {
+            "name": "Tabber Spak",
+            "version": "1.0",
+            "build": "1",
+            "platform": "ios"
+          },
+          "protocol_versions": [
+            "1.0"
+          ]
+        }
+      }
+    },
+    {
+      "from": "host",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 5,
+        "result": {
+          "host": {
+            "id": "8c1f2e47-5a93-4d0b-9e26-7f3a1c4b5d60",
+            "name": "Studio Mac",
+            "app_version": "0.3.17"
+          },
+          "protocol_version": "1.0",
+          "capabilities": [
+            "transport/1",
+            "record/1",
+            "tempo_scale/1",
+            "tracks/1",
+            "tracks.monitor/1",
+            "markers/1",
+            "takes/1",
+            "takes.discard/1",
+            "takes.go_again/1",
+            "undo/1",
+            "save/1",
+            "meters/1",
+            "pair.code/1"
+          ],
+          "limits": {
+            "max_frame_bytes": 65536,
+            "requests_per_second": 20,
+            "burst": 40,
+            "heartbeat_ms": 2000,
+            "heartbeat_misses": 3,
+            "connections_per_device": 2
+          },
+          "challenge": "MPFqZ8bJSGGP0LRhOsYVN8mNZmKkdxuyTjuZEZOEfS0"
+        }
+      }
+    },
+    {
+      "from": "remote",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 6,
+        "method": "pair",
+        "params": {
+          "mode": "code",
+          "device": {
+            "name": "Björn's iPhone",
+            "model": "iPhone",
+            "key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAELmFLfdxxNIkeJNkXdNhfQVal4qrDnl_C1tq3bYJMIbARSFIBJiHBKBXg2n0qXdRgpN7x-2sEbrFmAaCll5zfdw"
+          },
+          "signature": "MEUCIQCg4qzwk2Y9LKy2gIrC1q7fkq3j4CY9VN09NaWZqz6PNQIgewfSLMzccQAIBJlGKJe4vNTm1axddNdp11pl3wsTq2k"
+        }
+      }
+    },
+    {
+      "from": "host",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 6,
+        "result": {
+          "device_id": "zsiNWgOpGPu3nnQsDLV1c5EUoLWC_GqaxM6F0p8aU88",
+          "host": {
+            "id": "8c1f2e47-5a93-4d0b-9e26-7f3a1c4b5d60",
+            "name": "Studio Mac"
+          }
+        }
+      },
+      "note": "Both screens showed 512578. The user clicked Allow."
+    }
+  ]
+}

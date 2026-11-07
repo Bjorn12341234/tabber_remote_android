@@ -1,0 +1,24 @@
+{
+  "description": "Pins and device ids (spec 4.1). The validator recomputes every derived field.",
+  "host": {
+    "key_file": "keys/host_test_key.pem",
+    "spki_der_b64url": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEzj3i8_zAsXSQqkwy6Mlu6DbK89euOjaOxTiay08Q1eOwecD4jv_IUChAsPj_5I8UEZvRkmwswvpxXZV5L1bM4w",
+    "pin": "Wighj50LBkzmiw0f0ee3LA4_K5-BI6b3ru0qd7P8SIo",
+    "id": "8c1f2e47-5a93-4d0b-9e26-7f3a1c4b5d60",
+    "name": "Studio Mac"
+  },
+  "device": {
+    "key_file": "keys/device_test_key.pem",
+    "spki_der_b64url": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAELmFLfdxxNIkeJNkXdNhfQVal4qrDnl_C1tq3bYJMIbARSFIBJiHBKBXg2n0qXdRgpN7x-2sEbrFmAaCll5zfdw",
+    "key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAELmFLfdxxNIkeJNkXdNhfQVal4qrDnl_C1tq3bYJMIbARSFIBJiHBKBXg2n0qXdRgpN7x-2sEbrFmAaCll5zfdw",
+    "device_id": "zsiNWgOpGPu3nnQsDLV1c5EUoLWC_GqaxM6F0p8aU88"
+  },
+  "other_device": {
+    "key_file": "keys/other_device_test_key.pem",
+    "spki_der_b64url": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEfdMDOgOgwgxcyXDjjwLBccjmAcc4HfOcE7RDGnzZjja78ykGkpFRG_5ZJQULWFNap13_0AgGRfR2FAevOjmkOA",
+    "device_id": "CR3CUlSbgZJpYgPfgu0gGijoYzPhJyppBk6wy4Lu2Dk"
+  },
+  "challenge": "MPFqZ8bJSGGP0LRhOsYVN8mNZmKkdxuyTjuZEZOEfS0",
+  "challenge_2": "Z-H9u-pKo1X4tLCZjDhFOcnI1UNElfeUKBH0BL_29IA",
+  "token": "JnEEUOFO1YbF8ut11rT4iA"
+}

@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tabber.studio/schemas/remote/1/methods/transport.set_count_in.json",
+  "title": "transport.set_count_in",
+  "x-capability": "record/1",
+  "x-changes": true,
+  "$defs": {
+    "params": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "$ref": "../common.json#/$defs/key"
+        },
+        "bars": {
+          "enum": [
+            0,
+            1,
+            2
+          ]
+        }
+      },
+      "required": [
+        "key",
+        "bars"
+      ],
+      "additionalProperties": false
+    },
+    "result": {
+      "type": "object",
+      "properties": {
+        "transport": {
+          "$ref": "../common.json#/$defs/transport"
+        }
+      },
+      "required": [
+        "transport"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

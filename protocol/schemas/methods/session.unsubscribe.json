@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tabber.studio/schemas/remote/1/methods/session.unsubscribe.json",
+  "title": "session.unsubscribe",
+  "x-capability": null,
+  "x-changes": false,
+  "$defs": {
+    "params": {
+      "type": "object",
+      "properties": {
+        "topics": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "../common.json#/$defs/topic"
+          }
+        }
+      },
+      "required": [
+        "topics"
+      ],
+      "additionalProperties": false
+    },
+    "result": {
+      "type": "object",
+      "properties": {
+        "topics": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "../common.json#/$defs/topic"
+          }
+        }
+      },
+      "required": [
+        "topics"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

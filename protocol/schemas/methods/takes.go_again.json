@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tabber.studio/schemas/remote/1/methods/takes.go_again.json",
+  "title": "takes.go_again",
+  "x-capability": "takes.go_again/1",
+  "x-changes": true,
+  "$defs": {
+    "params": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "$ref": "../common.json#/$defs/key"
+        },
+        "take_id": {
+          "$ref": "../common.json#/$defs/id"
+        }
+      },
+      "required": [
+        "key",
+        "take_id"
+      ],
+      "additionalProperties": false
+    },
+    "result": {
+      "type": "object",
+      "properties": {
+        "transport": {
+          "$ref": "../common.json#/$defs/transport"
+        },
+        "record": {
+          "$ref": "../common.json#/$defs/record"
+        }
+      },
+      "required": [
+        "transport",
+        "record"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

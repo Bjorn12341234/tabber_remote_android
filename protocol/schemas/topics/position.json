@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tabber.studio/schemas/remote/1/topics/position.json",
+  "title": "Event data for the position topic",
+  "type": "object",
+  "properties": {
+    "state": {
+      "$ref": "../common.json#/$defs/transport_state"
+    },
+    "position": {
+      "$ref": "../common.json#/$defs/position"
+    }
+  },
+  "required": [
+    "state",
+    "position"
+  ],
+  "additionalProperties": false
+}

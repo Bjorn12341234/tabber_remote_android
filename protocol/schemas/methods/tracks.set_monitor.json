@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tabber.studio/schemas/remote/1/methods/tracks.set_monitor.json",
+  "title": "tracks.set_monitor",
+  "x-capability": "tracks.monitor/1",
+  "x-changes": true,
+  "$defs": {
+    "params": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "$ref": "../common.json#/$defs/key"
+        },
+        "track_id": {
+          "$ref": "../common.json#/$defs/id"
+        },
+        "mode": {
+          "enum": [
+            "off",
+            "auto",
+            "on"
+          ]
+        }
+      },
+      "required": [
+        "key",
+        "track_id",
+        "mode"
+      ],
+      "additionalProperties": false
+    },
+    "result": {
+      "type": "object",
+      "properties": {
+        "tracks": {
+          "$ref": "../common.json#/$defs/tracks"
+        }
+      },
+      "required": [
+        "tracks"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

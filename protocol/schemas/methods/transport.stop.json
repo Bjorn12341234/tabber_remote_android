@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tabber.studio/schemas/remote/1/methods/transport.stop.json",
+  "title": "transport.stop",
+  "x-capability": "transport/1",
+  "x-changes": true,
+  "$defs": {
+    "params": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "$ref": "../common.json#/$defs/key"
+        }
+      },
+      "required": [
+        "key"
+      ],
+      "additionalProperties": false
+    },
+    "result": {
+      "type": "object",
+      "properties": {
+        "transport": {
+          "$ref": "../common.json#/$defs/transport"
+        },
+        "record": {
+          "$ref": "../common.json#/$defs/record"
+        },
+        "take": {
+          "oneOf": [
+            {
+              "$ref": "../common.json#/$defs/take"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "transport",
+        "record",
+        "take"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

@@ -804,9 +804,9 @@ The demo part of a sprint passes the gate items for what it contains.
   - error codes, each with a sentence a musician can read
   - versioning, capabilities and limits (frame size, rate limits)
 - **The M1 vocabulary,** exactly these verbs:
-  - connection: `hello`, `pair`, `auth.begin`, `auth.prove`,
-    `session.subscribe`, `session.unsubscribe`, `session.snapshot`,
-    `heartbeat`
+  - connection: `hello`, `pair`, `auth`, `session.subscribe`,
+    `session.unsubscribe`, `session.snapshot`, and the `heartbeat`
+    notification
   - transport: `transport.play`, `transport.stop`, `transport.record`,
     `transport.seek`, `transport.set_loop`, `transport.set_click`,
     `transport.set_count_in`, `transport.set_tempo_scale`
@@ -920,7 +920,7 @@ repo" means `tabber_remote`.
 
 | # | Sprint | Where | Gate |
 |---|---|---|---|
-| TR1 | Remote-ready verbs: `recording.arm_audio_track`, `markers.list`, `markers.go`, `markers.add`, `takes.discard`, `takes.go_again`, stable ids, compact session snapshot | Studio | Headless through the shared dispatcher, read back from the model and the engine: arming by verb equals the UI path; discard then undo restores the take, and its file is untouched on disk; go again makes a new take at the right start; markers match `tabs.list_measures` |
+| TR1 | Remote-ready verbs: `recording.arm_audio_track`, `markers.list`, `markers.go`, `markers.add`, `takes.discard`, `takes.go_again`, stable ids, undo step ids (`project.undo` and `project.redo` take `expect`), the compact `session.snapshot` | Studio | Headless through the shared dispatcher, read back from the model and the engine: arming by verb equals the UI path; discard then undo restores the take, and its file is untouched on disk; go again makes a new take at the right start; markers match `tabs.list_measures` |
 | TR2 | Remote host core: `remote_host/` server, identity, pairing tokens, device keys and challenges, vocabulary, bridge, limits, logging; `remote.enable`, `disable`, `status`, `pair`, `devices`, `revoke` | Studio | The M1 vectors pass against a headless Tabber Studio; each of these is refused: a wrong key, a wrong or expired token, a replayed challenge, an oversized frame, an unknown verb, a raw Control API method; with the remote off, no socket listens and `remote_host` is not imported (the MP13 import check extended); the frozen app contains the package and its dependencies; bundle growth recorded |
 | TR3 | State feed: snapshot, changes, sequence numbers, heartbeats, busy state, rate limits | Studio | Feed values equal the Control API's read-backs; a 10-minute playback and recording stress test with two clients at full rate has zero dropouts; main-thread time per tick and CPU change recorded here |
 | TR4 | Discovery and the computer's side of pairing: Bonjour advertising (DNS-SD through ctypes), both Info.plist keys in the macOS spec, Settings › Remote, the QR dialog, paired devices, the 6-digit fallback with Allow, activity notices, a connected-phone indicator | Studio | `dns-sd -B _tabber-remote._tcp` sees the service only while the remote is on; a scripted client pairs from the QR payload and through the 6-digit path; Remove disconnects at once; on the signed, installed app (owner warned first, since it opens a window on the owner's screen): the Local Network and firewall prompts, and QR pairing still works with Local Network denied |
@@ -1076,6 +1076,37 @@ what was measured, and what changed in the plan.
   and the web. Tabber Studio `main` was still at `1ecc4a79`, so the references
   above stand. Its working tree held someone's uncommitted changes
   (`control_api/handlers/buses.py` and two plans), left untouched.
+- **2026-11-07, the owner:** "do the first 10 subsprints. commit and push
+  after each". In the owner's projects a subsprint is one session's work, as
+  each TR sprint is here, so TR0 to TR9 run in this session in the order of
+  One builder, in turns, each committed and pushed. ✅ marks a sprint whose
+  gate is met; 🟡 marks one whose remaining items need the owner's iPhone, the
+  signed app or the owner's eyes, listed with it.
+- **TR0 ✅ 2026-11-07, this repository.** `protocol/spec.md` (Tabber Remote
+  Protocol 1.0), 41 JSON Schemas in `protocol/schemas/` plus the error table,
+  13 exchange vectors and 4 crypto vectors in `protocol/vectors/`,
+  `tools/validate_vectors.py` and `tools/test_validate_vectors.py`.
+  - **Gate:** every vector validates against its schema, and together they use
+    all 27 verbs, 9 event topics and 29 errors. Ten mutation tests prove the
+    validator catches what it claims to: a wrong signature, an unmarked `seq`
+    gap, a changed error message, three failures without a close, a resent key
+    answered differently, an unknown field, a verb before authentication, a
+    wrong pin or pairing code, missing coverage. Two of them failed at first
+    and fixed the validator.
+  - **Decided in the spec:** port 9474 when free; bars and beats count from 1
+    (the host converts); `auth.begin` and `auth.prove` became one `auth`, with
+    the challenge in `hello`'s answer, to save a round trip on every
+    reconnect; edits name their targets, including the armed tracks for
+    Record and the undo step for Undo; heartbeats carry `seq`, so lost events
+    show even when nothing changes; a request refused before it ran keeps no
+    idempotency key. `nothing_armed` and `not_recording` were dropped: no
+    1.0 verb can produce them.
+  - **For TR1:** undo step ids, and `project.undo` and `project.redo` with
+    `expect`; a `session.snapshot` Control API verb, besides the verbs already
+    listed.
+  - **Crypto vectors are reproducible:** test keys derive from fixed strings
+    and signatures use RFC 6979, so `tools/make_crypto_vectors.py` leaves
+    `git diff` empty. Tools run from `.venv` (`tools/requirements.txt`).
 
 ## Sources
 

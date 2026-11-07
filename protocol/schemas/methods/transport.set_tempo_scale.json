@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tabber.studio/schemas/remote/1/methods/transport.set_tempo_scale.json",
+  "title": "transport.set_tempo_scale",
+  "x-capability": "tempo_scale/1",
+  "x-changes": true,
+  "$defs": {
+    "params": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "$ref": "../common.json#/$defs/key"
+        },
+        "scale": {
+          "type": "number",
+          "minimum": 0.25,
+          "maximum": 2.0
+        }
+      },
+      "required": [
+        "key",
+        "scale"
+      ],
+      "additionalProperties": false
+    },
+    "result": {
+      "type": "object",
+      "properties": {
+        "transport": {
+          "$ref": "../common.json#/$defs/transport"
+        }
+      },
+      "required": [
+        "transport"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

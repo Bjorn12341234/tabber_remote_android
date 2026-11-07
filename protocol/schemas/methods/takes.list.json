@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tabber.studio/schemas/remote/1/methods/takes.list.json",
+  "title": "takes.list",
+  "x-capability": "takes/1",
+  "x-changes": false,
+  "$defs": {
+    "params": {
+      "type": "object",
+      "properties": {
+        "track_id": {
+          "$ref": "../common.json#/$defs/id"
+        }
+      },
+      "required": [
+        "track_id"
+      ],
+      "additionalProperties": false
+    },
+    "result": {
+      "type": "object",
+      "properties": {
+        "takes": {
+          "$ref": "../common.json#/$defs/takes"
+        }
+      },
+      "required": [
+        "takes"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

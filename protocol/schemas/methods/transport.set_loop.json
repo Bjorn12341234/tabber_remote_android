@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tabber.studio/schemas/remote/1/methods/transport.set_loop.json",
+  "title": "transport.set_loop",
+  "x-capability": "transport/1",
+  "x-changes": true,
+  "$defs": {
+    "params": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "$ref": "../common.json#/$defs/key"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "start": {
+          "$ref": "../common.json#/$defs/bar_beat"
+        },
+        "end": {
+          "$ref": "../common.json#/$defs/bar_beat"
+        }
+      },
+      "required": [
+        "key",
+        "enabled"
+      ],
+      "additionalProperties": false,
+      "dependentRequired": {
+        "start": [
+          "end"
+        ],
+        "end": [
+          "start"
+        ]
+      }
+    },
+    "result": {
+      "type": "object",
+      "properties": {
+        "transport": {
+          "$ref": "../common.json#/$defs/transport"
+        }
+      },
+      "required": [
+        "transport"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "description": "Signed bytes are context || 0x00 || pin hash || challenge || token (spec 4.3 to 4.5). ECDSA P-256 SHA-256, DER, b64url. These signatures use RFC 6979; a Secure Enclave signs randomly, and both verify.",
+  "host_pin": "Wighj50LBkzmiw0f0ee3LA4_K5-BI6b3ru0qd7P8SIo",
+  "cases": [
+    {
+      "name": "pair_token",
+      "context": "tabber-remote pair v1",
+      "challenge": "MPFqZ8bJSGGP0LRhOsYVN8mNZmKkdxuyTjuZEZOEfS0",
+      "token": "JnEEUOFO1YbF8ut11rT4iA",
+      "signed_bytes_hex": "7461626265722d72656d6f74652070616972207631005a28218f9d0b064ce68b0d1fd1e7b72c0e3f2b9f8123a6f7aeed2a77b3fc488a30f16a67c6c948618fd0b4613ac61537c98d6662a4771bb24e3b991193847d2d26710450e14ed586c5f2eb75d6b4f888",
+      "device_key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAELmFLfdxxNIkeJNkXdNhfQVal4qrDnl_C1tq3bYJMIbARSFIBJiHBKBXg2n0qXdRgpN7x-2sEbrFmAaCll5zfdw",
+      "signature": "MEQCIFk8KApknaXulAXmIfzTcEYut4u3Ec71vFq60FXGNUCbAiBlecUmxEyseVOILAKCk8TqxkqwfWA3bpYWd0uy9r-kug",
+      "verifies": true
+    },
+    {
+      "name": "pair_code",
+      "context": "tabber-remote pair v1",
+      "challenge": "MPFqZ8bJSGGP0LRhOsYVN8mNZmKkdxuyTjuZEZOEfS0",
+      "token": null,
+      "signed_bytes_hex": "7461626265722d72656d6f74652070616972207631005a28218f9d0b064ce68b0d1fd1e7b72c0e3f2b9f8123a6f7aeed2a77b3fc488a30f16a67c6c948618fd0b4613ac61537c98d6662a4771bb24e3b991193847d2d",
+      "device_key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAELmFLfdxxNIkeJNkXdNhfQVal4qrDnl_C1tq3bYJMIbARSFIBJiHBKBXg2n0qXdRgpN7x-2sEbrFmAaCll5zfdw",
+      "signature": "MEUCIQCg4qzwk2Y9LKy2gIrC1q7fkq3j4CY9VN09NaWZqz6PNQIgewfSLMzccQAIBJlGKJe4vNTm1axddNdp11pl3wsTq2k",
+      "verifies": true
+    },
+    {
+      "name": "auth",
+      "context": "tabber-remote auth v1",
+      "challenge": "MPFqZ8bJSGGP0LRhOsYVN8mNZmKkdxuyTjuZEZOEfS0",
+      "token": null,
+      "signed_bytes_hex": "7461626265722d72656d6f74652061757468207631005a28218f9d0b064ce68b0d1fd1e7b72c0e3f2b9f8123a6f7aeed2a77b3fc488a30f16a67c6c948618fd0b4613ac61537c98d6662a4771bb24e3b991193847d2d",
+      "device_key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAELmFLfdxxNIkeJNkXdNhfQVal4qrDnl_C1tq3bYJMIbARSFIBJiHBKBXg2n0qXdRgpN7x-2sEbrFmAaCll5zfdw",
+      "signature": "MEUCIQDN56V3iG3ETpVfL7OtJZ0RmONlRPRGXoEiXOY_WQY8MwIgIgpTp6sTvt5HWePO98EYQp12fuVD8s_kqIPN5bbA5bc",
+      "verifies": true
+    },
+    {
+      "name": "auth_second_challenge",
+      "context": "tabber-remote auth v1",
+      "challenge": "Z-H9u-pKo1X4tLCZjDhFOcnI1UNElfeUKBH0BL_29IA",
+      "token": null,
+      "signed_bytes_hex": "7461626265722d72656d6f74652061757468207631005a28218f9d0b064ce68b0d1fd1e7b72c0e3f2b9f8123a6f7aeed2a77b3fc488a67e1fdbbea4aa355f8b4b0998c384539c9c8d5434495f7942811f404bff6f480",
+      "device_key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAELmFLfdxxNIkeJNkXdNhfQVal4qrDnl_C1tq3bYJMIbARSFIBJiHBKBXg2n0qXdRgpN7x-2sEbrFmAaCll5zfdw",
+      "signature": "MEYCIQCQHAzP0U2Aihq-Q2zgLVy6ijHqeVbt3xmt6uY_BsoMzQIhAK3JGji1BdB41829ph-GlMOm8Pd2KFGR-gSKTtHADO6F",
+      "verifies": true
+    },
+    {
+      "name": "pair_token_signed_by_another_key",
+      "context": "tabber-remote pair v1",
+      "challenge": "MPFqZ8bJSGGP0LRhOsYVN8mNZmKkdxuyTjuZEZOEfS0",
+      "token": "JnEEUOFO1YbF8ut11rT4iA",
+      "signed_bytes_hex": "7461626265722d72656d6f74652070616972207631005a28218f9d0b064ce68b0d1fd1e7b72c0e3f2b9f8123a6f7aeed2a77b3fc488a30f16a67c6c948618fd0b4613ac61537c98d6662a4771bb24e3b991193847d2d26710450e14ed586c5f2eb75d6b4f888",
+      "device_key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAELmFLfdxxNIkeJNkXdNhfQVal4qrDnl_C1tq3bYJMIbARSFIBJiHBKBXg2n0qXdRgpN7x-2sEbrFmAaCll5zfdw",
+      "signature": "MEUCIQCbL3TuHX2raDbd3ug8ZDWJCzlMDBA-LSSoYTzCjusjEAIgeFhlAx_BhScmSN-ORhChbGPWY3hvf6jFEXthMvE80WE",
+      "verifies": false
+    },
+    {
+      "name": "pair_token_for_another_host",
+      "context": "tabber-remote pair v1",
+      "challenge": "MPFqZ8bJSGGP0LRhOsYVN8mNZmKkdxuyTjuZEZOEfS0",
+      "token": "JnEEUOFO1YbF8ut11rT4iA",
+      "signed_bytes_hex": "7461626265722d72656d6f74652070616972207631005b28218f9d0b064ce68b0d1fd1e7b72c0e3f2b9f8123a6f7aeed2a77b3fc488a30f16a67c6c948618fd0b4613ac61537c98d6662a4771bb24e3b991193847d2d26710450e14ed586c5f2eb75d6b4f888",
+      "device_key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAELmFLfdxxNIkeJNkXdNhfQVal4qrDnl_C1tq3bYJMIbARSFIBJiHBKBXg2n0qXdRgpN7x-2sEbrFmAaCll5zfdw",
+      "signature": "MEQCIFk8KApknaXulAXmIfzTcEYut4u3Ec71vFq60FXGNUCbAiBlecUmxEyseVOILAKCk8TqxkqwfWA3bpYWd0uy9r-kug",
+      "verifies": false,
+      "note": "The signature over the real host's bytes does not verify for these bytes."
+    }
+  ]
+}

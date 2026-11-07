@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tabber.studio/schemas/remote/1/methods/markers.add.json",
+  "title": "markers.add",
+  "x-capability": "markers/1",
+  "x-changes": true,
+  "$defs": {
+    "params": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "$ref": "../common.json#/$defs/key"
+        },
+        "at": {
+          "$ref": "../common.json#/$defs/bar_beat"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        }
+      },
+      "required": [
+        "key",
+        "at"
+      ],
+      "additionalProperties": false
+    },
+    "result": {
+      "type": "object",
+      "properties": {
+        "marker": {
+          "$ref": "../common.json#/$defs/marker"
+        },
+        "markers": {
+          "$ref": "../common.json#/$defs/markers"
+        }
+      },
+      "required": [
+        "marker",
+        "markers"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

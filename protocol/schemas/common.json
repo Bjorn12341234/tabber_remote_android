@@ -1,0 +1,494 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tabber.studio/schemas/remote/1/common.json",
+  "title": "Shared definitions",
+  "$defs": {
+    "uuid": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+      "description": "A random UUID, version 4, lowercase."
+    },
+    "key": {
+      "$ref": "#/$defs/uuid",
+      "description": "Idempotency key: one per user action, reused on resend (spec 5.1)."
+    },
+    "b64url": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "maxLength": 4096,
+      "description": "base64url without padding."
+    },
+    "sha256_b64url": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{43}$",
+      "description": "32 bytes (a SHA-256 or a challenge) as base64url without padding."
+    },
+    "token": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{22}$",
+      "description": "16 bytes as base64url without padding."
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "description": "An opaque, stable id chosen by the host."
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "host_time": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Seconds on the host's monotonic clock."
+    },
+    "bar_beat": {
+      "type": "object",
+      "properties": {
+        "bar": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "beat": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "bar",
+        "beat"
+      ],
+      "additionalProperties": false,
+      "description": "A place in the song, counted from bar 1 beat 1."
+    },
+    "position": {
+      "type": "object",
+      "properties": {
+        "bar": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "beat": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "seconds": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "bar",
+        "beat",
+        "seconds"
+      ],
+      "additionalProperties": false,
+      "description": "Where the playhead is: bar and beat from 1, and seconds from the start."
+    },
+    "transport_state": {
+      "enum": [
+        "stopped",
+        "playing",
+        "paused"
+      ]
+    },
+    "transport": {
+      "type": "object",
+      "properties": {
+        "state": {
+          "$ref": "#/$defs/transport_state"
+        },
+        "position": {
+          "$ref": "#/$defs/position"
+        },
+        "tempo_bpm": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1000
+        },
+        "tempo_scale": {
+          "type": "number",
+          "minimum": 0.25,
+          "maximum": 2.0
+        },
+        "time_signature": {
+          "type": "object",
+          "properties": {
+            "beats": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 64
+            },
+            "unit": {
+              "enum": [
+                1,
+                2,
+                4,
+                8,
+                16,
+                32
+              ]
+            }
+          },
+          "required": [
+            "beats",
+            "unit"
+          ],
+          "additionalProperties": false
+        },
+        "loop": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "start": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/bar_beat"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "end": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/bar_beat"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "enabled",
+            "start",
+            "end"
+          ],
+          "additionalProperties": false
+        },
+        "click": {
+          "type": "boolean"
+        },
+        "count_in_bars": {
+          "enum": [
+            0,
+            1,
+            2
+          ]
+        },
+        "counting_in": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "state",
+        "position",
+        "tempo_bpm",
+        "tempo_scale",
+        "time_signature",
+        "loop",
+        "click",
+        "count_in_bars",
+        "counting_in"
+      ],
+      "additionalProperties": false
+    },
+    "record": {
+      "type": "object",
+      "properties": {
+        "recording": {
+          "type": "boolean"
+        },
+        "started": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "position": {
+                  "$ref": "#/$defs/position"
+                },
+                "t": {
+                  "$ref": "#/$defs/host_time"
+                }
+              },
+              "required": [
+                "position",
+                "t"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "armed_track_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          },
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "recording",
+        "started",
+        "armed_track_ids"
+      ],
+      "additionalProperties": false
+    },
+    "track": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "kind": {
+          "enum": [
+            "audio",
+            "midi"
+          ]
+        },
+        "armed": {
+          "type": "boolean"
+        },
+        "monitor": {
+          "enum": [
+            "off",
+            "auto",
+            "on"
+          ]
+        },
+        "selected": {
+          "type": "boolean"
+        },
+        "color": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "^#[0-9A-Fa-f]{6}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "kind",
+        "armed",
+        "monitor",
+        "selected",
+        "color"
+      ],
+      "additionalProperties": false
+    },
+    "tracks": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/track"
+      }
+    },
+    "marker": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "bar": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "beat": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "bar",
+        "beat"
+      ],
+      "additionalProperties": false
+    },
+    "markers": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/marker"
+      }
+    },
+    "take": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "track_id": {
+          "$ref": "#/$defs/id"
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "start": {
+          "$ref": "#/$defs/position"
+        },
+        "length_seconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "rating": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5
+        },
+        "active": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "track_id",
+        "name",
+        "start",
+        "length_seconds",
+        "rating",
+        "active"
+      ],
+      "additionalProperties": false
+    },
+    "takes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/take"
+      }
+    },
+    "recent_takes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/take"
+      },
+      "maxItems": 20,
+      "description": "The newest takes on any track, newest first."
+    },
+    "undo_step": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "$ref": "#/$defs/id"
+            },
+            "label": {
+              "type": "string",
+              "maxLength": 200
+            }
+          },
+          "required": [
+            "id",
+            "label"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "undo": {
+      "type": "object",
+      "properties": {
+        "undo": {
+          "$ref": "#/$defs/undo_step"
+        },
+        "redo": {
+          "$ref": "#/$defs/undo_step"
+        }
+      },
+      "required": [
+        "undo",
+        "redo"
+      ],
+      "additionalProperties": false
+    },
+    "project": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "unsaved": {
+          "type": "boolean"
+        },
+        "has_file": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "title",
+        "unsaved",
+        "has_file"
+      ],
+      "additionalProperties": false
+    },
+    "capability": {
+      "type": "string",
+      "pattern": "^[a-z][a-z_.]*/[0-9]+$"
+    },
+    "protocol_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+$"
+    },
+    "topic": {
+      "enum": [
+        "transport",
+        "position",
+        "record",
+        "tracks",
+        "markers",
+        "takes",
+        "undo",
+        "project",
+        "meters"
+      ]
+    },
+    "host": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "name": {
+          "$ref": "#/$defs/name"
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ],
+      "additionalProperties": false
+    },
+    "empty": {
+      "type": "object",
+      "additionalProperties": false
+    }
+  }
+}

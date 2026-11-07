@@ -1,0 +1,592 @@
+{
+  "name": "conflicts",
+  "description": "The phone acts on what it showed, but the computer already changed it (spec 5.2): refused with the current state.",
+  "start": "authenticated",
+  "host_state": {
+    "pairing": {
+      "open": false
+    },
+    "paired_devices": [
+      {
+        "device_id": "zsiNWgOpGPu3nnQsDLV1c5EUoLWC_GqaxM6F0p8aU88",
+        "name": "Björn's iPhone",
+        "key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAELmFLfdxxNIkeJNkXdNhfQVal4qrDnl_C1tq3bYJMIbARSFIBJiHBKBXg2n0qXdRgpN7x-2sEbrFmAaCll5zfdw"
+      }
+    ],
+    "capabilities": [
+      "transport/1",
+      "record/1",
+      "tempo_scale/1",
+      "tracks/1",
+      "tracks.monitor/1",
+      "markers/1",
+      "takes/1",
+      "takes.discard/1",
+      "takes.go_again/1",
+      "undo/1",
+      "save/1",
+      "meters/1",
+      "pair.code/1"
+    ],
+    "snapshot": {
+      "seq": 0,
+      "t": 9200.0,
+      "project": {
+        "title": "My Song",
+        "unsaved": false,
+        "has_file": true
+      },
+      "transport": {
+        "state": "stopped",
+        "position": {
+          "bar": 1,
+          "beat": 1,
+          "seconds": 0.0
+        },
+        "tempo_bpm": 96.0,
+        "tempo_scale": 1.0,
+        "time_signature": {
+          "beats": 4,
+          "unit": 4
+        },
+        "loop": {
+          "enabled": false,
+          "start": null,
+          "end": null
+        },
+        "click": false,
+        "count_in_bars": 0,
+        "counting_in": false
+      },
+      "record": {
+        "recording": false,
+        "started": null,
+        "armed_track_ids": [
+          "trk-guitar"
+        ]
+      },
+      "tracks": [
+        {
+          "id": "trk-vocals",
+          "name": "Vocals",
+          "kind": "audio",
+          "armed": false,
+          "monitor": "auto",
+          "selected": true,
+          "color": "#E5484D"
+        },
+        {
+          "id": "trk-guitar",
+          "name": "Guitar",
+          "kind": "audio",
+          "armed": true,
+          "monitor": "auto",
+          "selected": false,
+          "color": "#3E63DD"
+        },
+        {
+          "id": "trk-keys",
+          "name": "Keys",
+          "kind": "midi",
+          "armed": false,
+          "monitor": "auto",
+          "selected": false,
+          "color": "#30A46C"
+        }
+      ],
+      "markers": [
+        {
+          "id": "mrk-intro",
+          "name": "Intro",
+          "bar": 1,
+          "beat": 1
+        },
+        {
+          "id": "mrk-verse",
+          "name": "Verse",
+          "bar": 9,
+          "beat": 1
+        },
+        {
+          "id": "mrk-chorus",
+          "name": "Chorus",
+          "bar": 25,
+          "beat": 1
+        },
+        {
+          "id": "mrk-solo",
+          "name": "Solo",
+          "bar": 41,
+          "beat": 1
+        }
+      ],
+      "takes": [
+        {
+          "id": "take-guitar-1",
+          "track_id": "trk-guitar",
+          "name": "Guitar take 1",
+          "start": {
+            "bar": 9,
+            "beat": 1,
+            "seconds": 20.0
+          },
+          "length_seconds": 40.0,
+          "rating": 3,
+          "active": true
+        }
+      ],
+      "undo": {
+        "undo": {
+          "id": "u-50",
+          "label": "Change volume"
+        },
+        "redo": null
+      }
+    }
+  },
+  "steps": [
+    {
+      "from": "remote",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "transport.record",
+        "params": {
+          "key": "0b6c3f1e-7a2d-4e59-9c84-000000000028",
+          "armed_track_ids": [
+            "trk-vocals"
+          ]
+        }
+      }
+    },
+    {
+      "from": "host",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "error": {
+          "code": 1026,
+          "message": "This changed on the computer. The phone now shows the new state.",
+          "data": {
+            "reason": "stale_target",
+            "tracks": [
+              {
+                "id": "trk-vocals",
+                "name": "Vocals",
+                "kind": "audio",
+                "armed": false,
+                "monitor": "auto",
+                "selected": true,
+                "color": "#E5484D"
+              },
+              {
+                "id": "trk-guitar",
+                "name": "Guitar",
+                "kind": "audio",
+                "armed": true,
+                "monitor": "auto",
+                "selected": false,
+                "color": "#3E63DD"
+              },
+              {
+                "id": "trk-keys",
+                "name": "Keys",
+                "kind": "midi",
+                "armed": false,
+                "monitor": "auto",
+                "selected": false,
+                "color": "#30A46C"
+              }
+            ],
+            "record": {
+              "recording": false,
+              "started": null,
+              "armed_track_ids": [
+                "trk-guitar"
+              ]
+            }
+          }
+        }
+      },
+      "note": "The engineer armed Guitar instead of Vocals on the computer a moment before."
+    },
+    {
+      "from": "remote",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 2,
+        "method": "edit.undo",
+        "params": {
+          "key": "0b6c3f1e-7a2d-4e59-9c84-000000000029",
+          "expect": "u-49"
+        }
+      }
+    },
+    {
+      "from": "host",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 2,
+        "error": {
+          "code": 1027,
+          "message": "The computer's newest change is a different one. Undo it there, or try again.",
+          "data": {
+            "reason": "undo_mismatch",
+            "undo": {
+              "undo": {
+                "id": "u-50",
+                "label": "Change volume"
+              },
+              "redo": null
+            }
+          }
+        }
+      },
+      "note": "The phone's Undo was for its discard, u-49; the newest step on the computer is now a volume change."
+    },
+    {
+      "from": "remote",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 3,
+        "method": "tracks.arm",
+        "params": {
+          "key": "0b6c3f1e-7a2d-4e59-9c84-00000000002a",
+          "track_id": "trk-bass",
+          "armed": true
+        }
+      }
+    },
+    {
+      "from": "host",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 3,
+        "error": {
+          "code": 1023,
+          "message": "That track is gone from the song.",
+          "data": {
+            "reason": "unknown_track",
+            "tracks": [
+              {
+                "id": "trk-vocals",
+                "name": "Vocals",
+                "kind": "audio",
+                "armed": false,
+                "monitor": "auto",
+                "selected": true,
+                "color": "#E5484D"
+              },
+              {
+                "id": "trk-guitar",
+                "name": "Guitar",
+                "kind": "audio",
+                "armed": true,
+                "monitor": "auto",
+                "selected": false,
+                "color": "#3E63DD"
+              },
+              {
+                "id": "trk-keys",
+                "name": "Keys",
+                "kind": "midi",
+                "armed": false,
+                "monitor": "auto",
+                "selected": false,
+                "color": "#30A46C"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "from": "remote",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 4,
+        "method": "takes.discard",
+        "params": {
+          "key": "0b6c3f1e-7a2d-4e59-9c84-00000000002b",
+          "take_id": "take-vocals-9"
+        }
+      }
+    },
+    {
+      "from": "host",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 4,
+        "error": {
+          "code": 1024,
+          "message": "That take is gone from the song.",
+          "data": {
+            "reason": "unknown_take",
+            "takes": [
+              {
+                "id": "take-guitar-1",
+                "track_id": "trk-guitar",
+                "name": "Guitar take 1",
+                "start": {
+                  "bar": 9,
+                  "beat": 1,
+                  "seconds": 20.0
+                },
+                "length_seconds": 40.0,
+                "rating": 3,
+                "active": true
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "from": "remote",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 5,
+        "method": "markers.go",
+        "params": {
+          "key": "0b6c3f1e-7a2d-4e59-9c84-00000000002c",
+          "marker_id": "mrk-bridge"
+        }
+      }
+    },
+    {
+      "from": "host",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 5,
+        "error": {
+          "code": 1025,
+          "message": "That marker is gone from the song.",
+          "data": {
+            "reason": "unknown_marker",
+            "markers": [
+              {
+                "id": "mrk-intro",
+                "name": "Intro",
+                "bar": 1,
+                "beat": 1
+              },
+              {
+                "id": "mrk-verse",
+                "name": "Verse",
+                "bar": 9,
+                "beat": 1
+              },
+              {
+                "id": "mrk-chorus",
+                "name": "Chorus",
+                "bar": 25,
+                "beat": 1
+              },
+              {
+                "id": "mrk-solo",
+                "name": "Solo",
+                "bar": 41,
+                "beat": 1
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "from": "remote",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 6,
+        "method": "edit.redo",
+        "params": {
+          "key": "0b6c3f1e-7a2d-4e59-9c84-00000000002d",
+          "expect": "u-51"
+        }
+      }
+    },
+    {
+      "from": "host",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 6,
+        "error": {
+          "code": 1029,
+          "message": "There is nothing to redo.",
+          "data": {
+            "reason": "nothing_to_redo",
+            "undo": {
+              "undo": {
+                "id": "u-50",
+                "label": "Change volume"
+              },
+              "redo": null
+            }
+          }
+        }
+      }
+    },
+    {
+      "from": "remote",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 7,
+        "method": "transport.record",
+        "params": {
+          "key": "0b6c3f1e-7a2d-4e59-9c84-00000000002e",
+          "armed_track_ids": [
+            "trk-guitar"
+          ]
+        }
+      }
+    },
+    {
+      "from": "host",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 7,
+        "result": {
+          "transport": {
+            "state": "playing",
+            "position": {
+              "bar": 1,
+              "beat": 1,
+              "seconds": 0.0
+            },
+            "tempo_bpm": 96.0,
+            "tempo_scale": 1.0,
+            "time_signature": {
+              "beats": 4,
+              "unit": 4
+            },
+            "loop": {
+              "enabled": false,
+              "start": null,
+              "end": null
+            },
+            "click": false,
+            "count_in_bars": 0,
+            "counting_in": false
+          },
+          "record": {
+            "recording": true,
+            "started": {
+              "position": {
+                "bar": 1,
+                "beat": 1,
+                "seconds": 0.0
+              },
+              "t": 9201.0
+            },
+            "armed_track_ids": [
+              "trk-guitar"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "from": "host",
+      "message": {
+        "jsonrpc": "2.0",
+        "method": "event",
+        "params": {
+          "topic": "transport",
+          "seq": 1,
+          "t": 9201.0,
+          "data": {
+            "state": "playing",
+            "position": {
+              "bar": 1,
+              "beat": 1,
+              "seconds": 0.0
+            },
+            "tempo_bpm": 96.0,
+            "tempo_scale": 1.0,
+            "time_signature": {
+              "beats": 4,
+              "unit": 4
+            },
+            "loop": {
+              "enabled": false,
+              "start": null,
+              "end": null
+            },
+            "click": false,
+            "count_in_bars": 0,
+            "counting_in": false
+          }
+        }
+      }
+    },
+    {
+      "from": "host",
+      "message": {
+        "jsonrpc": "2.0",
+        "method": "event",
+        "params": {
+          "topic": "record",
+          "seq": 2,
+          "t": 9201.0,
+          "data": {
+            "recording": true,
+            "started": {
+              "position": {
+                "bar": 1,
+                "beat": 1,
+                "seconds": 0.0
+              },
+              "t": 9201.0
+            },
+            "armed_track_ids": [
+              "trk-guitar"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "from": "remote",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 8,
+        "method": "transport.record",
+        "params": {
+          "key": "0b6c3f1e-7a2d-4e59-9c84-00000000002f",
+          "armed_track_ids": [
+            "trk-guitar"
+          ]
+        }
+      }
+    },
+    {
+      "from": "host",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 8,
+        "error": {
+          "code": 1021,
+          "message": "Tabber Studio is already recording.",
+          "data": {
+            "reason": "already_recording",
+            "record": {
+              "recording": true,
+              "started": {
+                "position": {
+                  "bar": 1,
+                  "beat": 1,
+                  "seconds": 0.0
+                },
+                "t": 9201.0
+              },
+              "armed_track_ids": [
+                "trk-guitar"
+              ]
+            }
+          }
+        }
+      },
+      "note": "A second press with a new key, while the first take is still recording."
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "description": "The 6-digit code both screens show (spec 4.4).",
+  "cases": [
+    {
+      "host_pin": "Wighj50LBkzmiw0f0ee3LA4_K5-BI6b3ru0qd7P8SIo",
+      "device_id": "zsiNWgOpGPu3nnQsDLV1c5EUoLWC_GqaxM6F0p8aU88",
+      "challenge": "MPFqZ8bJSGGP0LRhOsYVN8mNZmKkdxuyTjuZEZOEfS0",
+      "code": "512578"
+    },
+    {
+      "host_pin": "Wighj50LBkzmiw0f0ee3LA4_K5-BI6b3ru0qd7P8SIo",
+      "device_id": "zsiNWgOpGPu3nnQsDLV1c5EUoLWC_GqaxM6F0p8aU88",
+      "challenge": "Z-H9u-pKo1X4tLCZjDhFOcnI1UNElfeUKBH0BL_29IA",
+      "code": "151942"
+    }
+  ]
+}

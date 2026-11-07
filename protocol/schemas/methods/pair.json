@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tabber.studio/schemas/remote/1/methods/pair.json",
+  "title": "pair",
+  "x-capability": null,
+  "x-changes": false,
+  "$defs": {
+    "params": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "const": "token"
+            },
+            "token": {
+              "$ref": "../common.json#/$defs/token"
+            },
+            "device": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "$ref": "../common.json#/$defs/name"
+                },
+                "model": {
+                  "type": "string",
+                  "maxLength": 64
+                },
+                "key": {
+                  "$ref": "../common.json#/$defs/b64url"
+                }
+              },
+              "required": [
+                "name",
+                "model",
+                "key"
+              ],
+              "additionalProperties": false
+            },
+            "signature": {
+              "$ref": "../common.json#/$defs/b64url"
+            }
+          },
+          "required": [
+            "mode",
+            "token",
+            "device",
+            "signature"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "const": "code"
+            },
+            "device": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "$ref": "../common.json#/$defs/name"
+                },
+                "model": {
+                  "type": "string",
+                  "maxLength": 64
+                },
+                "key": {
+                  "$ref": "../common.json#/$defs/b64url"
+                }
+              },
+              "required": [
+                "name",
+                "model",
+                "key"
+              ],
+              "additionalProperties": false
+            },
+            "signature": {
+              "$ref": "../common.json#/$defs/b64url"
+            }
+          },
+          "required": [
+            "mode",
+            "device",
+            "signature"
+          ],
+          "additionalProperties": false
+        }
+      ],
+      "description": "Code mode needs the pair.code/1 capability."
+    },
+    "result": {
+      "type": "object",
+      "properties": {
+        "device_id": {
+          "$ref": "../common.json#/$defs/sha256_b64url"
+        },
+        "host": {
+          "$ref": "../common.json#/$defs/host"
+        }
+      },
+      "required": [
+        "device_id",
+        "host"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,173 @@
+{
+  "name": "version_mismatch",
+  "description": "A remote that speaks only a newer major version (spec 7).",
+  "start": "connected",
+  "host_state": {
+    "pairing": {
+      "open": false
+    },
+    "paired_devices": [
+      {
+        "device_id": "zsiNWgOpGPu3nnQsDLV1c5EUoLWC_GqaxM6F0p8aU88",
+        "name": "Björn's iPhone",
+        "key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAELmFLfdxxNIkeJNkXdNhfQVal4qrDnl_C1tq3bYJMIbARSFIBJiHBKBXg2n0qXdRgpN7x-2sEbrFmAaCll5zfdw"
+      }
+    ],
+    "snapshot": {
+      "seq": 0,
+      "t": 8500.0,
+      "project": {
+        "title": "My Song",
+        "unsaved": false,
+        "has_file": true
+      },
+      "transport": {
+        "state": "stopped",
+        "position": {
+          "bar": 1,
+          "beat": 1,
+          "seconds": 0.0
+        },
+        "tempo_bpm": 96.0,
+        "tempo_scale": 1.0,
+        "time_signature": {
+          "beats": 4,
+          "unit": 4
+        },
+        "loop": {
+          "enabled": false,
+          "start": null,
+          "end": null
+        },
+        "click": false,
+        "count_in_bars": 0,
+        "counting_in": false
+      },
+      "record": {
+        "recording": false,
+        "started": null,
+        "armed_track_ids": []
+      },
+      "tracks": [
+        {
+          "id": "trk-vocals",
+          "name": "Vocals",
+          "kind": "audio",
+          "armed": false,
+          "monitor": "auto",
+          "selected": true,
+          "color": "#E5484D"
+        },
+        {
+          "id": "trk-guitar",
+          "name": "Guitar",
+          "kind": "audio",
+          "armed": false,
+          "monitor": "auto",
+          "selected": false,
+          "color": "#3E63DD"
+        },
+        {
+          "id": "trk-keys",
+          "name": "Keys",
+          "kind": "midi",
+          "armed": false,
+          "monitor": "auto",
+          "selected": false,
+          "color": "#30A46C"
+        }
+      ],
+      "markers": [
+        {
+          "id": "mrk-intro",
+          "name": "Intro",
+          "bar": 1,
+          "beat": 1
+        },
+        {
+          "id": "mrk-verse",
+          "name": "Verse",
+          "bar": 9,
+          "beat": 1
+        },
+        {
+          "id": "mrk-chorus",
+          "name": "Chorus",
+          "bar": 25,
+          "beat": 1
+        },
+        {
+          "id": "mrk-solo",
+          "name": "Solo",
+          "bar": 41,
+          "beat": 1
+        }
+      ],
+      "takes": [
+        {
+          "id": "take-guitar-1",
+          "track_id": "trk-guitar",
+          "name": "Guitar take 1",
+          "start": {
+            "bar": 9,
+            "beat": 1,
+            "seconds": 20.0
+          },
+          "length_seconds": 40.0,
+          "rating": 3,
+          "active": true
+        }
+      ],
+      "undo": {
+        "undo": {
+          "id": "u-41",
+          "label": "Move clip"
+        },
+        "redo": null
+      }
+    }
+  },
+  "steps": [
+    {
+      "from": "remote",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "hello",
+        "params": {
+          "app": {
+            "name": "Tabber Spak",
+            "version": "3.0",
+            "build": "1",
+            "platform": "ios"
+          },
+          "protocol_versions": [
+            "2.0"
+          ]
+        }
+      }
+    },
+    {
+      "from": "host",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "error": {
+          "code": 1010,
+          "message": "Update Tabber Studio or Tabber Spak so they can talk to each other.",
+          "data": {
+            "reason": "unsupported_version",
+            "host_versions": [
+              "1.0"
+            ]
+          }
+        }
+      },
+      "note": "The app tells the user to update Tabber Studio."
+    },
+    {
+      "from": "host",
+      "close": 4002
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tabber.studio/schemas/remote/1/snapshot.json",
+  "title": "The whole session, as session.subscribe and session.snapshot return it (spec 8.1)",
+  "type": "object",
+  "properties": {
+    "seq": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "t": {
+      "$ref": "common.json#/$defs/host_time"
+    },
+    "project": {
+      "$ref": "common.json#/$defs/project"
+    },
+    "transport": {
+      "$ref": "common.json#/$defs/transport"
+    },
+    "record": {
+      "$ref": "common.json#/$defs/record"
+    },
+    "tracks": {
+      "$ref": "common.json#/$defs/tracks"
+    },
+    "markers": {
+      "$ref": "common.json#/$defs/markers"
+    },
+    "takes": {
+      "$ref": "common.json#/$defs/recent_takes"
+    },
+    "undo": {
+      "$ref": "common.json#/$defs/undo"
+    }
+  },
+  "required": [
+    "seq",
+    "t",
+    "project",
+    "transport",
+    "record",
+    "tracks",
+    "markers",
+    "takes",
+    "undo"
+  ],
+  "additionalProperties": false
+}

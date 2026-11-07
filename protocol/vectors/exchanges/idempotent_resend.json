@@ -1,0 +1,590 @@
+{
+  "name": "idempotent_resend",
+  "description": "S2: the Wi-Fi drops right after Record. The phone resends with the same key on the next connection; the host answers with the first answer and records once (spec 5.1).",
+  "start": "authenticated",
+  "host_state": {
+    "pairing": {
+      "open": false
+    },
+    "paired_devices": [
+      {
+        "device_id": "zsiNWgOpGPu3nnQsDLV1c5EUoLWC_GqaxM6F0p8aU88",
+        "name": "Björn's iPhone",
+        "key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAELmFLfdxxNIkeJNkXdNhfQVal4qrDnl_C1tq3bYJMIbARSFIBJiHBKBXg2n0qXdRgpN7x-2sEbrFmAaCll5zfdw"
+      }
+    ],
+    "capabilities": [
+      "transport/1",
+      "record/1",
+      "tempo_scale/1",
+      "tracks/1",
+      "tracks.monitor/1",
+      "markers/1",
+      "takes/1",
+      "takes.discard/1",
+      "takes.go_again/1",
+      "undo/1",
+      "save/1",
+      "meters/1",
+      "pair.code/1"
+    ],
+    "snapshot": {
+      "seq": 0,
+      "t": 9500.0,
+      "project": {
+        "title": "My Song",
+        "unsaved": false,
+        "has_file": true
+      },
+      "transport": {
+        "state": "stopped",
+        "position": {
+          "bar": 25,
+          "beat": 1,
+          "seconds": 60.0
+        },
+        "tempo_bpm": 96.0,
+        "tempo_scale": 1.0,
+        "time_signature": {
+          "beats": 4,
+          "unit": 4
+        },
+        "loop": {
+          "enabled": false,
+          "start": null,
+          "end": null
+        },
+        "click": false,
+        "count_in_bars": 0,
+        "counting_in": false
+      },
+      "record": {
+        "recording": false,
+        "started": null,
+        "armed_track_ids": [
+          "trk-vocals"
+        ]
+      },
+      "tracks": [
+        {
+          "id": "trk-vocals",
+          "name": "Vocals",
+          "kind": "audio",
+          "armed": true,
+          "monitor": "auto",
+          "selected": true,
+          "color": "#E5484D"
+        },
+        {
+          "id": "trk-guitar",
+          "name": "Guitar",
+          "kind": "audio",
+          "armed": false,
+          "monitor": "auto",
+          "selected": false,
+          "color": "#3E63DD"
+        },
+        {
+          "id": "trk-keys",
+          "name": "Keys",
+          "kind": "midi",
+          "armed": false,
+          "monitor": "auto",
+          "selected": false,
+          "color": "#30A46C"
+        }
+      ],
+      "markers": [
+        {
+          "id": "mrk-intro",
+          "name": "Intro",
+          "bar": 1,
+          "beat": 1
+        },
+        {
+          "id": "mrk-verse",
+          "name": "Verse",
+          "bar": 9,
+          "beat": 1
+        },
+        {
+          "id": "mrk-chorus",
+          "name": "Chorus",
+          "bar": 25,
+          "beat": 1
+        },
+        {
+          "id": "mrk-solo",
+          "name": "Solo",
+          "bar": 41,
+          "beat": 1
+        }
+      ],
+      "takes": [
+        {
+          "id": "take-guitar-1",
+          "track_id": "trk-guitar",
+          "name": "Guitar take 1",
+          "start": {
+            "bar": 9,
+            "beat": 1,
+            "seconds": 20.0
+          },
+          "length_seconds": 40.0,
+          "rating": 3,
+          "active": true
+        }
+      ],
+      "undo": {
+        "undo": {
+          "id": "u-41",
+          "label": "Move clip"
+        },
+        "redo": null
+      }
+    }
+  },
+  "steps": [
+    {
+      "from": "remote",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "transport.record",
+        "params": {
+          "key": "0b6c3f1e-7a2d-4e59-9c84-00000000003c",
+          "armed_track_ids": [
+            "trk-vocals"
+          ]
+        }
+      }
+    },
+    {
+      "from": "host",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "result": {
+          "transport": {
+            "state": "playing",
+            "position": {
+              "bar": 25,
+              "beat": 1,
+              "seconds": 60.0
+            },
+            "tempo_bpm": 96.0,
+            "tempo_scale": 1.0,
+            "time_signature": {
+              "beats": 4,
+              "unit": 4
+            },
+            "loop": {
+              "enabled": false,
+              "start": null,
+              "end": null
+            },
+            "click": false,
+            "count_in_bars": 0,
+            "counting_in": false
+          },
+          "record": {
+            "recording": true,
+            "started": {
+              "position": {
+                "bar": 25,
+                "beat": 1,
+                "seconds": 60.0
+              },
+              "t": 9500.4
+            },
+            "armed_track_ids": [
+              "trk-vocals"
+            ]
+          }
+        }
+      },
+      "lost": true,
+      "note": "The host answered and keeps this answer under the key, but it never reaches the phone."
+    },
+    {
+      "from": "remote",
+      "close": 1006
+    },
+    {
+      "reconnect": true
+    },
+    {
+      "from": "remote",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 2,
+        "method": "hello",
+        "params": {
+          "app": {
+            "name": "Tabber Spak",
+            "version": "1.0",
+            "build": "1",
+            "platform": "ios"
+          },
+          "protocol_versions": [
+            "1.0"
+          ]
+        }
+      }
+    },
+    {
+      "from": "host",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 2,
+        "result": {
+          "host": {
+            "id": "8c1f2e47-5a93-4d0b-9e26-7f3a1c4b5d60",
+            "name": "Studio Mac",
+            "app_version": "0.3.17"
+          },
+          "protocol_version": "1.0",
+          "capabilities": [
+            "transport/1",
+            "record/1",
+            "tempo_scale/1",
+            "tracks/1",
+            "tracks.monitor/1",
+            "markers/1",
+            "takes/1",
+            "takes.discard/1",
+            "takes.go_again/1",
+            "undo/1",
+            "save/1",
+            "meters/1",
+            "pair.code/1"
+          ],
+          "limits": {
+            "max_frame_bytes": 65536,
+            "requests_per_second": 20,
+            "burst": 40,
+            "heartbeat_ms": 2000,
+            "heartbeat_misses": 3,
+            "connections_per_device": 2
+          },
+          "challenge": "Z-H9u-pKo1X4tLCZjDhFOcnI1UNElfeUKBH0BL_29IA"
+        }
+      }
+    },
+    {
+      "from": "remote",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 3,
+        "method": "auth",
+        "params": {
+          "device_id": "zsiNWgOpGPu3nnQsDLV1c5EUoLWC_GqaxM6F0p8aU88",
+          "signature": "MEYCIQCQHAzP0U2Aihq-Q2zgLVy6ijHqeVbt3xmt6uY_BsoMzQIhAK3JGji1BdB41829ph-GlMOm8Pd2KFGR-gSKTtHADO6F"
+        }
+      }
+    },
+    {
+      "from": "host",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 3,
+        "result": {
+          "device": {
+            "id": "zsiNWgOpGPu3nnQsDLV1c5EUoLWC_GqaxM6F0p8aU88",
+            "name": "Björn's iPhone"
+          }
+        }
+      }
+    },
+    {
+      "from": "remote",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 4,
+        "method": "session.subscribe",
+        "params": {
+          "topics": [
+            "transport",
+            "record",
+            "tracks",
+            "markers",
+            "takes",
+            "undo",
+            "project"
+          ]
+        }
+      }
+    },
+    {
+      "from": "host",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 4,
+        "result": {
+          "seq": 0,
+          "t": 9509.0,
+          "project": {
+            "title": "My Song",
+            "unsaved": false,
+            "has_file": true
+          },
+          "transport": {
+            "state": "playing",
+            "position": {
+              "bar": 28,
+              "beat": 2,
+              "seconds": 68.125
+            },
+            "tempo_bpm": 96.0,
+            "tempo_scale": 1.0,
+            "time_signature": {
+              "beats": 4,
+              "unit": 4
+            },
+            "loop": {
+              "enabled": false,
+              "start": null,
+              "end": null
+            },
+            "click": false,
+            "count_in_bars": 0,
+            "counting_in": false
+          },
+          "record": {
+            "recording": true,
+            "started": {
+              "position": {
+                "bar": 25,
+                "beat": 1,
+                "seconds": 60.0
+              },
+              "t": 9500.4
+            },
+            "armed_track_ids": [
+              "trk-vocals"
+            ]
+          },
+          "tracks": [
+            {
+              "id": "trk-vocals",
+              "name": "Vocals",
+              "kind": "audio",
+              "armed": true,
+              "monitor": "auto",
+              "selected": true,
+              "color": "#E5484D"
+            },
+            {
+              "id": "trk-guitar",
+              "name": "Guitar",
+              "kind": "audio",
+              "armed": false,
+              "monitor": "auto",
+              "selected": false,
+              "color": "#3E63DD"
+            },
+            {
+              "id": "trk-keys",
+              "name": "Keys",
+              "kind": "midi",
+              "armed": false,
+              "monitor": "auto",
+              "selected": false,
+              "color": "#30A46C"
+            }
+          ],
+          "markers": [
+            {
+              "id": "mrk-intro",
+              "name": "Intro",
+              "bar": 1,
+              "beat": 1
+            },
+            {
+              "id": "mrk-verse",
+              "name": "Verse",
+              "bar": 9,
+              "beat": 1
+            },
+            {
+              "id": "mrk-chorus",
+              "name": "Chorus",
+              "bar": 25,
+              "beat": 1
+            },
+            {
+              "id": "mrk-solo",
+              "name": "Solo",
+              "bar": 41,
+              "beat": 1
+            }
+          ],
+          "takes": [
+            {
+              "id": "take-guitar-1",
+              "track_id": "trk-guitar",
+              "name": "Guitar take 1",
+              "start": {
+                "bar": 9,
+                "beat": 1,
+                "seconds": 20.0
+              },
+              "length_seconds": 40.0,
+              "rating": 3,
+              "active": true
+            }
+          ],
+          "undo": {
+            "undo": {
+              "id": "u-41",
+              "label": "Move clip"
+            },
+            "redo": null
+          }
+        }
+      },
+      "note": "The computer kept recording. The phone shows REC with the time since started.t."
+    },
+    {
+      "from": "remote",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 5,
+        "method": "transport.record",
+        "params": {
+          "key": "0b6c3f1e-7a2d-4e59-9c84-00000000003c",
+          "armed_track_ids": [
+            "trk-vocals"
+          ]
+        }
+      }
+    },
+    {
+      "from": "host",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 5,
+        "result": {
+          "transport": {
+            "state": "playing",
+            "position": {
+              "bar": 25,
+              "beat": 1,
+              "seconds": 60.0
+            },
+            "tempo_bpm": 96.0,
+            "tempo_scale": 1.0,
+            "time_signature": {
+              "beats": 4,
+              "unit": 4
+            },
+            "loop": {
+              "enabled": false,
+              "start": null,
+              "end": null
+            },
+            "click": false,
+            "count_in_bars": 0,
+            "counting_in": false
+          },
+          "record": {
+            "recording": true,
+            "started": {
+              "position": {
+                "bar": 25,
+                "beat": 1,
+                "seconds": 60.0
+              },
+              "t": 9500.4
+            },
+            "armed_track_ids": [
+              "trk-vocals"
+            ]
+          }
+        }
+      },
+      "note": "The same key: the stored answer from the first time. No second take."
+    },
+    {
+      "from": "remote",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 6,
+        "method": "transport.stop",
+        "params": {
+          "key": "0b6c3f1e-7a2d-4e59-9c84-00000000003d"
+        }
+      }
+    },
+    {
+      "from": "host",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 6,
+        "result": {
+          "transport": {
+            "state": "stopped",
+            "position": {
+              "bar": 31,
+              "beat": 1,
+              "seconds": 75.0
+            },
+            "tempo_bpm": 96.0,
+            "tempo_scale": 1.0,
+            "time_signature": {
+              "beats": 4,
+              "unit": 4
+            },
+            "loop": {
+              "enabled": false,
+              "start": null,
+              "end": null
+            },
+            "click": false,
+            "count_in_bars": 0,
+            "counting_in": false
+          },
+          "record": {
+            "recording": false,
+            "started": null,
+            "armed_track_ids": [
+              "trk-vocals"
+            ]
+          },
+          "take": {
+            "id": "take-vocals-3",
+            "track_id": "trk-vocals",
+            "name": "Vocals take 3",
+            "start": {
+              "bar": 25,
+              "beat": 1,
+              "seconds": 60.0
+            },
+            "length_seconds": 15.0,
+            "rating": 0,
+            "active": true
+          }
+        }
+      }
+    },
+    {
+      "from": "host",
+      "message": {
+        "jsonrpc": "2.0",
+        "method": "event",
+        "params": {
+          "topic": "record",
+          "seq": 1,
+          "t": 9515.5,
+          "data": {
+            "recording": false,
+            "started": null,
+            "armed_track_ids": [
+              "trk-vocals"
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

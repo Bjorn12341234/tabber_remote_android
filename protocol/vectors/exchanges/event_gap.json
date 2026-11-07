@@ -1,0 +1,547 @@
+{
+  "name": "event_gap",
+  "description": "Events got lost: the phone sees a gap in seq, or a heartbeat with a newer seq, and asks for a snapshot (spec 6.1, 8.2). A busy heartbeat.",
+  "start": "authenticated",
+  "host_state": {
+    "pairing": {
+      "open": false
+    },
+    "paired_devices": [
+      {
+        "device_id": "zsiNWgOpGPu3nnQsDLV1c5EUoLWC_GqaxM6F0p8aU88",
+        "name": "Björn's iPhone",
+        "key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAELmFLfdxxNIkeJNkXdNhfQVal4qrDnl_C1tq3bYJMIbARSFIBJiHBKBXg2n0qXdRgpN7x-2sEbrFmAaCll5zfdw"
+      }
+    ],
+    "capabilities": [
+      "transport/1",
+      "record/1",
+      "tempo_scale/1",
+      "tracks/1",
+      "tracks.monitor/1",
+      "markers/1",
+      "takes/1",
+      "takes.discard/1",
+      "takes.go_again/1",
+      "undo/1",
+      "save/1",
+      "meters/1",
+      "pair.code/1"
+    ],
+    "snapshot": {
+      "seq": 20,
+      "t": 9400.0,
+      "project": {
+        "title": "My Song",
+        "unsaved": false,
+        "has_file": true
+      },
+      "transport": {
+        "state": "stopped",
+        "position": {
+          "bar": 1,
+          "beat": 1,
+          "seconds": 0.0
+        },
+        "tempo_bpm": 96.0,
+        "tempo_scale": 1.0,
+        "time_signature": {
+          "beats": 4,
+          "unit": 4
+        },
+        "loop": {
+          "enabled": false,
+          "start": null,
+          "end": null
+        },
+        "click": false,
+        "count_in_bars": 0,
+        "counting_in": false
+      },
+      "record": {
+        "recording": false,
+        "started": null,
+        "armed_track_ids": []
+      },
+      "tracks": [
+        {
+          "id": "trk-vocals",
+          "name": "Vocals",
+          "kind": "audio",
+          "armed": false,
+          "monitor": "auto",
+          "selected": true,
+          "color": "#E5484D"
+        },
+        {
+          "id": "trk-guitar",
+          "name": "Guitar",
+          "kind": "audio",
+          "armed": false,
+          "monitor": "auto",
+          "selected": false,
+          "color": "#3E63DD"
+        },
+        {
+          "id": "trk-keys",
+          "name": "Keys",
+          "kind": "midi",
+          "armed": false,
+          "monitor": "auto",
+          "selected": false,
+          "color": "#30A46C"
+        }
+      ],
+      "markers": [
+        {
+          "id": "mrk-intro",
+          "name": "Intro",
+          "bar": 1,
+          "beat": 1
+        },
+        {
+          "id": "mrk-verse",
+          "name": "Verse",
+          "bar": 9,
+          "beat": 1
+        },
+        {
+          "id": "mrk-chorus",
+          "name": "Chorus",
+          "bar": 25,
+          "beat": 1
+        },
+        {
+          "id": "mrk-solo",
+          "name": "Solo",
+          "bar": 41,
+          "beat": 1
+        }
+      ],
+      "takes": [
+        {
+          "id": "take-guitar-1",
+          "track_id": "trk-guitar",
+          "name": "Guitar take 1",
+          "start": {
+            "bar": 9,
+            "beat": 1,
+            "seconds": 20.0
+          },
+          "length_seconds": 40.0,
+          "rating": 3,
+          "active": true
+        }
+      ],
+      "undo": {
+        "undo": {
+          "id": "u-41",
+          "label": "Move clip"
+        },
+        "redo": null
+      }
+    }
+  },
+  "steps": [
+    {
+      "from": "host",
+      "message": {
+        "jsonrpc": "2.0",
+        "method": "event",
+        "params": {
+          "topic": "transport",
+          "seq": 21,
+          "t": 9400.1,
+          "data": {
+            "state": "playing",
+            "position": {
+              "bar": 1,
+              "beat": 1,
+              "seconds": 0.0
+            },
+            "tempo_bpm": 96.0,
+            "tempo_scale": 1.0,
+            "time_signature": {
+              "beats": 4,
+              "unit": 4
+            },
+            "loop": {
+              "enabled": false,
+              "start": null,
+              "end": null
+            },
+            "click": false,
+            "count_in_bars": 0,
+            "counting_in": false
+          }
+        }
+      }
+    },
+    {
+      "from": "host",
+      "message": {
+        "jsonrpc": "2.0",
+        "method": "event",
+        "params": {
+          "topic": "transport",
+          "seq": 23,
+          "t": 9400.5,
+          "data": {
+            "state": "playing",
+            "position": {
+              "bar": 1,
+              "beat": 1,
+              "seconds": 0.0
+            },
+            "tempo_bpm": 96.0,
+            "tempo_scale": 1.0,
+            "time_signature": {
+              "beats": 4,
+              "unit": 4
+            },
+            "loop": {
+              "enabled": false,
+              "start": null,
+              "end": null
+            },
+            "click": true,
+            "count_in_bars": 0,
+            "counting_in": false
+          }
+        }
+      },
+      "gap": true,
+      "note": "Events 22 never arrived. The phone shows the state as stale and asks for a snapshot."
+    },
+    {
+      "from": "remote",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "session.snapshot",
+        "params": {}
+      }
+    },
+    {
+      "from": "host",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "result": {
+          "seq": 23,
+          "t": 9400.6,
+          "project": {
+            "title": "My Song",
+            "unsaved": false,
+            "has_file": true
+          },
+          "transport": {
+            "state": "playing",
+            "position": {
+              "bar": 1,
+              "beat": 2,
+              "seconds": 0.625
+            },
+            "tempo_bpm": 96.0,
+            "tempo_scale": 1.0,
+            "time_signature": {
+              "beats": 4,
+              "unit": 4
+            },
+            "loop": {
+              "enabled": false,
+              "start": null,
+              "end": null
+            },
+            "click": true,
+            "count_in_bars": 0,
+            "counting_in": false
+          },
+          "record": {
+            "recording": false,
+            "started": null,
+            "armed_track_ids": []
+          },
+          "tracks": [
+            {
+              "id": "trk-vocals",
+              "name": "Vocals",
+              "kind": "audio",
+              "armed": false,
+              "monitor": "auto",
+              "selected": true,
+              "color": "#E5484D"
+            },
+            {
+              "id": "trk-guitar",
+              "name": "Guitar",
+              "kind": "audio",
+              "armed": false,
+              "monitor": "auto",
+              "selected": false,
+              "color": "#3E63DD"
+            },
+            {
+              "id": "trk-keys",
+              "name": "Keys",
+              "kind": "midi",
+              "armed": false,
+              "monitor": "auto",
+              "selected": false,
+              "color": "#30A46C"
+            }
+          ],
+          "markers": [
+            {
+              "id": "mrk-intro",
+              "name": "Intro",
+              "bar": 1,
+              "beat": 1
+            },
+            {
+              "id": "mrk-verse",
+              "name": "Verse",
+              "bar": 9,
+              "beat": 1
+            },
+            {
+              "id": "mrk-chorus",
+              "name": "Chorus",
+              "bar": 25,
+              "beat": 1
+            },
+            {
+              "id": "mrk-solo",
+              "name": "Solo",
+              "bar": 41,
+              "beat": 1
+            }
+          ],
+          "takes": [
+            {
+              "id": "take-guitar-1",
+              "track_id": "trk-guitar",
+              "name": "Guitar take 1",
+              "start": {
+                "bar": 9,
+                "beat": 1,
+                "seconds": 20.0
+              },
+              "length_seconds": 40.0,
+              "rating": 3,
+              "active": true
+            }
+          ],
+          "undo": {
+            "undo": {
+              "id": "u-41",
+              "label": "Move clip"
+            },
+            "redo": null
+          }
+        }
+      }
+    },
+    {
+      "from": "host",
+      "message": {
+        "jsonrpc": "2.0",
+        "method": "event",
+        "params": {
+          "topic": "transport",
+          "seq": 24,
+          "t": 9401.0,
+          "data": {
+            "state": "stopped",
+            "position": {
+              "bar": 2,
+              "beat": 1,
+              "seconds": 2.5
+            },
+            "tempo_bpm": 96.0,
+            "tempo_scale": 1.0,
+            "time_signature": {
+              "beats": 4,
+              "unit": 4
+            },
+            "loop": {
+              "enabled": false,
+              "start": null,
+              "end": null
+            },
+            "click": true,
+            "count_in_bars": 0,
+            "counting_in": false
+          }
+        }
+      }
+    },
+    {
+      "from": "host",
+      "message": {
+        "jsonrpc": "2.0",
+        "method": "heartbeat",
+        "params": {
+          "t": 9402.0,
+          "seq": 26,
+          "busy": false
+        }
+      },
+      "note": "The heartbeat names seq 26, but the phone has seen 24: events were lost again."
+    },
+    {
+      "from": "remote",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 2,
+        "method": "session.snapshot",
+        "params": {}
+      }
+    },
+    {
+      "from": "host",
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 2,
+        "result": {
+          "seq": 26,
+          "t": 9402.1,
+          "project": {
+            "title": "My Song",
+            "unsaved": true,
+            "has_file": true
+          },
+          "transport": {
+            "state": "stopped",
+            "position": {
+              "bar": 2,
+              "beat": 1,
+              "seconds": 2.5
+            },
+            "tempo_bpm": 96.0,
+            "tempo_scale": 1.0,
+            "time_signature": {
+              "beats": 4,
+              "unit": 4
+            },
+            "loop": {
+              "enabled": false,
+              "start": null,
+              "end": null
+            },
+            "click": false,
+            "count_in_bars": 0,
+            "counting_in": false
+          },
+          "record": {
+            "recording": false,
+            "started": null,
+            "armed_track_ids": []
+          },
+          "tracks": [
+            {
+              "id": "trk-vocals",
+              "name": "Vocals",
+              "kind": "audio",
+              "armed": false,
+              "monitor": "auto",
+              "selected": true,
+              "color": "#E5484D"
+            },
+            {
+              "id": "trk-guitar",
+              "name": "Guitar",
+              "kind": "audio",
+              "armed": false,
+              "monitor": "auto",
+              "selected": false,
+              "color": "#3E63DD"
+            },
+            {
+              "id": "trk-keys",
+              "name": "Keys",
+              "kind": "midi",
+              "armed": false,
+              "monitor": "auto",
+              "selected": false,
+              "color": "#30A46C"
+            }
+          ],
+          "markers": [
+            {
+              "id": "mrk-intro",
+              "name": "Intro",
+              "bar": 1,
+              "beat": 1
+            },
+            {
+              "id": "mrk-verse",
+              "name": "Verse",
+              "bar": 9,
+              "beat": 1
+            },
+            {
+              "id": "mrk-chorus",
+              "name": "Chorus",
+              "bar": 25,
+              "beat": 1
+            },
+            {
+              "id": "mrk-solo",
+              "name": "Solo",
+              "bar": 41,
+              "beat": 1
+            }
+          ],
+          "takes": [
+            {
+              "id": "take-guitar-1",
+              "track_id": "trk-guitar",
+              "name": "Guitar take 1",
+              "start": {
+                "bar": 9,
+                "beat": 1,
+                "seconds": 20.0
+              },
+              "length_seconds": 40.0,
+              "rating": 3,
+              "active": true
+            }
+          ],
+          "undo": {
+            "undo": {
+              "id": "u-41",
+              "label": "Move clip"
+            },
+            "redo": null
+          }
+        }
+      }
+    },
+    {
+      "from": "host",
+      "message": {
+        "jsonrpc": "2.0",
+        "method": "heartbeat",
+        "params": {
+          "t": 9404.0,
+          "seq": 26,
+          "busy": true
+        }
+      },
+      "note": "A project is loading on the computer. The phone says Tabber Studio is busy."
+    },
+    {
+      "from": "host",
+      "message": {
+        "jsonrpc": "2.0",
+        "method": "heartbeat",
+        "params": {
+          "t": 9406.0,
+          "seq": 26,
+          "busy": false
+        }
+      }
+    }
+  ]
+}

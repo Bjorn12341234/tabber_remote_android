@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tabber.studio/schemas/remote/1/heartbeat.json",
+  "title": "The params of a heartbeat notification (spec 6.1)",
+  "$defs": {
+    "host": {
+      "type": "object",
+      "properties": {
+        "t": {
+          "$ref": "common.json#/$defs/host_time"
+        },
+        "seq": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "busy": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "t",
+        "seq",
+        "busy"
+      ],
+      "additionalProperties": false
+    },
+    "remote": {
+      "type": "object",
+      "additionalProperties": false
+    }
+  }
+}

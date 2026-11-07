@@ -1,0 +1,6 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tabber.studio/schemas/remote/1/topics/record.json",
+  "title": "Event data for the record topic",
+  "$ref": "../common.json#/$defs/record"
+}

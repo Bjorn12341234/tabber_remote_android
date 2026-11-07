@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tabber.studio/schemas/remote/1/topics/tracks.json",
+  "title": "Event data for the tracks topic",
+  "type": "object",
+  "properties": {
+    "tracks": {
+      "$ref": "../common.json#/$defs/tracks"
+    }
+  },
+  "required": [
+    "tracks"
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tabber.studio/schemas/remote/1/topics/takes.json",
+  "title": "Event data for the takes topic",
+  "type": "object",
+  "properties": {
+    "takes": {
+      "$ref": "../common.json#/$defs/recent_takes"
+    }
+  },
+  "required": [
+    "takes"
+  ],
+  "additionalProperties": false
+}

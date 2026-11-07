@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tabber.studio/schemas/remote/1/methods/takes.rate.json",
+  "title": "takes.rate",
+  "x-capability": "takes/1",
+  "x-changes": true,
+  "$defs": {
+    "params": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "$ref": "../common.json#/$defs/key"
+        },
+        "take_id": {
+          "$ref": "../common.json#/$defs/id"
+        },
+        "rating": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5
+        }
+      },
+      "required": [
+        "key",
+        "take_id",
+        "rating"
+      ],
+      "additionalProperties": false
+    },
+    "result": {
+      "type": "object",
+      "properties": {
+        "take": {
+          "$ref": "../common.json#/$defs/take"
+        }
+      },
+      "required": [
+        "take"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

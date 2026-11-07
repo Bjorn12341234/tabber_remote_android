@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tabber.studio/schemas/remote/1/event.json",
+  "title": "The params of an event notification (spec 8.2); data is checked by its topic",
+  "type": "object",
+  "properties": {
+    "topic": {
+      "$ref": "common.json#/$defs/topic"
+    },
+    "seq": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "t": {
+      "$ref": "common.json#/$defs/host_time"
+    },
+    "data": {
+      "type": "object"
+    }
+  },
+  "required": [
+    "topic",
+    "seq",
+    "t",
+    "data"
+  ],
+  "additionalProperties": false
+}

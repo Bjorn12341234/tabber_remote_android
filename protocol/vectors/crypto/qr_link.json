@@ -1,0 +1,17 @@
+{
+  "description": "The pairing link in the QR code (spec 4.2). Values are percent-encoded.",
+  "link": "tabber-remote://pair?v=1&id=8c1f2e47-5a93-4d0b-9e26-7f3a1c4b5d60&name=Studio%20Mac&spki=Wighj50LBkzmiw0f0ee3LA4_K5-BI6b3ru0qd7P8SIo&tok=JnEEUOFO1YbF8ut11rT4iA&hosts=studio-mac.local%3A9474%2C192.168.1.20%3A9474%2C%5Bfd12%3A3456%3A789a%3A%3A20%5D%3A9474",
+  "fields": {
+    "v": "1",
+    "id": "8c1f2e47-5a93-4d0b-9e26-7f3a1c4b5d60",
+    "name": "Studio Mac",
+    "spki": "Wighj50LBkzmiw0f0ee3LA4_K5-BI6b3ru0qd7P8SIo",
+    "tok": "JnEEUOFO1YbF8ut11rT4iA",
+    "hosts": "studio-mac.local:9474,192.168.1.20:9474,[fd12:3456:789a::20]:9474"
+  },
+  "routes": [
+    "studio-mac.local:9474",
+    "192.168.1.20:9474",
+    "[fd12:3456:789a::20]:9474"
+  ]
+}
