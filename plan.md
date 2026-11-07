@@ -1238,6 +1238,33 @@ what was measured, and what changed in the plan.
     `missingApp(bundleId: "studio.tabber.spak")`: App Store Connect has no app
     record yet. Once the owner creates it (Apps, New App, iOS, "Tabber Spak",
     bundle id `studio.tabber.spak`), the same script uploads build 1.
+- **TR7 🟡 2026-11-07, this repository.** The Session screen
+  (`apple/TabberSpak/SessionView.swift`, `RootView.swift`): the connection
+  badge, the song and its unsaved mark, the section at the playhead, bar and
+  beat, the time counted on locally between updates, the armed track with
+  its meter (or a track picker when none is armed), marker chips (tap to
+  jump, hold to loop), count-in, click and loop, the red recording frame
+  with `REC 00:42` or the count-in, haptics per action and keep awake. The
+  transport (Go again, Record, Play/Stop) is the tab bar's bottom accessory
+  with the tab bar never minimized, so it never moves. Taps look pending
+  until the computer confirms; without a connection the screen dims.
+  - **Gate, met:** UI tests against DemoHost for every control (markers,
+    the three toggles, arm, record, stop, go again, play and stop, the
+    Computer tab), all passing in the Simulator.
+  - **Found by the UI tests:** the root view and the transport bar read the
+    whole session state, so the tab view was rebuilt 10 times a second while
+    playing. They now read a small summary that changes only when what they
+    show changes.
+  - **Owed to the owner, on the iPhone:** S1 up to the take card and S2
+    against Tabber Studio, and tap-to-confirmed latency p50 and p95 with
+    AirDrop on and off.
+  - **The icon, redrawn at the owner's word** ("the literal image of a
+    spak", then "not a red round thing on top"): a lever with a grip in a
+    gated base, in Tabber Studio's dark tokens and teal accent.
+  - **The owner, 2026-11-07:** Tabber Spak follows Tabber Studio's design
+    language; "we will deal with that when it's time." TR9's design pass
+    brings Tabber Studio's design tokens (`ui/design_tokens.py`) into the
+    app.
 
 ## Sources
 

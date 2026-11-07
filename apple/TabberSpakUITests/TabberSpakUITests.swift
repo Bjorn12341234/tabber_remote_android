@@ -19,21 +19,12 @@ final class TabberSpakUITests: XCTestCase {
     }
 
     @MainActor
-    func testTheDemoSessionRecordsATake() throws {
+    func testTheComputerTabShowsTheConnection() throws {
         let app = XCUIApplication()
         app.launchArguments = ["-demo"]
         app.launch()
+        app.tabBars.buttons["Computer"].tap()
         XCTAssertTrue(waitFor(row(app, "host-name"), toShow: "Demo Studio"))
         XCTAssertTrue(waitFor(row(app, "link-state"), toShow: "Connected"))
-        app.buttons["arm-first"].tap()
-        let record = app.buttons["record"]
-        XCTAssertTrue(record.waitForExistence(timeout: 5))
-        let enabled = XCTNSPredicateExpectation(predicate: NSPredicate(format: "isEnabled == true"), object: record)
-        XCTAssertEqual(XCTWaiter().wait(for: [enabled], timeout: 5), .completed)
-        record.tap()
-        XCTAssertTrue(waitFor(row(app, "record-state"), toShow: "REC"))
-        app.buttons["stop"].tap()
-        XCTAssertTrue(waitFor(row(app, "take-count"), toShow: "1"))
-        XCTAssertTrue(waitFor(row(app, "record-state"), toShow: "no"))
     }
 }

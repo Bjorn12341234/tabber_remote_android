@@ -28,7 +28,30 @@ public struct SessionState: Sendable, Hashable {
     /// The host time of the newest message, and when it arrived here.
     public var hostTime = 0.0
     public var receivedAt = ContinuousClock.now
+    /// When the playhead in `transport` was last confirmed, to count on from it.
+    public var positionAt = ContinuousClock.now
     public init() {}
+
+    /// The host's clock now, from the newest message (spec 1, host time).
+    public var hostNow: Double {
+        let gap = ContinuousClock.now - receivedAt
+        return hostTime + Double(gap.components.seconds) + Double(gap.components.attoseconds) / 1e18
+    }
+
+    /// The playhead's seconds now: counted on locally while playing (spec 8.2).
+    public var playheadSeconds: Double {
+        guard let transport else { return 0 }
+        guard transport.state == .playing else { return transport.position.seconds }
+        let gap = ContinuousClock.now - positionAt
+        let elapsed = Double(gap.components.seconds) + Double(gap.components.attoseconds) / 1e18
+        return transport.position.seconds + min(elapsed, 1.0) * transport.tempoScale
+    }
+
+    /// Seconds recorded so far; negative while the count-in runs.
+    public var recordedSeconds: Double? {
+        guard record.recording, let started = record.started else { return nil }
+        return hostNow - started.t
+    }
 }
 
 /// Keeps one computer connected, applies its events, and resends changes
@@ -176,6 +199,7 @@ public actor RemoteSession {
         state.receivedAt = .now
         state.project = snapshot.project
         state.transport = snapshot.transport
+        state.positionAt = .now
         state.record = snapshot.record
         state.tracks = snapshot.tracks
         state.markers = snapshot.markers
@@ -189,12 +213,14 @@ public actor RemoteSession {
         state.receivedAt = .now
         let data = event.data
         switch event.topic {
-        case "transport": if let v = try? JSONCoding.decode(TransportState.self, from: data) { state.transport = v }
+        case "transport":
+            if let v = try? JSONCoding.decode(TransportState.self, from: data) { state.transport = v; state.positionAt = .now }
         case "position":
             if let p = data["position"], let v = try? JSONCoding.decode(Position.self, from: p),
                let s = data["state"]?.stringValue, let play = PlayState(rawValue: s) {
                 state.transport?.position = v
                 state.transport?.state = play
+                state.positionAt = .now
             }
         case "record": if let v = try? JSONCoding.decode(RecordState.self, from: data) { state.record = v }
         case "tracks": if let v = try? JSONCoding.decode([Track].self, from: data["tracks"] ?? []) { state.tracks = v }
@@ -213,7 +239,10 @@ public actor RemoteSession {
 
     /// Apply the confirmed state a verb returned (spec 5.3).
     private func applyResult(_ result: JSONValue) {
-        if let v = result["transport"], let t = try? JSONCoding.decode(TransportState.self, from: v) { state.transport = t }
+        if let v = result["transport"], let t = try? JSONCoding.decode(TransportState.self, from: v) {
+            state.transport = t
+            state.positionAt = .now
+        }
         if let v = result["record"], let r = try? JSONCoding.decode(RecordState.self, from: v) { state.record = r }
         if let v = result["tracks"], let t = try? JSONCoding.decode([Track].self, from: v) { state.tracks = t }
         if let v = result["markers"], let m = try? JSONCoding.decode([Marker].self, from: v) { state.markers = m }

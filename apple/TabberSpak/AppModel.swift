@@ -7,7 +7,30 @@ import RemoteKit
 @Observable
 final class AppModel {
     private(set) var state = SessionState()
+    /// What the transport bar shows. It changes only when one of these does, so
+    /// the bar does not redraw with every playhead update (principle 7).
+    private(set) var bar = TransportSummary()
+
+    struct TransportSummary: Equatable {
+        var connected = false
+        var recording = false
+        var playing = false
+        var armed: [String] = []
+        var hasTake = false
+        var hasSession = false
+    }
     private(set) var problem: String?
+    /// Controls whose command is on its way: they look pending until confirmed (principle 3).
+    private(set) var pending: Set<String> = []
+    /// The take the newest Stop made: the take card shows it (TR8).
+    var lastTake: Take?
+    /// Bumped on every confirmed action, for haptics.
+    private(set) var feedback: (kind: Feedback, count: Int) = (.tap, 0)
+    var keepAwake: Bool = UserDefaults.standard.object(forKey: "keepAwake") as? Bool ?? true {
+        didSet { UserDefaults.standard.set(keepAwake, forKey: "keepAwake") }
+    }
+
+    enum Feedback: Equatable { case tap, record, stop, goAgain, discard, failure }
     private(set) var isDemo = false
     private(set) var known: KnownHost?
     private var session: RemoteSession?
@@ -78,7 +101,16 @@ final class AppModel {
         listener = Task { [weak self] in
             await next.start()
             for await update in next.updates {
-                self?.state = update
+                guard let self else { return }
+                self.state = update
+                var summary = TransportSummary()
+                if case .connected = update.link { summary.connected = true }
+                summary.recording = update.record.recording
+                summary.playing = update.transport?.state == .playing
+                summary.armed = update.tracks.filter(\.armed).map(\.name)
+                summary.hasTake = !update.takes.isEmpty
+                summary.hasSession = update.transport != nil
+                if summary != self.bar { self.bar = summary }
             }
         }
     }
@@ -90,6 +122,63 @@ final class AppModel {
         if let old = session { Task { await old.stop() } }
         session = nil
         state = SessionState()
+        bar = TransportSummary()
+    }
+
+    var isConnected: Bool { if case .connected = state.link { return true }; return false }
+
+    /// Run a verb for a control: pending until the computer confirms, then a
+    /// haptic; a refusal is shown in words (spec 10).
+    func act(_ control: String, _ method: String, _ params: JSONValue = [:], feel: Feedback = .tap,
+             then: ((JSONValue) -> Void)? = nil) {
+        guard let session, !pending.contains(control) else { return }
+        pending.insert(control)
+        Task {
+            do {
+                let result = try await session.perform(method, params)
+                pending.remove(control)
+                problem = nil
+                feedback = (feel, feedback.count + 1)
+                then?(result)
+            } catch {
+                pending.remove(control)
+                problem = Self.explain(error)
+                feedback = (.failure, feedback.count + 1)
+            }
+        }
+    }
+
+    // The take loop (plan: The app, screens 1 and 2)
+
+    var armedIDs: [String] { state.tracks.filter(\.armed).map(\.id) }
+
+    func record() {
+        if state.record.recording {
+            stop()
+        } else if !armedIDs.isEmpty {
+            act("record", "transport.record", ["armed_track_ids": .array(armedIDs.map { .string($0) })], feel: .record)
+        } else {
+            problem = "Arm a track first."
+            feedback = (.failure, feedback.count + 1)
+        }
+    }
+
+    func stop() {
+        act("stop", "transport.stop", feel: .stop) { [weak self] result in
+            if let take = result["take"], take != .null, let decoded = try? JSONCoding.decode(Take.self, from: take) {
+                self?.lastTake = decoded
+            }
+        }
+    }
+
+    func playOrStop() {
+        if state.transport?.state == .playing { stop() } else { act("play", "transport.play") }
+    }
+
+    func goAgain() {
+        guard let take = lastTake ?? state.takes.first else { return }
+        lastTake = nil
+        act("goagain", "takes.go_again", ["take_id": .string(take.id)], feel: .goAgain)
     }
 
     /// Run a verb; a refusal is shown in words (spec 10).

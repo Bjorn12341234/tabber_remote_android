@@ -7,7 +7,7 @@ struct TabberSpakApp: App {
 
     var body: some Scene {
         WindowGroup {
-            DebugView(model: model)
+            RootView(model: model)
                 .onOpenURL { url in
                     // The QR code's link, or `xcrun simctl openurl booted <link>` in the Simulator.
                     if let link = PairingLink(url: url) {
