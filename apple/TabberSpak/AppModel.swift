@@ -52,7 +52,7 @@ final class AppModel {
     /// Go to: the start or a marker, from the transport's position.
     var choosingPlace = false
     /// The screen on show; `-screen tab` opens another one (screenshots, tests).
-    enum Screen: String, Hashable { case tracks, tab, mixer, tuner }
+    enum Screen: String, Hashable { case tracks, tab, mixer, tuner, chat }
     var screen: Screen = ProcessInfo.processInfo.arguments.firstIndex(of: "-screen")
         .flatMap { index in ProcessInfo.processInfo.arguments.dropFirst(index + 1).first }
         .flatMap(Screen.init(rawValue:)) ?? .tracks
@@ -98,9 +98,9 @@ final class AppModel {
         }
     }
 
-    private var demoSpeaks = ["1.2"]
+    private var demoSpeaks = ["1.3"]
 
-    func startDemo(speaks: [String] = ["1.2"]) {
+    func startDemo(speaks: [String] = ["1.3"]) {
         isDemo = true
         demoSpeaks = speaks
         book = nil
@@ -402,6 +402,24 @@ final class AppModel {
             draining = false
         }
     }
+
+    // Chat (chat/1): words to the computer's chat, a plan back, Execute to run it.
+
+    var chatAvailable: Bool { state.capabilities.contains("chat/1") }
+
+    func chatSend(_ text: String) {
+        act("chat-send", "chat.send", ["text": .string(String(text.prefix(2000)))])
+    }
+
+    func chatConfirm(_ plan: ChatPlan) {
+        act("chat-execute", "chat.confirm", ["plan_id": .string(plan.id)], feel: .goAgain)
+    }
+
+    func chatCancel(_ plan: ChatPlan) {
+        act("chat-cancel", "chat.cancel", ["plan_id": .string(plan.id)])
+    }
+
+    func chatStop() { act("chat-stop", "chat.stop") }
 
     // Routing (the Mixer's Routing view, routing/1)
 

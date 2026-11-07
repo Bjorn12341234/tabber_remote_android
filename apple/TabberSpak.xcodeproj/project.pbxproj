@@ -284,6 +284,7 @@
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.music";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Scan the pairing code Tabber Studio shows on your computer.";
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "Chat can change your song on the computer, so it opens only for you.";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Tabber Spak finds Tabber Studio on your network and controls it there. Nothing leaves your network.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "The tuner listens to your instrument. Nothing is recorded, and the sound never leaves this iPhone.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -316,6 +317,7 @@
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.music";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Scan the pairing code Tabber Studio shows on your computer.";
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "Chat can change your song on the computer, so it opens only for you.";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Tabber Spak finds Tabber Studio on your network and controls it there. Nothing leaves your network.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "The tuner listens to your instrument. Nothing is recorded, and the sound never leaves this iPhone.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;

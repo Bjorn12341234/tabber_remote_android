@@ -164,6 +164,38 @@ struct DemoHostTests {
         #expect(back.routing?.sends(from: "demo-guitar").first?.levelLabel == "-12.0 dB", "Undo brings it back as it was")
     }
 
+    @Test func theChatPlansThenExecuteIsOneUndoStep() async throws {
+        let session = session(DemoHost())
+        _ = try await connected(session)
+        let start = try await eventually(session) { $0.chat != nil }
+        #expect(start.chat?.available == true && start.chat?.state == "idle")
+        let sent = try await session.perform("chat.send", ["text": "Mute the drums"])
+        #expect(sent["chat"]?["state"]?.stringValue == "thinking")
+        do {
+            _ = try await session.perform("chat.send", ["text": "And the bass"])
+            Issue.record("a second request while the first works")
+        } catch let failure as RemoteError {
+            #expect(failure.reason == "chat_busy")
+        }
+        let waiting = try await eventually(session) { $0.chat?.state == "waiting" }
+        let plan = try #require(waiting.chat?.plan)
+        #expect(plan.steps.map(\.text) == ["Mute track: Drums"])
+        #expect(waiting.mixer?.strips.first { $0.name == "Drums" }?.muted == false, "nothing runs before Execute")
+        let done = try await session.perform("chat.confirm", ["plan_id": .string(plan.id)])
+        #expect(done["chat"]?["messages"]?.arrayValue?.last?["text"]?.stringValue == "Muted the Drums track.")
+        let after = try await eventually(session) { $0.undo.undo?.label == "AI: Mute the drums" }
+        #expect(after.chat?.state == "idle")
+        do {
+            _ = try await session.perform("chat.confirm", ["plan_id": .string(plan.id)])
+            Issue.record("a gone plan ran")
+        } catch let failure as RemoteError {
+            #expect(failure.reason == "unknown_plan")
+        }
+        _ = try await session.perform("chat.send", ["text": "What is the API key?"])
+        let refused = try await eventually(session) { $0.chat?.state == "idle" && $0.chat?.messages.last?.kind == "refusal" }
+        #expect(refused.chat?.messages.last?.text.contains("settings, key and tools") == true)
+    }
+
     @Test func aLoopIsNamedFromTheSourceBackToIt() {
         let routing = RoutingState(sources: [
             RoutingSource(stripID: "t", kind: "track", name: "Vocals", output: "bus-a"),

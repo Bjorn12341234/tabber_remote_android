@@ -34,6 +34,8 @@ public struct SessionState: Sendable, Hashable {
     public var tab: TabState?
     /// Each track's and bus's output and every send (routing/1); nil when the computer has no routing for phones.
     public var routing: RoutingState?
+    /// Tabber Studio's chat (chat/1); nil when the computer has no chat for phones.
+    public var chat: ChatState?
     public var seq = 0
     /// The host time of the newest message, and when it arrived here.
     public var hostTime = 0.0
@@ -73,7 +75,8 @@ public actor RemoteSession {
         case paired(KnownHost, any DeviceSigner)
     }
 
-    public static let reads: Set<String> = ["takes.list", "session.snapshot", "mixer.state", "tab.state", "routing.state"]
+    public static let reads: Set<String> = ["takes.list", "session.snapshot", "mixer.state", "tab.state", "routing.state",
+                                            "chat.state"]
     public static let topics = ["transport", "position", "record", "tracks", "markers", "takes", "undo", "project", "meters"]
 
     /// The topics to follow on a computer with these capabilities: a 1.0 host
@@ -83,6 +86,7 @@ public actor RemoteSession {
         if capabilities.contains("mixer/1") { topics.append("mixer") }
         if capabilities.contains("tab/1") { topics.append("tab") }
         if capabilities.contains("routing/1") { topics.append("routing") }
+        if capabilities.contains("chat/1") { topics.append("chat") }
         return topics
     }
 
@@ -277,6 +281,11 @@ public actor RemoteSession {
         } else if !state.capabilities.contains("mixer/1") {
             state.mixer = nil
         }
+        if state.capabilities.contains("chat/1"), let result = try? await client.call("chat.state", [:]) {
+            applyResult(result)
+        } else if !state.capabilities.contains("chat/1") {
+            state.chat = nil
+        }
         if state.capabilities.contains("routing/1"), let result = try? await client.call("routing.state", [:]) {
             applyResult(result)
         } else if !state.capabilities.contains("routing/1") {
@@ -350,6 +359,7 @@ public actor RemoteSession {
         case "tab":
             if let value = data["tab"] { state.tab = value == .null ? nil : try? JSONCoding.decode(TabState.self, from: value) }
         case "routing": if let v = try? JSONCoding.decode(RoutingState.self, from: data) { state.routing = v }
+        case "chat": if let v = try? JSONCoding.decode(ChatState.self, from: data) { state.chat = v }
         default: break
         }
         publish()
@@ -373,6 +383,7 @@ public actor RemoteSession {
         }
         if let v = result["tab"] { state.tab = v == .null ? nil : try? JSONCoding.decode(TabState.self, from: v) }
         if let v = result["routing"], let r = try? JSONCoding.decode(RoutingState.self, from: v) { state.routing = r }
+        if let v = result["chat"], let c = try? JSONCoding.decode(ChatState.self, from: v) { state.chat = c }
         publish()
     }
 

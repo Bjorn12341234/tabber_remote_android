@@ -66,6 +66,11 @@ public actor DemoHost {
     private let buses: [(id: String, name: String)] = [("demo-bus-reverb", "Reverb")]
     /// Each send's level and Pre-fader: direct writes, as the mixer's send controls.
     private var sendLevels: [String: (level: Double, pre: Bool)] = [:]
+    /// The chat (chat/1), answered by a few scripted words in place of the AI.
+    private var chat = ChatState(available: true, state: "idle", messages: [], plan: nil)
+    private var chatCounter = 0
+    private var chatRequest = ""
+    private var chatAction: (planID: String, track: String, solo: Bool)?
     /// The Tab view's cursor on each tab track, and the duration a new note gets.
     private var tabCursors: [String: TabCursor] = [:]
     private var tabDuration = NoteValue(value: 4)
@@ -79,7 +84,7 @@ public actor DemoHost {
     /// shows the app's Update cards (TR6).
     public let speaks: [String]
 
-    public init(speaks: [String] = ["1.2"]) {
+    public init(speaks: [String] = ["1.3"]) {
         self.speaks = speaks
         // Tabber Studio's own track colours (core/models.py TRACK_COLORS), in its strip order.
         song = Song(
@@ -197,10 +202,10 @@ public actor DemoHost {
             }
             connection.challenge = Data((0..<32).map { _ in UInt8.random(in: 0...255) })
             return ["host": ["id": .string(Self.hostID), "name": .string(Self.name), "app_version": "demo"],
-                    "protocol_version": "1.2",
+                    "protocol_version": "1.3",
                     "capabilities": ["transport/1", "record/1", "tempo_scale/1", "tracks/1", "tracks.monitor/1",
                                      "markers/1", "takes/1", "takes.discard/1", "takes.go_again/1", "undo/1",
-                                     "save/1", "meters/1", "mixer/1", "tab/1", "routing/1"],
+                                     "save/1", "meters/1", "mixer/1", "tab/1", "routing/1", "chat/1"],
                     "limits": ["max_frame_bytes": 65536, "requests_per_second": 20, "burst": 40,
                                "heartbeat_ms": 2000, "heartbeat_misses": 3, "connections_per_device": 2],
                     "challenge": .string(Base64URL.encode(connection.challenge))]
@@ -407,6 +412,11 @@ public actor DemoHost {
                 }
             }
             return ["mixer": try JSONCoding.value(mixerState()), "undo": try JSONCoding.value(undoState())]
+        case "chat.state":
+            return ["chat": try JSONCoding.value(chat)]
+        case "chat.send", "chat.confirm", "chat.cancel", "chat.stop":
+            try chatVerb(method, p)
+            return ["chat": try JSONCoding.value(chat)]
         case "routing.state":
             return ["routing": try JSONCoding.value(routingState())]
         case "routing.set_output", "routing.set_send", "routing.remove_send":
@@ -464,6 +474,78 @@ public actor DemoHost {
     private func mixerState() -> MixerState {
         let ids = song.tracks.map(\.id) + buses.map(\.id) + ["master"]
         return MixerState(strips: ids.compactMap(strip), scale: Self.scale)
+    }
+
+    // MARK: the chat
+
+    private func chatError(_ reason: String) -> Error {
+        DemoErrors.make(reason, ["chat": (try? JSONCoding.value(chat)) ?? .null])
+    }
+
+    private func say(_ from: String, _ kind: String, _ text: String) {
+        chatCounter += 1
+        chat.messages.append(ChatMessage(id: "demo-m\(chatCounter)", from: from, kind: kind, text: text))
+        if chat.messages.count > 50 { chat.messages.removeFirst(chat.messages.count - 50) }
+    }
+
+    /// Tabber Studio's chat, as the demo answers it: mute or solo a track by
+    /// name, each one undo step after Execute; keys and settings refused in
+    /// Tabber Studio's words; anything else, what to try.
+    private func chatVerb(_ method: String, _ p: JSONValue) throws {
+        switch method {
+        case "chat.send":
+            guard !chat.isWorking else { throw chatError("chat_busy") }
+            let text = p["text"]?.stringValue ?? ""
+            chat.plan = nil
+            chatAction = nil
+            chatRequest = text
+            say("you", "text", text)
+            chat.state = "thinking"
+            Task { [weak self] in
+                try? await Task.sleep(for: .milliseconds(500))
+                await self?.answerChat(text)
+            }
+        case "chat.confirm", "chat.cancel":
+            let id = p["plan_id"]?.stringValue ?? ""
+            guard chat.state == "waiting", let action = chatAction, action.planID == id else { throw chatError("unknown_plan") }
+            chat.plan = nil
+            chatAction = nil
+            chat.state = "idle"
+            guard method == "chat.confirm" else { return }
+            let name = song.tracks.first { $0.id == action.track }?.name ?? "the track"
+            edit("AI: \(chatRequest.prefix(40))") { song in
+                if action.solo { song.soloed.insert(action.track) } else { song.muted.insert(action.track) }
+            }
+            say("studio", "result", "\(action.solo ? "Soloed" : "Muted") the \(name) track.")
+        default:                                                   // chat.stop
+            if chat.isWorking {
+                chat.state = "idle"
+                say("studio", "text", "Stopped.")
+            }
+        }
+    }
+
+    private func answerChat(_ text: String) {
+        guard chat.state == "thinking", chatRequest == text else { return }
+        let before = topicData()
+        let lower = text.lowercased()
+        let track = song.tracks.sorted { $0.name.count > $1.name.count }.first { lower.contains($0.name.lowercased()) }
+        if ["key", "password", "token", "pair", "setting"].contains(where: lower.contains) {
+            say("studio", "refusal", "From a phone the chat does not reach the AI's own settings, key and tools. Do that on the computer.")
+            chat.state = "idle"
+        } else if let track, lower.contains("mute") || lower.contains("solo") {
+            let solo = !lower.contains("mute")
+            chatCounter += 1
+            let planID = "demo-p\(chatCounter)"
+            chatAction = (planID, track.id, solo)
+            chat.plan = ChatPlan(id: planID, text: "I'll \(solo ? "solo" : "mute") the \(track.name) track.",
+                                 steps: [.init(text: "\(solo ? "Solo" : "Mute") track: \(track.name)")])
+            chat.state = "waiting"
+        } else {
+            say("studio", "text", "In the demo, try: mute the drums, or solo the bass.")
+            chat.state = "idle"
+        }
+        broadcastChanges(from: before)
     }
 
     // MARK: routing
@@ -732,6 +814,7 @@ public actor DemoHost {
         data["mixer"] = try? JSONCoding.value(mixerState())
         data["tab"] = ["tab": tabValue()]
         data["routing"] = try? JSONCoding.value(routingState())
+        data["chat"] = try? JSONCoding.value(chat)
         return data
     }
 
@@ -746,13 +829,14 @@ public actor DemoHost {
         case "mixer": return (try? JSONCoding.value(mixerState())) ?? .null
         case "tab": return ["tab": tabValue()]
         case "routing": return (try? JSONCoding.value(routingState())) ?? .null
+        case "chat": return (try? JSONCoding.value(chat)) ?? .null
         default: return (try? JSONCoding.value(song.project)) ?? .null
         }
     }
 
     private func broadcastChanges(from before: [String: JSONValue]) {
         let after = topicData()
-        for topic in ["transport", "record", "tracks", "markers", "takes", "undo", "project", "mixer", "tab", "routing"]
+        for topic in ["transport", "record", "tracks", "markers", "takes", "undo", "project", "mixer", "tab", "routing", "chat"]
         where before[topic] != after[topic] {
             emit(topic, full(topic))
         }

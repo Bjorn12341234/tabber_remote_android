@@ -152,6 +152,7 @@ struct ExchangeVectorTests {
                 case "strip": try roundTrip(Strip.self, value)
                 case "tab": if value != .null { try roundTrip(TabState.self, value) }
                 case "routing": try roundTrip(RoutingState.self, value)
+                case "chat": try roundTrip(ChatState.self, value)
                 default: Issue.record("unknown result field \(key) of \(method)")
                 }
             }
@@ -173,6 +174,7 @@ struct ExchangeVectorTests {
         case "mixer_meters": try roundTrip([StripLevel].self, data["levels"]!)
         case "tab": if data["tab"] != .null { try roundTrip(TabState.self, data["tab"]!) }
         case "routing": try roundTrip(RoutingState.self, data)
+        case "chat": try roundTrip(ChatState.self, data)
         default: Issue.record("unknown topic \(topic)")
         }
     }
