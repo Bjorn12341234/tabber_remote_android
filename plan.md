@@ -769,7 +769,7 @@ toggle loops the range set on the computer.
 
 **Before the stage freeze on 19 November,** in this order (the owner,
 2026-11-07: "we have time to build stuff"):
-1. Take lanes for passes (TR33).
+1. Take lanes for passes (TR33, done 7 November).
 2. Routing (TR27, TR28).
 3. Chat (TR29, TR30).
 
@@ -1290,9 +1290,9 @@ what was measured, and what changed in the plan.
     only the grid since U13c-4, so a Direction-dialog marker on the reference
     track never reached the bar the score draws; a stale console test; a
     metadata coverage report one method behind on `main`.
-  - **Open for the owner (decision 20):** recording again over a kept take
-    leaves both clips audible, because a linear pass is a plain clip. The take
-    loop is still right for the demo (record, discard, go again, keep).
+  - **Settled by TR33 (decision 20):** recording again over a kept take left
+    both clips audible, because a linear pass was a plain clip. Now the new
+    pass joins the kept take in take lanes and plays instead of it.
 - **TR2 🟡 2026-11-07, Tabber Studio `85d51115`; vectors fixed here in
   `9036723`.** `remote_host/` (identity, pairing, bridge, vocabulary, session,
   server, runtime) and `control_api/handlers/remote.py` (`remote.enable`,
@@ -1739,6 +1739,59 @@ what was measured, and what changed in the plan.
     accessibility audit now includes the Tuner.
   - **Owed:** tuning a real guitar on a device, against the Viga Tuner app
     side by side.
+
+- **TR33 ✅ 2026-11-07, Tabber Studio (d5bd91ce) and this repository
+  (ffa00fc).** Take lanes for passes (decision 20).
+  - **At Stop,** a pass that overlaps audio already on its track joins that
+    audio in take lanes (`core/take_record.build_pass_takes`):
+    - every pass becomes a take row and keeps its clip id, which the pass
+      registry keys on;
+    - the comp gives each pass its span in the order they were recorded, so
+      the newest plays where they overlap and older audio still plays
+      outside it, with Studio's own crossfade at each seam;
+    - a pass over nothing stays a plain clip, as before;
+    - it is one undo step, "Record audio clip", through
+      `SetActiveTakeCommand`, the step Studio uses when a take is chosen.
+  - **The take loop works on lanes:**
+    - Delete takes the pass out of the lanes with its comp copies, and the
+      takes left fill its span, the newest winning ("Discard take", one
+      step);
+    - `takes.passes` calls a take in lanes active when it owns part of the
+      comp, so a comp swipe on the computer shows on the phone;
+    - Go again records over the take, so the new pass joins the lanes and
+      plays.
+  - **Fixed on the way:**
+    - The rating step held a clip object, and a lane change swaps in copies
+      of the clips. After Undo and Redo a rating went to a clip the song no
+      longer had. It now finds its pass by id.
+    - An audition still running at Stop restores its saved clips when it
+      ends, which would drop the new pass. Stop now ends it first.
+  - **The phone:** the takes list dims a take that doesn't play and says
+    "not playing". DemoHost decides it as Studio's lanes do: an earlier take
+    plays only where no newer take on its track covers it, and discarding
+    the newer one lets it play again.
+  - **Gate met, headless:**
+    - 11 Studio tests (`tests/remote/test_tr33_take_lanes.py`):
+      - three passes give three lanes, only the newest heard;
+      - each Stop is one undo step, and Undo and Redo give back each state,
+        down to the first pass as a plain clip again;
+      - a partial overlap plays both;
+      - discarding the newest or an older take, with no comp copy left
+        behind;
+      - a rating across Undo and Redo;
+      - go again, and a pass over nothing.
+    - Putting either fixed bug back fails 3 of them.
+    - Loop recording, comp, audition and recording suites stay green (307
+      tests).
+    - The smoke slice passes except `test_unified_render_parity`. That test
+      stops before rendering because this Mac's engine binary (13 October)
+      is not the one its manifest (5 October) names, which predates TR33.
+    - RemoteKit's 28 tests and the 4 take-loop UI tests pass, one new in
+      each.
+  - **Owed:** S1 on a device against Tabber Studio, going again over the
+    chorus.
+  - **Not built:** choosing an earlier take from the phone. Delete the newer
+    take to hear the earlier one again; comping stays on the computer.
 
 ## Sources
 
