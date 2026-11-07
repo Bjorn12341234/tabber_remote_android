@@ -254,7 +254,7 @@ whether Tabber Studio is busy:
 ## 7. Versions and capabilities
 
 - **The protocol version** is `major.minor`. `hello` lists what the remote
-  speaks (`"protocol_versions": ["1.2"]`, one entry per major, the highest
+  speaks (`"protocol_versions": ["1.3"]`, one entry per major, the highest
   minor it knows); the host answers with the version it chose: the major
   both speak, and the lower of the two minors. It lists only that version's
   capabilities, refuses the verbs of any other with `not_supported` and
@@ -301,6 +301,13 @@ and shows Routing only when the host lists it:
 |---|---|
 | `routing/1` | `routing.state`, `routing.set_output`, `routing.set_send`, `routing.remove_send`, the `routing` topic |
 
+Version 1.3 adds one capability. A 1.3 remote works with any 1.x host and
+shows Chat only when the host lists it:
+
+| Capability | Gives |
+|---|---|
+| `chat/1` | `chat.state`, `chat.send`, `chat.confirm`, `chat.cancel`, `chat.stop`, the `chat` topic |
+
 ## 8. Snapshot and events
 
 ### 8.1 The snapshot
@@ -320,10 +327,10 @@ object (`schemas/snapshot.json`):
 - `takes`: the newest takes on any track, newest first, at most 20
 - `undo`: the next undo and redo steps
 
-The mixer, the tab and the routing are not in the snapshot. A remote that
-subscribes to `mixer`, `tab` or `routing` reads them once with
-`mixer.state`, `tab.state` and `routing.state`, then follows their topics; it
-reads them again after every new snapshot.
+The mixer, the tab, the routing and the chat are not in the snapshot. A
+remote that subscribes to `mixer`, `tab`, `routing` or `chat` reads them once
+with `mixer.state`, `tab.state`, `routing.state` and `chat.state`, then
+follows their topics; it reads them again after every new snapshot.
 
 ### 8.2 Events
 
@@ -354,6 +361,7 @@ reads them again after every new snapshot.
 | `mixer_meters` | `{levels: [{strip_id, peak}]}` (mixer/1) | at most 20 a second, every strip and the master, only while subscribed: a remote subscribes while its mixer is on screen |
 | `tab` | `{tab}`, the selected track's tab or null (tab/1) | on every change, the cursor's included |
 | `routing` | `{sources, sends}` (routing/1) | on every change |
+| `chat` | `{available, state, messages, plan}` (chat/1) | on every change |
 
 `position` and `meters` are sent only to remotes that subscribed to them, and
 the host does no meter work at all while nobody is subscribed (principle 7).
@@ -552,6 +560,47 @@ shows it. Ids are the mixer's strip ids: a track's id, a bus's strip id, and
   bus, an output for the master, or an output to a track is refused with
   `wrong_kind`.
 
+### Chat (chat/1)
+
+Tabber Studio's own chat, from the phone (plan decision 21): the same AI,
+the same plan to confirm, the same single undo step. The phone sends words
+and gets words back. The AI and its key stay on the computer.
+
+| Verb | Params | Result | In Tabber Studio |
+|---|---|---|---|
+| `chat.state` | none | `chat` | the chat's conversation |
+| `chat.send` | `key`, `text` (1 to 2000 characters) | `chat` | typing a request and Send |
+| `chat.confirm` | `key`, `plan_id` | `chat` | Execute under a plan |
+| `chat.cancel` | `key`, `plan_id` | `chat` | Cancel under a plan |
+| `chat.stop` | `key` | `chat` | Stop while it works |
+
+- **An answer comes in its own time.** `chat.send` returns at once, with
+  the request in `messages` and `state` "thinking". The answer follows on
+  the `chat` topic: a message, or a `plan` and `state` "waiting".
+- **Nothing changes before Confirm.** A plan lists its steps in words.
+  `chat.confirm` runs it as the chat's Execute does: the AI may take more
+  steps on its own to finish the request, each checked as below. The whole
+  request is one undo step ("AI: mute the drums"), undone with `edit.undo`.
+  `chat.cancel` drops the plan, and `chat.stop` stops a request that is
+  still working.
+- **What the chat does not do from a phone** (decision 21):
+  - read or change the AI's settings or key, the remote's pairing and
+    devices, preferences, macros, shells, scripts or downloads;
+  - reach files outside the song's own folder;
+  - open or start another song over unsaved changes;
+  - load a plug-in that is not installed.
+
+  A request that needs one is answered in words, and nothing runs.
+- **No secrets reach the phone.** Every message is filtered on the
+  computer: anything that looks like a key, a token or a password reads
+  "[hidden]".
+- **At most 10 chat requests a minute** come from each phone (`chat.send`
+  and `chat.confirm`). The 11th is refused with `rate_limited`.
+- **The computer shows every request** and every action it runs, as it
+  shows the remote's other actions.
+- **`available` is false** when Tabber Studio has no AI set up. `chat.send`
+  is then refused with `chat_unavailable`.
+
 ### Not in the vocabulary
 
 A remote cannot reach Control API methods by name, file paths, scripts, app
@@ -600,6 +649,9 @@ state in `data`, as listed.
 | 1033 | `no_tab` | Choose a tab track to write on first. | `tracks` |
 | 1034 | `routing_loop` | That route would make a feedback loop. | `path`, `routing` |
 | 1035 | `wrong_kind` | That strip cannot be routed that way. | `routing` |
+| 1036 | `chat_unavailable` | Set up the AI in Tabber Studio first, in Preferences › AI. | `chat` |
+| 1037 | `chat_busy` | The chat is still working on the last request. | `chat` |
+| 1038 | `unknown_plan` | That plan is gone. Ask again. | `chat` |
 | 1099 | `host_error` | Tabber Studio could not do that. | `detail` |
 
 `schemas/errors.json` holds this table; the validator checks every error in

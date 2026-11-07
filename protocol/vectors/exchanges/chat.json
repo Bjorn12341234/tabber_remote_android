@@ -1,0 +1,898 @@
+{
+ "name": "chat",
+ "description": "Chat: ask, see the plan, Confirm it as one undo step, a request refused in words on a phone, a plan that is gone, and a second request while the first works (spec 9, chat/1).",
+ "start": "authenticated",
+ "host_state": {
+  "pairing": {
+   "open": false
+  },
+  "paired_devices": [
+   {
+    "device_id": "zsiNWgOpGPu3nnQsDLV1c5EUoLWC_GqaxM6F0p8aU88",
+    "name": "Björn's iPhone",
+    "key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAELmFLfdxxNIkeJNkXdNhfQVal4qrDnl_C1tq3bYJMIbARSFIBJiHBKBXg2n0qXdRgpN7x-2sEbrFmAaCll5zfdw"
+   }
+  ],
+  "capabilities": [
+   "transport/1",
+   "record/1",
+   "tempo_scale/1",
+   "tracks/1",
+   "tracks.monitor/1",
+   "markers/1",
+   "takes/1",
+   "takes.discard/1",
+   "takes.go_again/1",
+   "undo/1",
+   "save/1",
+   "meters/1",
+   "pair.code/1",
+   "mixer/1",
+   "tab/1",
+   "routing/1",
+   "chat/1"
+  ],
+  "snapshot": {
+   "seq": 10,
+   "t": 9000.0,
+   "project": {
+    "title": "My Song",
+    "unsaved": false,
+    "has_file": true
+   },
+   "transport": {
+    "state": "stopped",
+    "position": {
+     "bar": 1,
+     "beat": 1,
+     "seconds": 0.0
+    },
+    "tempo_bpm": 96.0,
+    "tempo_scale": 1.0,
+    "time_signature": {
+     "beats": 4,
+     "unit": 4
+    },
+    "loop": {
+     "enabled": false,
+     "start": null,
+     "end": null
+    },
+    "click": false,
+    "count_in_bars": 0,
+    "counting_in": false
+   },
+   "record": {
+    "recording": false,
+    "started": null,
+    "armed_track_ids": []
+   },
+   "tracks": [
+    {
+     "id": "trk-guitar",
+     "name": "Guitar",
+     "kind": "midi",
+     "armed": false,
+     "monitor": "auto",
+     "selected": true,
+     "color": "#50A0DC",
+     "instrument": "Acoustic Guitar (steel)",
+     "tuning": [
+      64,
+      59,
+      55,
+      50,
+      45,
+      40
+     ]
+    },
+    {
+     "id": "trk-vocals",
+     "name": "Vocals",
+     "kind": "audio",
+     "armed": false,
+     "monitor": "auto",
+     "selected": false,
+     "color": "#DC5050"
+    },
+    {
+     "id": "trk-keys",
+     "name": "Keys",
+     "kind": "midi",
+     "armed": false,
+     "monitor": "auto",
+     "selected": false,
+     "color": "#64BE64",
+     "instrument": "Electric Piano 1"
+    }
+   ],
+   "markers": [
+    {
+     "id": "mrk-intro",
+     "name": "Intro",
+     "bar": 1,
+     "beat": 1
+    },
+    {
+     "id": "mrk-verse",
+     "name": "Verse",
+     "bar": 9,
+     "beat": 1
+    },
+    {
+     "id": "mrk-chorus",
+     "name": "Chorus",
+     "bar": 25,
+     "beat": 1
+    },
+    {
+     "id": "mrk-solo",
+     "name": "Solo",
+     "bar": 41,
+     "beat": 1
+    }
+   ],
+   "takes": [],
+   "undo": {
+    "undo": null,
+    "redo": null
+   }
+  }
+ },
+ "steps": [
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "session.subscribe",
+    "params": {
+     "topics": [
+      "chat",
+      "undo"
+     ]
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "result": {
+     "seq": 10,
+     "t": 9000.0,
+     "project": {
+      "title": "My Song",
+      "unsaved": false,
+      "has_file": true
+     },
+     "transport": {
+      "state": "stopped",
+      "position": {
+       "bar": 1,
+       "beat": 1,
+       "seconds": 0.0
+      },
+      "tempo_bpm": 96.0,
+      "tempo_scale": 1.0,
+      "time_signature": {
+       "beats": 4,
+       "unit": 4
+      },
+      "loop": {
+       "enabled": false,
+       "start": null,
+       "end": null
+      },
+      "click": false,
+      "count_in_bars": 0,
+      "counting_in": false
+     },
+     "record": {
+      "recording": false,
+      "started": null,
+      "armed_track_ids": []
+     },
+     "tracks": [
+      {
+       "id": "trk-guitar",
+       "name": "Guitar",
+       "kind": "midi",
+       "armed": false,
+       "monitor": "auto",
+       "selected": true,
+       "color": "#50A0DC",
+       "instrument": "Acoustic Guitar (steel)",
+       "tuning": [
+        64,
+        59,
+        55,
+        50,
+        45,
+        40
+       ]
+      },
+      {
+       "id": "trk-vocals",
+       "name": "Vocals",
+       "kind": "audio",
+       "armed": false,
+       "monitor": "auto",
+       "selected": false,
+       "color": "#DC5050"
+      },
+      {
+       "id": "trk-keys",
+       "name": "Keys",
+       "kind": "midi",
+       "armed": false,
+       "monitor": "auto",
+       "selected": false,
+       "color": "#64BE64",
+       "instrument": "Electric Piano 1"
+      }
+     ],
+     "markers": [
+      {
+       "id": "mrk-intro",
+       "name": "Intro",
+       "bar": 1,
+       "beat": 1
+      },
+      {
+       "id": "mrk-verse",
+       "name": "Verse",
+       "bar": 9,
+       "beat": 1
+      },
+      {
+       "id": "mrk-chorus",
+       "name": "Chorus",
+       "bar": 25,
+       "beat": 1
+      },
+      {
+       "id": "mrk-solo",
+       "name": "Solo",
+       "bar": 41,
+       "beat": 1
+      }
+     ],
+     "takes": [],
+     "undo": {
+      "undo": null,
+      "redo": null
+     }
+    }
+   }
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 2,
+    "method": "chat.state",
+    "params": {}
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 2,
+    "result": {
+     "chat": {
+      "available": true,
+      "state": "idle",
+      "messages": [],
+      "plan": null
+     }
+    }
+   }
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 3,
+    "method": "chat.send",
+    "params": {
+     "key": "0b6c3f1e-7a2d-4e59-9c84-000000000500",
+     "text": "Mute the drums"
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 3,
+    "result": {
+     "chat": {
+      "available": true,
+      "state": "thinking",
+      "messages": [
+       {
+        "id": "m1",
+        "from": "you",
+        "kind": "text",
+        "text": "Mute the drums"
+       }
+      ],
+      "plan": null
+     }
+    }
+   }
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 4,
+    "method": "chat.send",
+    "params": {
+     "key": "0b6c3f1e-7a2d-4e59-9c84-000000000501",
+     "text": "And the bass"
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 4,
+    "error": {
+     "code": 1037,
+     "message": "The chat is still working on the last request.",
+     "data": {
+      "reason": "chat_busy",
+      "chat": {
+       "available": true,
+       "state": "thinking",
+       "messages": [
+        {
+         "id": "m1",
+         "from": "you",
+         "kind": "text",
+         "text": "Mute the drums"
+        }
+       ],
+       "plan": null
+      }
+     }
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "method": "event",
+    "params": {
+     "topic": "chat",
+     "seq": 11,
+     "t": 9001.1,
+     "data": {
+      "available": true,
+      "state": "waiting",
+      "messages": [
+       {
+        "id": "m1",
+        "from": "you",
+        "kind": "text",
+        "text": "Mute the drums"
+       }
+      ],
+      "plan": {
+       "id": "p1",
+       "text": "I'll mute the Drums track.",
+       "steps": [
+        {
+         "text": "Mute track: track 3 (Drums)"
+        }
+       ]
+      }
+     }
+    }
+   }
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 5,
+    "method": "chat.confirm",
+    "params": {
+     "key": "0b6c3f1e-7a2d-4e59-9c84-000000000502",
+     "plan_id": "p1"
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 5,
+    "result": {
+     "chat": {
+      "available": true,
+      "state": "running",
+      "messages": [
+       {
+        "id": "m1",
+        "from": "you",
+        "kind": "text",
+        "text": "Mute the drums"
+       }
+      ],
+      "plan": null
+     }
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "method": "event",
+    "params": {
+     "topic": "undo",
+     "seq": 12,
+     "t": 9001.2,
+     "data": {
+      "undo": {
+       "id": "u-61",
+       "label": "AI: Mute the drums"
+      },
+      "redo": null
+     }
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "method": "event",
+    "params": {
+     "topic": "chat",
+     "seq": 13,
+     "t": 9001.3,
+     "data": {
+      "available": true,
+      "state": "idle",
+      "messages": [
+       {
+        "id": "m1",
+        "from": "you",
+        "kind": "text",
+        "text": "Mute the drums"
+       },
+       {
+        "id": "m2",
+        "from": "studio",
+        "kind": "result",
+        "text": "Muted the Drums track."
+       }
+      ],
+      "plan": null
+     }
+    }
+   }
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 6,
+    "method": "chat.confirm",
+    "params": {
+     "key": "0b6c3f1e-7a2d-4e59-9c84-000000000503",
+     "plan_id": "p1"
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 6,
+    "error": {
+     "code": 1038,
+     "message": "That plan is gone. Ask again.",
+     "data": {
+      "reason": "unknown_plan",
+      "chat": {
+       "available": true,
+       "state": "idle",
+       "messages": [
+        {
+         "id": "m1",
+         "from": "you",
+         "kind": "text",
+         "text": "Mute the drums"
+        },
+        {
+         "id": "m2",
+         "from": "studio",
+         "kind": "result",
+         "text": "Muted the Drums track."
+        }
+       ],
+       "plan": null
+      }
+     }
+    }
+   }
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 7,
+    "method": "chat.send",
+    "params": {
+     "key": "0b6c3f1e-7a2d-4e59-9c84-000000000504",
+     "text": "What is the AI's API key?"
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 7,
+    "result": {
+     "chat": {
+      "available": true,
+      "state": "thinking",
+      "messages": [
+       {
+        "id": "m1",
+        "from": "you",
+        "kind": "text",
+        "text": "Mute the drums"
+       },
+       {
+        "id": "m2",
+        "from": "studio",
+        "kind": "result",
+        "text": "Muted the Drums track."
+       },
+       {
+        "id": "m3",
+        "from": "you",
+        "kind": "text",
+        "text": "What is the AI's API key?"
+       }
+      ],
+      "plan": null
+     }
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "method": "event",
+    "params": {
+     "topic": "chat",
+     "seq": 14,
+     "t": 9001.4,
+     "data": {
+      "available": true,
+      "state": "idle",
+      "messages": [
+       {
+        "id": "m1",
+        "from": "you",
+        "kind": "text",
+        "text": "Mute the drums"
+       },
+       {
+        "id": "m2",
+        "from": "studio",
+        "kind": "result",
+        "text": "Muted the Drums track."
+       },
+       {
+        "id": "m3",
+        "from": "you",
+        "kind": "text",
+        "text": "What is the AI's API key?"
+       },
+       {
+        "id": "m4",
+        "from": "studio",
+        "kind": "refusal",
+        "text": "From a phone the chat does not read or change the AI's settings or key. Do that on the computer."
+       }
+      ],
+      "plan": null
+     }
+    }
+   }
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 8,
+    "method": "chat.send",
+    "params": {
+     "key": "0b6c3f1e-7a2d-4e59-9c84-000000000505",
+     "text": "Transpose the whole song up a fifth"
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 8,
+    "result": {
+     "chat": {
+      "available": true,
+      "state": "thinking",
+      "messages": [
+       {
+        "id": "m1",
+        "from": "you",
+        "kind": "text",
+        "text": "Mute the drums"
+       },
+       {
+        "id": "m2",
+        "from": "studio",
+        "kind": "result",
+        "text": "Muted the Drums track."
+       },
+       {
+        "id": "m3",
+        "from": "you",
+        "kind": "text",
+        "text": "What is the AI's API key?"
+       },
+       {
+        "id": "m4",
+        "from": "studio",
+        "kind": "refusal",
+        "text": "From a phone the chat does not read or change the AI's settings or key. Do that on the computer."
+       },
+       {
+        "id": "m5",
+        "from": "you",
+        "kind": "text",
+        "text": "Transpose the whole song up a fifth"
+       }
+      ],
+      "plan": null
+     }
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "method": "event",
+    "params": {
+     "topic": "chat",
+     "seq": 15,
+     "t": 9001.5,
+     "data": {
+      "available": true,
+      "state": "waiting",
+      "messages": [
+       {
+        "id": "m1",
+        "from": "you",
+        "kind": "text",
+        "text": "Mute the drums"
+       },
+       {
+        "id": "m2",
+        "from": "studio",
+        "kind": "result",
+        "text": "Muted the Drums track."
+       },
+       {
+        "id": "m3",
+        "from": "you",
+        "kind": "text",
+        "text": "What is the AI's API key?"
+       },
+       {
+        "id": "m4",
+        "from": "studio",
+        "kind": "refusal",
+        "text": "From a phone the chat does not read or change the AI's settings or key. Do that on the computer."
+       },
+       {
+        "id": "m5",
+        "from": "you",
+        "kind": "text",
+        "text": "Transpose the whole song up a fifth"
+       }
+      ],
+      "plan": {
+       "id": "p2",
+       "text": "I'll move every note up seven semitones.",
+       "steps": [
+        {
+         "text": "Transpose: all tracks, +7"
+        }
+       ]
+      }
+     }
+    }
+   }
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 9,
+    "method": "chat.cancel",
+    "params": {
+     "key": "0b6c3f1e-7a2d-4e59-9c84-000000000506",
+     "plan_id": "p2"
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 9,
+    "result": {
+     "chat": {
+      "available": true,
+      "state": "idle",
+      "messages": [
+       {
+        "id": "m1",
+        "from": "you",
+        "kind": "text",
+        "text": "Mute the drums"
+       },
+       {
+        "id": "m2",
+        "from": "studio",
+        "kind": "result",
+        "text": "Muted the Drums track."
+       },
+       {
+        "id": "m3",
+        "from": "you",
+        "kind": "text",
+        "text": "What is the AI's API key?"
+       },
+       {
+        "id": "m4",
+        "from": "studio",
+        "kind": "refusal",
+        "text": "From a phone the chat does not read or change the AI's settings or key. Do that on the computer."
+       },
+       {
+        "id": "m5",
+        "from": "you",
+        "kind": "text",
+        "text": "Transpose the whole song up a fifth"
+       }
+      ],
+      "plan": null
+     }
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "method": "event",
+    "params": {
+     "topic": "chat",
+     "seq": 16,
+     "t": 9001.6,
+     "data": {
+      "available": true,
+      "state": "idle",
+      "messages": [
+       {
+        "id": "m1",
+        "from": "you",
+        "kind": "text",
+        "text": "Mute the drums"
+       },
+       {
+        "id": "m2",
+        "from": "studio",
+        "kind": "result",
+        "text": "Muted the Drums track."
+       },
+       {
+        "id": "m3",
+        "from": "you",
+        "kind": "text",
+        "text": "What is the AI's API key?"
+       },
+       {
+        "id": "m4",
+        "from": "studio",
+        "kind": "refusal",
+        "text": "From a phone the chat does not read or change the AI's settings or key. Do that on the computer."
+       },
+       {
+        "id": "m5",
+        "from": "you",
+        "kind": "text",
+        "text": "Transpose the whole song up a fifth"
+       }
+      ],
+      "plan": null
+     }
+    }
+   }
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 10,
+    "method": "chat.stop",
+    "params": {
+     "key": "0b6c3f1e-7a2d-4e59-9c84-000000000507"
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 10,
+    "result": {
+     "chat": {
+      "available": true,
+      "state": "idle",
+      "messages": [
+       {
+        "id": "m1",
+        "from": "you",
+        "kind": "text",
+        "text": "Mute the drums"
+       },
+       {
+        "id": "m2",
+        "from": "studio",
+        "kind": "result",
+        "text": "Muted the Drums track."
+       },
+       {
+        "id": "m3",
+        "from": "you",
+        "kind": "text",
+        "text": "What is the AI's API key?"
+       },
+       {
+        "id": "m4",
+        "from": "studio",
+        "kind": "refusal",
+        "text": "From a phone the chat does not read or change the AI's settings or key. Do that on the computer."
+       },
+       {
+        "id": "m5",
+        "from": "you",
+        "kind": "text",
+        "text": "Transpose the whole song up a fifth"
+       }
+      ],
+      "plan": null
+     }
+    }
+   }
+  }
+ ]
+}

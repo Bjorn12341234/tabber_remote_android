@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tabber.studio/schemas/remote/1/methods/chat.send.json",
+  "title": "chat.send",
+  "x-capability": "chat/1",
+  "x-changes": true,
+  "$defs": {
+    "params": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "$ref": "../common.json#/$defs/key"
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        }
+      },
+      "required": [
+        "key",
+        "text"
+      ],
+      "additionalProperties": false
+    },
+    "result": {
+      "type": "object",
+      "properties": {
+        "chat": {
+          "$ref": "../common.json#/$defs/chat"
+        }
+      },
+      "required": [
+        "chat"
+      ],
+      "additionalProperties": false
+    }
+  }
+}
