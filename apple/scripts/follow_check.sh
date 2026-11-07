@@ -35,13 +35,11 @@ wait_for() {     # $1 file, $2 text, $3 seconds
 
 echo "• the computer on port $FIRST_PORT"
 start_host "$FIRST_PORT" "$WORK/first"
-LINK="$(python3 -c 'import json,sys; print(json.loads(open(sys.argv[1]).readline())["link"])' "$WORK/first")"
+LINK="$(grep '"link"' "$WORK/first" | head -1 | python3 -c 'import json,sys; print(json.loads(sys.stdin.read())["link"])')"
 xcrun simctl terminate "$SIM" studio.tabber.spak 2>/dev/null || true
 xcrun simctl install "$SIM" "$APP"
-xcrun simctl launch "$SIM" studio.tabber.spak -reset > /dev/null
-sleep 2
 echo "• the phone pairs from the link"
-xcrun simctl openurl "$SIM" "$LINK"
+xcrun simctl launch "$SIM" studio.tabber.spak -reset -pair-link "$LINK" > /dev/null
 wait_for "$WORK/first" '"activity": "paired' 20 || { echo "✗ the phone did not pair"; cat "$WORK/first"; exit 1; }
 wait_for "$WORK/first" ' connected"' 20 || { echo "✗ the phone did not connect after pairing"; cat "$WORK/first"; exit 1; }
 xcrun simctl io "$SIM" screenshot "$WORK/paired.png" > /dev/null 2>&1 || true

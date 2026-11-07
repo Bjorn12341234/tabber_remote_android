@@ -66,6 +66,13 @@ final class AppModel {
             HostStore.save(host)
         }
         known = HostStore.load()
+        // Scripts: `-pair-link <link>` pairs at launch, as a scanned code does
+        // (`simctl openurl` now stops at iOS's "Open in Tabber Spak?").
+        if let index = arguments.firstIndex(of: "-pair-link"), index + 1 < arguments.count,
+           let link = PairingLink(string: arguments[index + 1]) {
+            Task { await self.pair(with: link) }
+            return
+        }
         if arguments.contains("-demo") {
             startDemo()
         } else if let index = arguments.firstIndex(of: "-demo-speaks"), index + 1 < arguments.count {

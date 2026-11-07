@@ -1212,6 +1212,37 @@ what was measured, and what changed in the plan.
     reports their event rates and seq gaps and the engine's xrun and
     deadline-miss change, and forgets the phones afterwards. The gate is
     zero dropouts.
+- **TR4 🟡 2026-11-07, Tabber Studio `d11b0070`.** `remote_host/discovery.py`
+  announces `_tabber-remote._tcp` through macOS DNS-SD (TXT `v` and `id`
+  only) while the remote is on. Settings gets a Remote page
+  (`ui/remote_panel.py`): on and off, Pair iPhone with a QR code that renews
+  itself and closes when a phone pairs, and the paired phones with Remove and
+  Forget All. `ui/remote_controller.py` turns the remote back on at launch
+  if it was on, names the connected phones in the status bar, and closes
+  phones on quit. The macOS spec declares `NSLocalNetworkUsageDescription`
+  and `NSBonjourServices`; segno 1.6.6 draws the code.
+  - **Gate, met:** `tests/remote/test_tr4_computer_side.py`, 7 tests:
+    `dns-sd` sees the service, with the host id and port, only while the
+    remote is on; a scripted phone pairs from the dialog's link and the
+    dialog closes; Remove closes the phone with 4001 at once; the status bar
+    names a connected phone and drops it when it leaves; the remote comes
+    back on at launch; Settings has the page; the spec has both keys. The 15
+    Preferences test files and `tests/remote` pass (331 and 42 tests).
+  - **Names:** phones see the Mac's ComputerName; the code's first address
+    is its Bonjour host name (`LocalHostName.local`), then its other
+    addresses. On this Mac those include Tailscale's.
+  - **Found:** Tabber Studio's JF6 inventory test records line numbers, so
+    the Remote page's 7 lines moved three entries in
+    `preferences_dialog.py`. Nothing else changed (compared entry by entry);
+    the snapshot and its history were updated, as the inventory's rule asks.
+  - **Not in the demo cut:** the 6-digit fallback with Allow (`pair.code/1`
+    stays off).
+  - **Owed:** the signed, installed app (the owner is warned first, since it
+    opens on the owner's screen): the Local Network and firewall prompts,
+    whether a rebuild asks again, QR pairing with Local Network denied, and
+    the frozen app's bundle and release locks (moved here from TR2). The
+    macOS firewall is off on this Mac, so "Block all incoming connections"
+    was not tried.
 - **TR5 ✅ 2026-11-07, this repository.** Built with Xcode 26.3 (27.2 was not
   downloaded yet; the release script switches to it by itself).
   - **RemoteKit** (`apple/RemoteKit`, Swift 6, no UI framework): the
@@ -1272,6 +1303,16 @@ what was measured, and what changed in the plan.
     each cause; wake reconnects within 0.5 s; a quiet connection is remade
     within a second), and all 24 pass. The interop test against the real
     host still passes.
+  - **End to end** (`apple/scripts/follow_check.sh`): Tabber Spak in the
+    Simulator paired with a headless Tabber Studio (`tools/stage_host.py`, a
+    real MainWindow with the remote on and an engine that opens no device);
+    the computer came back on another port with the same keys, and the
+    phone found it again through Bonjour 5.8 s later, without pairing. Most
+    of that is the backoff over the four old addresses before the Bonjour
+    lookup; trying Bonjour sooner is a possible improvement.
+  - **Found:** `xcrun simctl openurl` with a `tabber-remote://` link now
+    stops at iOS's "Open in Tabber Spak?", so scripts pass the link with
+    `-pair-link` instead.
   - **Owed to the owner, on the iPhone:** fresh install to paired with one
     scan; the Local Network prompt after the explainer; each card, by
     recreating its cause (Tabber Studio closed, Wi-Fi off, Local Network
