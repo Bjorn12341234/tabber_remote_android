@@ -716,21 +716,39 @@ the real thing or drops the step.
 
 ### What the room sees
 
-About four minutes:
+Rewritten 2026-11-07 for the app in Tabber Studio's shape (TR31). The core
+is about four minutes; each optional moment adds under a minute, and the
+owner picks which go on stage.
 
-1. **Pair.** Turn the remote on in Tabber Studio and click Pair iPhone. Scan
-   the QR code in Tabber Spak. The phone shows the computer and the song.
-2. **Record from across the room.** Walk away from the computer. On the phone:
-   arm the guitar track, tap Chorus, set a one-bar count-in, record.
-3. **Go again.** Stop. The take card rises. Hold Discard, then Go again:
-   count-in, record, stop, Keep.
-4. **One undo history.** Undo on the computer. The discarded take comes back,
-   and the phone shows it.
+1. **Pair.** In Tabber Studio, Preferences > Remote: tick "Let paired phones
+   control Tabber Studio" and click Pair iPhone. Scan the code in Tabber
+   Spak. The phone opens on the song's tracks.
+2. **Record from across the room.** Walk away from the computer. On the
+   phone:
+   - tap ○ on the guitar track (its input meter moves);
+   - tap the position and choose Chorus in Go to;
+   - turn Count-in on and press ●.
+3. **Go again.** Press ● to stop, and the take card rises. Delete (one
+   tap), then Undo in the banner: the take is back. Go again: count-in,
+   record, stop, Keep.
+4. **One undo history.** Delete the take, then Undo on the computer. The
+   take comes back on both.
 5. **Drop the Wi-Fi.** Record again and take the phone off the Wi-Fi mid-take.
    The computer keeps recording and the phone says Reconnecting. Back on the
    Wi-Fi, the phone shows the true state: still recording, with the right
    time. Stop.
-6. **Loop.** Hold Chorus to loop it.
+
+**Optional moments,** the owner's pick:
+- **Write a riff from the floor.** On the Tab tab, tap frets on the phone's
+  fretboard. Each beat plays on the computer, the computer's Tab view fills
+  in as the phone writes, and Next moves on.
+- **Mix from the floor.** On the Mixer tab, S on the guitar to hear it alone,
+  then pull the drums down. The computer's faders move with the phone's.
+- **Tune up on stage.** On the Tuner tab, play the low E. The note turns
+  teal in tune. It works with no computer at all.
+
+The old step 6, "hold Chorus to loop it", left with the marker row. The Loop
+toggle loops the range set on the computer.
 
 ### The demo cut
 
@@ -738,10 +756,12 @@ About four minutes:
 - QR pairing with pinned TLS, the one-time token and the device key. Principle
   2 is not cut for a demo, and one scan is the demo's first surprise.
 - Reconnecting by itself: Bonjour, plus the addresses from the QR code.
-- The Session screen and the take card: transport, recording frame, bars and
-  beats, the armed track and its meter, count-in, click, loop, marker chips,
-  keep, discard with hold and Undo, go again, haptics, keep awake.
-- Choosing the armed track from the Session screen.
+- The Tracks screen, the transport and the take card (TR31): choosing and
+  arming a track, its meter, S and M, count-in, metronome, loop, Go to,
+  Keep, Delete with Undo, Go again, the takes list, haptics, keep awake.
+- For the optional moments: the Tab screen with the fretboard and the piano
+  (TR15), the Mixer (TR25), the Tuner (TR32). Each is in only once it has
+  passed on a device against Tabber Studio 0.3.17.
 - The true state after a drop.
 - On the computer: Settings › Remote with on and off, the QR dialog, paired
   devices with Remove, and activity notices.
@@ -750,13 +770,12 @@ About four minutes:
 **After the demo,** still in 1.0:
 - the 6-digit fallback, several computers, and every fix-it card except "Can't
   reach your computer" and "Update Tabber Studio"
-- the Tracks screen, the takes list with ratings, Settings
-- the accessibility audit, Swedish, App Store submission
+- Settings, routing (TR27, TR28), chat (TR29, TR30)
+- App Store submission (languages wait for the owner, decision 17)
 
 **Stretch,** only if every demo gate is green by 19 November:
 - the Action Button starts and stops a recording (TR10)
-- practice speed (S6)
-- flag a moment
+- practice speed (S6), whose verb exists but which has no control yet
 
 TR0 still specifies all of M1, not only the cut, so the work after the demo
 needs no protocol change.
