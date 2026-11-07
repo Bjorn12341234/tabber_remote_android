@@ -153,6 +153,7 @@ final class AppModel {
     var armedIDs: [String] { state.tracks.filter(\.armed).map(\.id) }
 
     func record() {
+        lastTake = nil                       // recording again keeps the take
         if state.record.recording {
             stop()
         } else if !armedIDs.isEmpty {
@@ -173,6 +174,48 @@ final class AppModel {
 
     func playOrStop() {
         if state.transport?.state == .playing { stop() } else { act("play", "transport.play") }
+    }
+
+    /// After a discard: Undo for five seconds, naming the step it undoes (spec 9).
+    private(set) var undoOffer: UndoOffer?
+
+    struct UndoOffer: Equatable {
+        var stepID: String
+        var text: String
+        var until: Date
+    }
+
+    func keep() { lastTake = nil }
+
+    func discard(_ take: Take) {
+        act("discard", "takes.discard", ["take_id": .string(take.id)], feel: .discard) { [weak self] result in
+            guard let self else { return }
+            self.lastTake = nil
+            if let step = result["undo"]?["undo"]?["id"]?.stringValue {
+                let offer = UndoOffer(stepID: step, text: "\(take.name) discarded", until: .now + 5)
+                self.undoOffer = offer
+                Task { @MainActor [weak self] in
+                    try? await Task.sleep(for: .seconds(5))
+                    if self?.undoOffer == offer { self?.undoOffer = nil }
+                }
+            }
+        }
+    }
+
+    func undoDiscard() {
+        guard let offer = undoOffer else { return }
+        undoOffer = nil
+        act("undo", "edit.undo", ["expect": .string(offer.stepID)], feel: .goAgain)
+    }
+
+    func rate(_ take: Take, _ rating: Int) {
+        act("rate-\(take.id)", "takes.rate", ["take_id": .string(take.id), "rating": .number(Double(rating))])
+    }
+
+    /// Flag a moment: a marker at the bar the phone shows now (spec 9: never "wherever the playhead is").
+    func flag() {
+        guard let position = state.transport?.position else { return }
+        act("flag", "markers.add", ["at": ["bar": .number(Double(position.bar)), "beat": 1], "name": "Flag"])
     }
 
     func goAgain() {

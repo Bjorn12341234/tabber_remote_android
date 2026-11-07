@@ -30,6 +30,22 @@ struct SessionView: View {
             .padding(.vertical, 12)
         }
         .scrollBounceBehavior(.basedOnSize)
+        .safeAreaInset(edge: .bottom) {
+            Group {
+                if let take = model.lastTake, !state.record.recording {
+                    // The confirmed take, rating included (principle 3).
+                    TakeCard(model: model, take: state.takes.first { $0.id == take.id } ?? take)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                } else if let offer = model.undoOffer {
+                    UndoBanner(model: model, offer: offer)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.bottom, 8)
+            .animation(.spring(duration: 0.35), value: model.lastTake?.id)
+            .animation(.spring(duration: 0.35), value: model.undoOffer)
+        }
         .opacity(model.isConnected ? 1 : 0.45)        // stale state is never shown as live
         .animation(.easeInOut(duration: 0.25), value: model.isConnected)
         .overlay { RecordingFrame(state: state) }
@@ -86,6 +102,16 @@ struct SessionView: View {
     private func markerChips(_ state: SessionState) -> some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
+                Button(action: model.flag) {
+                    Label("Flag", systemImage: "flag.fill")
+                        .font(.callout.weight(.semibold))
+                        .padding(.horizontal, 14).padding(.vertical, 10)
+                        .background(.fill.tertiary, in: .capsule)
+                }
+                .buttonStyle(.plain)
+                .opacity(model.pending.contains("flag") ? 0.5 : 1)
+                .accessibilityLabel("Flag this moment")
+                .accessibilityIdentifier("flag")
                 ForEach(state.markers) { marker in
                     MarkerChip(marker: marker, pending: model.pending.contains("marker-\(marker.id)"),
                                looped: state.transport?.loop.enabled == true && state.transport?.loop.start?.bar == marker.bar) {

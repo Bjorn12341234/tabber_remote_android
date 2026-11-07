@@ -1265,6 +1265,23 @@ what was measured, and what changed in the plan.
     language; "we will deal with that when it's time." TR9's design pass
     brings Tabber Studio's design tokens (`ui/design_tokens.py`) into the
     app.
+- **TR8 🟡 2026-11-07, this repository.** The take card
+  (`apple/TabberSpak/TakeCard.swift`) rises after every take: Keep (the
+  default; recording again keeps it too), Discard by press and hold, then an
+  Undo offer for five seconds that names the discard's undo step, Go again,
+  and the take's confirmed rating in stars. The Takes tab lists the newest
+  takes with ratings; the Tracks tab arms, selects and (for MIDI) monitors;
+  the Flag chip adds a marker at the bar the phone shows.
+  - **Gate, met in the Simulator against DemoHost:** keep; a second take
+    discarded and brought back by Undo; go again from the card; a rating of
+    four stars; a flag; Guitar armed from the Tracks tab. All seven UI tests
+    pass.
+  - **Found:** a list row with a tap gesture became one accessibility
+    element and hid its arm button from VoiceOver; rows now keep their
+    children reachable and select through an accessibility action.
+  - **Owed to the owner, on the iPhone against Tabber Studio:** S1 complete,
+    five takes with two discarded and one brought back with Undo on the
+    computer, files intact.
 
 ## Sources
 

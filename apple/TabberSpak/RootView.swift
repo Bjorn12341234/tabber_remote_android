@@ -11,6 +11,8 @@ struct RootView: View {
             } else {
                 TabView {
                     Tab("Session", systemImage: "record.circle") { SessionView(model: model) }
+                    Tab("Takes", systemImage: "square.stack") { TakesView(model: model) }
+                    Tab("Tracks", systemImage: "slider.vertical.3") { TracksView(model: model) }
                     Tab("Computer", systemImage: "desktopcomputer") { DebugView(model: model) }
                 }
                 .tabViewBottomAccessory { TransportBar(model: model) }
