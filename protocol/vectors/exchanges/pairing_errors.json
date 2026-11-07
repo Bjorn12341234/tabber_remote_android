@@ -1,10 +1,11 @@
 {
   "name": "pairing_errors",
-  "description": "Pairing is closed, then the token is expired, then it is wrong. Three failures close the connection (spec 6, 6.2).",
+  "description": "The token is expired, then wrong, then wrong again. Three failures close the connection (spec 6, 6.2).",
   "start": "connected",
   "host_state": {
     "pairing": {
-      "open": false
+      "open": true,
+      "token": "JnEEUOFO1YbF8ut11rT4iA"
     },
     "paired_devices": [],
     "expired_tokens": [
@@ -78,13 +79,13 @@
         "method": "pair",
         "params": {
           "mode": "token",
-          "token": "JnEEUOFO1YbF8ut11rT4iA",
+          "token": "6XrqHTHFVxOgp8K3q5pnGA",
           "device": {
             "name": "Björn's iPhone",
             "model": "iPhone",
             "key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAELmFLfdxxNIkeJNkXdNhfQVal4qrDnl_C1tq3bYJMIbARSFIBJiHBKBXg2n0qXdRgpN7x-2sEbrFmAaCll5zfdw"
           },
-          "signature": "MEQCIFk8KApknaXulAXmIfzTcEYut4u3Ec71vFq60FXGNUCbAiBlecUmxEyseVOILAKCk8TqxkqwfWA3bpYWd0uy9r-kug"
+          "signature": "MEQCIHTTGPr9552QUirD_80mfTD5A7mOu16250CSmiJZri3mAiBJn3vZeT93bm073xs33VU4TG_BaNaD6PpMgmQ7mYxdeQ"
         }
       }
     },
@@ -94,14 +95,14 @@
         "jsonrpc": "2.0",
         "id": 2,
         "error": {
-          "code": 1002,
-          "message": "Pairing is not open. Click Pair iPhone in Tabber Studio.",
+          "code": 1004,
+          "message": "This pairing code has expired. Scan the new one on the computer.",
           "data": {
-            "reason": "pairing_closed"
+            "reason": "pairing_token_expired"
           }
         }
       },
-      "note": "Nobody has clicked Pair iPhone on the computer."
+      "note": "The QR code the phone scanned was shown more than five minutes ago."
     },
     {
       "from": "remote",
@@ -169,13 +170,13 @@
         "method": "pair",
         "params": {
           "mode": "token",
-          "token": "6XrqHTHFVxOgp8K3q5pnGA",
+          "token": "WTou5Ht6QiwOXQ_7CCSwFQ",
           "device": {
             "name": "Björn's iPhone",
             "model": "iPhone",
             "key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAELmFLfdxxNIkeJNkXdNhfQVal4qrDnl_C1tq3bYJMIbARSFIBJiHBKBXg2n0qXdRgpN7x-2sEbrFmAaCll5zfdw"
           },
-          "signature": "MEUCIQCUBtef2nb6XCunaHelKt5085wnxFbJ05nxPRr9eMARvwIgY9znijeEukij9QiQ4AJ0uCB6HEoM2zbfhFu6ctvIDhQ"
+          "signature": "MEUCIQDcRmgiezfsF6mPXyDt8jqZ1HBX0YPsRnSH5nRHAgS8_AIgAyHasJYVSRyzqdvrKXtFNNGrDMnjlBcU17QviXO6g_w"
         }
       }
     },
@@ -185,10 +186,10 @@
         "jsonrpc": "2.0",
         "id": 4,
         "error": {
-          "code": 1004,
-          "message": "This pairing code has expired. Scan the new one on the computer.",
+          "code": 1003,
+          "message": "This pairing code does not work. Scan the code on the computer again.",
           "data": {
-            "reason": "pairing_token_expired"
+            "reason": "pairing_token_invalid"
           }
         }
       }
