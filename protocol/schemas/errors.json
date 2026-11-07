@@ -37,6 +37,7 @@
     {"code": 1036, "reason": "chat_unavailable", "message": "Set up the AI in Tabber Studio first, in Preferences › AI.", "data": ["chat"]},
     {"code": 1037, "reason": "chat_busy", "message": "The chat is still working on the last request.", "data": ["chat"]},
     {"code": 1038, "reason": "unknown_plan", "message": "That plan is gone. Ask again.", "data": ["chat"]},
+    {"code": 1039, "reason": "needs_loop", "message": "Turn Loop on first: the trainer speeds up each time the loop comes round.", "data": ["trainer"]},
     {"code": 1099, "reason": "host_error", "message": "Tabber Studio could not do that.", "data": ["detail"]}
   ],
   "data_schemas": {
@@ -53,6 +54,7 @@
     "mixer": {"$ref": "common.json#/$defs/mixer"},
     "routing": {"$ref": "common.json#/$defs/routing"},
     "chat": {"$ref": "common.json#/$defs/chat"},
+    "trainer": {"$ref": "common.json#/$defs/trainer"},
     "path": {"type": "array", "minItems": 2, "maxItems": 64, "items": {"type": "string", "maxLength": 200},
              "description": "The loop the route would close, by name, from the source back to it."}
   }

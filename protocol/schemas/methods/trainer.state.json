@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tabber.studio/schemas/remote/1/methods/trainer.state.json",
+  "title": "trainer.state",
+  "x-capability": "trainer/1",
+  "x-changes": false,
+  "$defs": {
+    "params": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    },
+    "result": {
+      "type": "object",
+      "properties": {
+        "trainer": {
+          "$ref": "../common.json#/$defs/trainer"
+        }
+      },
+      "required": [
+        "trainer"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

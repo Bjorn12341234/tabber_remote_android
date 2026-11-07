@@ -254,7 +254,7 @@ whether Tabber Studio is busy:
 ## 7. Versions and capabilities
 
 - **The protocol version** is `major.minor`. `hello` lists what the remote
-  speaks (`"protocol_versions": ["1.4"]`, one entry per major, the highest
+  speaks (`"protocol_versions": ["1.5"]`, one entry per major, the highest
   minor it knows); the host answers with the version it chose: the major
   both speak, and the lower of the two minors. It lists only that version's
   capabilities, refuses the verbs of any other with `not_supported` and
@@ -315,6 +315,13 @@ shows the view buttons only when the host lists it:
 |---|---|
 | `view/1` | `view.state`, `view.set`, the `view` topic |
 
+Version 1.5 adds one capability. A 1.5 remote works with any 1.x host and
+shows the Speed Trainer only when the host lists it:
+
+| Capability | Gives |
+|---|---|
+| `trainer/1` | `trainer.state`, `trainer.set`, the `trainer` topic |
+
 ## 8. Snapshot and events
 
 ### 8.1 The snapshot
@@ -334,11 +341,12 @@ object (`schemas/snapshot.json`):
 - `takes`: the newest takes on any track, newest first, at most 20
 - `undo`: the next undo and redo steps
 
-The mixer, the tab, the routing, the chat and the view are not in the
-snapshot. A remote that subscribes to `mixer`, `tab`, `routing`, `chat` or
-`view` reads them once with `mixer.state`, `tab.state`, `routing.state`,
-`chat.state` and `view.state`, then follows their topics; it reads them again
-after every new snapshot.
+The mixer, the tab, the routing, the chat, the view and the Speed Trainer
+are not in the snapshot. A remote that subscribes to `mixer`, `tab`,
+`routing`, `chat`, `view` or `trainer` reads them once with `mixer.state`,
+`tab.state`, `routing.state`, `chat.state`, `view.state` and
+`trainer.state`, then follows their topics; it reads them again after every
+new snapshot.
 
 ### 8.2 Events
 
@@ -371,6 +379,7 @@ after every new snapshot.
 | `routing` | `{sources, sends}` (routing/1) | on every change |
 | `chat` | `{available, state, messages, plan}` (chat/1) | on every change |
 | `view` | `{editor, split}` (view/1) | on every change |
+| `trainer` | `{enabled, start, step, target, speed}` (trainer/1) | on every change, each step of the speed included |
 
 `position` and `meters` are sent only to remotes that subscribed to them, and
 the host does no meter work at all while nobody is subscribed (principle 7).
@@ -625,6 +634,24 @@ buttons switch it: Arrange, Tab or Piano Roll, and Split beside them.
 - **`split`** turns Split on, or off again back to the editor shown before.
 - A view change is not an undo step, there or here.
 
+### Practice speed (trainer/1)
+
+Tabber Studio's Speed Trainer, set as its own Trainer button and fields set
+it: with Loop on, the song plays from `start` percent, and each time the loop
+comes round the speed goes up by `step` until it reaches `target`.
+
+| Verb | Params | Result | In Tabber Studio |
+|---|---|---|---|
+| `trainer.state` | none | `trainer` | the Trainer button and its fields |
+| `trainer.set` | `key`, `enabled`, `start` (25 to 200), `step` (1 to 50), `target` (25 to 200), each optional | `trainer` | Trainer, start, step and target |
+
+- **`speed`** is the speed now, in percent. The topic sends each step as the
+  loop comes round.
+- **Loop comes first,** as on the computer, where the trainer shows only
+  while Loop is on. Turning it on with Loop off is refused with
+  `needs_loop`, and Loop turned off turns the trainer off.
+- Setting the trainer is not an undo step, there or here.
+
 ### Not in the vocabulary
 
 A remote cannot reach Control API methods by name, file paths, scripts, app
@@ -676,6 +703,7 @@ state in `data`, as listed.
 | 1036 | `chat_unavailable` | Set up the AI in Tabber Studio first, in Preferences › AI. | `chat` |
 | 1037 | `chat_busy` | The chat is still working on the last request. | `chat` |
 | 1038 | `unknown_plan` | That plan is gone. Ask again. | `chat` |
+| 1039 | `needs_loop` | Turn Loop on first: the trainer speeds up each time the loop comes round. | `trainer` |
 | 1099 | `host_error` | Tabber Studio could not do that. | `detail` |
 
 `schemas/errors.json` holds this table; the validator checks every error in

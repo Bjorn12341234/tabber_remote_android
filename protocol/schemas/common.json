@@ -489,7 +489,8 @@
         "tab",
         "routing",
         "chat",
-        "view"
+        "view",
+        "trainer"
       ]
     },
     "host": {
@@ -1081,6 +1082,47 @@
       "required": [
         "editor",
         "split"
+      ],
+      "additionalProperties": false
+    },
+    "trainer": {
+      "type": "object",
+      "description": "Tabber Studio's Speed Trainer. With Loop on, each time the loop comes round the speed goes up by step, from start until it reaches target.",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "start": {
+          "type": "integer",
+          "minimum": 25,
+          "maximum": 200,
+          "description": "The speed the loop starts at, in percent."
+        },
+        "step": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50,
+          "description": "Added each time the loop comes round, in percent."
+        },
+        "target": {
+          "type": "integer",
+          "minimum": 25,
+          "maximum": 200,
+          "description": "The speed it stops at, in percent."
+        },
+        "speed": {
+          "type": "integer",
+          "minimum": 25,
+          "maximum": 200,
+          "description": "The speed now, in percent."
+        }
+      },
+      "required": [
+        "enabled",
+        "start",
+        "step",
+        "target",
+        "speed"
       ],
       "additionalProperties": false
     }

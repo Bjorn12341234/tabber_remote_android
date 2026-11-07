@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tabber.studio/schemas/remote/1/methods/trainer.set.json",
+  "title": "trainer.set",
+  "x-capability": "trainer/1",
+  "x-changes": true,
+  "$defs": {
+    "params": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "$ref": "../common.json#/$defs/key"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "start": {
+          "type": "integer",
+          "minimum": 25,
+          "maximum": 200
+        },
+        "step": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50
+        },
+        "target": {
+          "type": "integer",
+          "minimum": 25,
+          "maximum": 200
+        }
+      },
+      "required": [
+        "key"
+      ],
+      "additionalProperties": false
+    },
+    "result": {
+      "type": "object",
+      "properties": {
+        "trainer": {
+          "$ref": "../common.json#/$defs/trainer"
+        }
+      },
+      "required": [
+        "trainer"
+      ],
+      "additionalProperties": false
+    }
+  }
+}
