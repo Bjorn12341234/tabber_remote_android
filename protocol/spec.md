@@ -254,7 +254,7 @@ whether Tabber Studio is busy:
 ## 7. Versions and capabilities
 
 - **The protocol version** is `major.minor`. `hello` lists what the remote
-  speaks (`"protocol_versions": ["1.1"]`, one entry per major, the highest
+  speaks (`"protocol_versions": ["1.2"]`, one entry per major, the highest
   minor it knows); the host answers with the version it chose: the major
   both speak, and the lower of the two minors. It lists only that version's
   capabilities, refuses the verbs of any other with `not_supported` and
@@ -294,6 +294,13 @@ shows these screens only when the host lists them:
 | `mixer/1` | `mixer.state`, `mixer.set_volume`, `mixer.set_pan`, `mixer.set_mute`, `mixer.set_solo`, the `mixer` and `mixer_meters` topics, and `instrument` on tab and MIDI tracks |
 | `tab/1` | `tab.state`, `tab.set_cursor`, `tab.move`, `tab.put`, `tab.put_pitch`, `tab.set_duration`, `tab.rest`, `tab.delete`, the `tab` topic, and `tuning` on tab tracks |
 
+Version 1.2 adds one capability. A 1.2 remote works with a 1.1 or 1.0 host
+and shows Routing only when the host lists it:
+
+| Capability | Gives |
+|---|---|
+| `routing/1` | `routing.state`, `routing.set_output`, `routing.set_send`, `routing.remove_send`, the `routing` topic |
+
 ## 8. Snapshot and events
 
 ### 8.1 The snapshot
@@ -313,9 +320,10 @@ object (`schemas/snapshot.json`):
 - `takes`: the newest takes on any track, newest first, at most 20
 - `undo`: the next undo and redo steps
 
-The mixer and the tab are not in the snapshot. A remote that subscribes to
-`mixer` or `tab` reads them once with `mixer.state` and `tab.state`, then
-follows their topics; it reads them again after every new snapshot.
+The mixer, the tab and the routing are not in the snapshot. A remote that
+subscribes to `mixer`, `tab` or `routing` reads them once with
+`mixer.state`, `tab.state` and `routing.state`, then follows their topics; it
+reads them again after every new snapshot.
 
 ### 8.2 Events
 
@@ -345,6 +353,7 @@ follows their topics; it reads them again after every new snapshot.
 | `mixer` | `{strips, scale}` (mixer/1) | on every change |
 | `mixer_meters` | `{levels: [{strip_id, peak}]}` (mixer/1) | at most 20 a second, every strip and the master, only while subscribed: a remote subscribes while its mixer is on screen |
 | `tab` | `{tab}`, the selected track's tab or null (tab/1) | on every change, the cursor's included |
+| `routing` | `{sources, sends}` (routing/1) | on every change |
 
 `position` and `meters` are sent only to remotes that subscribed to them, and
 the host does no meter work at all while nobody is subscribed (principle 7).
@@ -411,8 +420,10 @@ the user tapped, never "wherever the playhead is now".
 
 A take is one recorded pass: what one recording placed on one track. In
 Tabber Studio a linear recording is one audio clip, and the take's id is the
-clip's id. Loop-record takes (Tabber Studio's take lanes) are not listed in
-1.0.
+clip's id. A pass recorded over an earlier one on its track joins it in take
+lanes, and the newest plays where they overlap: every pass is still listed,
+and `active` says whether any of it plays. Loop-record takes are not listed
+in 1.x.
 
 | Verb | Params | Result | Control API |
 |---|---|---|---|
@@ -511,6 +522,36 @@ plain MIDI track).
 - **No tab, no edits.** With no tab on the selected track (an audio, drum or
   plain MIDI track), every verb but `tab.state` is refused with `no_tab`.
 
+### Routing (routing/1)
+
+Where each track and bus sends its sound, as Tabber Studio's Routing panel
+shows it. Ids are the mixer's strip ids: a track's id, a bus's strip id, and
+`master`.
+
+| Verb | Params | Result | In Tabber Studio |
+|---|---|---|---|
+| `routing.state` | none | `routing` | the Routing panel's matrix |
+| `routing.set_output` | `key`, `strip_id` (a track or a bus), `output` (`master` or a bus) | `routing`, `undo` | a click in the matrix's route column |
+| `routing.set_send` | `key`, `strip_id` (a track), `bus_id`, `level` (0 to 1, optional), `pre_fader` (optional) | `routing`, `undo` | Alt+click on an empty cell, then the mixer's send level and Pre-fader |
+| `routing.remove_send` | `key`, `strip_id`, `bus_id` | `routing`, `undo` | Alt+click on a send |
+
+- **Every track and bus has one output,** the master by default. Choosing
+  another moves it there, as the matrix does, and it is one undo step,
+  "Routing change".
+- **A send taps a track's sound into a bus,** beside its output. Adding one
+  is an undo step ("Add send → bus 1") and starts it where Tabber Studio
+  does, at -6 dB. Its level and Pre-fader are not undo steps, there or here,
+  like the mixer's faders. A slider drag is many `routing.set_send` calls:
+  the remote sends the newest value only, one at a time.
+- **`level` is the send's gain,** 0 to 1, as the host stores it. `level_db`
+  says what it means (null is silence) and `level_label` is how Tabber Studio
+  writes it ("-6.0 dB").
+- **A bus cannot feed itself.** An output that would close a loop is refused
+  with `routing_loop`. `path` names the loop and nothing changes.
+- **Only tracks have sends, and the master has no output.** A send from a
+  bus, an output for the master, or an output to a track is refused with
+  `wrong_kind`.
+
 ### Not in the vocabulary
 
 A remote cannot reach Control API methods by name, file paths, scripts, app
@@ -555,8 +596,10 @@ state in `data`, as listed.
 | 1029 | `nothing_to_redo` | There is nothing to redo. | `undo` |
 | 1030 | `needs_save_location` | Save this song on the computer first, so it has a file. | |
 | 1031 | `not_supported` | This version of Tabber Studio cannot do that. Update Tabber Studio. | |
-| 1032 | `unknown_strip` | That strip is gone from the mixer. | `mixer` |
+| 1032 | `unknown_strip` | That strip is gone from the mixer. | `mixer` or `routing` |
 | 1033 | `no_tab` | Choose a tab track to write on first. | `tracks` |
+| 1034 | `routing_loop` | That route would make a feedback loop. | `path`, `routing` |
+| 1035 | `wrong_kind` | That strip cannot be routed that way. | `routing` |
 | 1099 | `host_error` | Tabber Studio could not do that. | `detail` |
 
 `schemas/errors.json` holds this table; the validator checks every error in

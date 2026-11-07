@@ -486,7 +486,8 @@
         "meters",
         "mixer",
         "mixer_meters",
-        "tab"
+        "tab",
+        "routing"
       ]
     },
     "host": {
@@ -842,6 +843,110 @@
         }
       ],
       "description": "The selected track's tab, or null when the selected track has none."
+    },
+    "routing_source": {
+      "type": "object",
+      "properties": {
+        "strip_id": {
+          "$ref": "#/$defs/id"
+        },
+        "kind": {
+          "enum": [
+            "track",
+            "bus"
+          ]
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "output": {
+          "$ref": "#/$defs/id",
+          "description": "master, or the strip id of the bus it outputs to."
+        }
+      },
+      "required": [
+        "strip_id",
+        "kind",
+        "name",
+        "output"
+      ],
+      "additionalProperties": false
+    },
+    "routing_send": {
+      "type": "object",
+      "properties": {
+        "strip_id": {
+          "$ref": "#/$defs/id",
+          "description": "The track that sends."
+        },
+        "bus_id": {
+          "$ref": "#/$defs/id",
+          "description": "The strip id of the bus it sends to."
+        },
+        "level": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "The send's gain, as the host stores it."
+        },
+        "level_db": {
+          "oneOf": [
+            {
+              "type": "number",
+              "minimum": -60,
+              "maximum": 0
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "What the level means; null is silence."
+        },
+        "level_label": {
+          "type": "string",
+          "maxLength": 12,
+          "description": "As Tabber Studio writes it: -6.0 dB."
+        },
+        "pre_fader": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "strip_id",
+        "bus_id",
+        "level",
+        "level_db",
+        "level_label",
+        "pre_fader"
+      ],
+      "additionalProperties": false
+    },
+    "routing": {
+      "type": "object",
+      "properties": {
+        "sources": {
+          "type": "array",
+          "maxItems": 512,
+          "items": {
+            "$ref": "#/$defs/routing_source"
+          },
+          "description": "Every track in strip order, then every bus, each with its one output."
+        },
+        "sends": {
+          "type": "array",
+          "maxItems": 4096,
+          "items": {
+            "$ref": "#/$defs/routing_send"
+          },
+          "description": "Every send, in strip order, then the mixer's bus order."
+        }
+      },
+      "required": [
+        "sources",
+        "sends"
+      ],
+      "additionalProperties": false
     }
   }
 }

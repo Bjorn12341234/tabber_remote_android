@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tabber.studio/schemas/remote/1/methods/routing.remove_send.json",
+  "title": "routing.remove_send",
+  "x-capability": "routing/1",
+  "x-changes": true,
+  "$defs": {
+    "params": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "$ref": "../common.json#/$defs/key"
+        },
+        "strip_id": {
+          "$ref": "../common.json#/$defs/id"
+        },
+        "bus_id": {
+          "$ref": "../common.json#/$defs/id"
+        }
+      },
+      "required": [
+        "key",
+        "strip_id",
+        "bus_id"
+      ],
+      "additionalProperties": false
+    },
+    "result": {
+      "type": "object",
+      "properties": {
+        "routing": {
+          "$ref": "../common.json#/$defs/routing"
+        },
+        "undo": {
+          "$ref": "../common.json#/$defs/undo"
+        }
+      },
+      "required": [
+        "routing",
+        "undo"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

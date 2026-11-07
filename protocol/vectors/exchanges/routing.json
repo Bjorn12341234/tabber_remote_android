@@ -1,0 +1,1568 @@
+{
+ "name": "routing",
+ "description": "Routing: read it, move a track's output to a bus, route a bus into another, a loop refused with its path, add a send and set its level and Pre-fader, remove a send, a bus that cannot send (wrong_kind), a gone strip, and Undo bringing a send back (spec 9, routing/1).",
+ "start": "authenticated",
+ "host_state": {
+  "pairing": {
+   "open": false
+  },
+  "paired_devices": [
+   {
+    "device_id": "zsiNWgOpGPu3nnQsDLV1c5EUoLWC_GqaxM6F0p8aU88",
+    "name": "Björn's iPhone",
+    "key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAELmFLfdxxNIkeJNkXdNhfQVal4qrDnl_C1tq3bYJMIbARSFIBJiHBKBXg2n0qXdRgpN7x-2sEbrFmAaCll5zfdw"
+   }
+  ],
+  "capabilities": [
+   "transport/1",
+   "record/1",
+   "tempo_scale/1",
+   "tracks/1",
+   "tracks.monitor/1",
+   "markers/1",
+   "takes/1",
+   "takes.discard/1",
+   "takes.go_again/1",
+   "undo/1",
+   "save/1",
+   "meters/1",
+   "pair.code/1",
+   "mixer/1",
+   "tab/1",
+   "routing/1"
+  ],
+  "snapshot": {
+   "seq": 10,
+   "t": 9000.0,
+   "project": {
+    "title": "My Song",
+    "unsaved": false,
+    "has_file": true
+   },
+   "transport": {
+    "state": "stopped",
+    "position": {
+     "bar": 1,
+     "beat": 1,
+     "seconds": 0.0
+    },
+    "tempo_bpm": 96.0,
+    "tempo_scale": 1.0,
+    "time_signature": {
+     "beats": 4,
+     "unit": 4
+    },
+    "loop": {
+     "enabled": false,
+     "start": null,
+     "end": null
+    },
+    "click": false,
+    "count_in_bars": 0,
+    "counting_in": false
+   },
+   "record": {
+    "recording": false,
+    "started": null,
+    "armed_track_ids": []
+   },
+   "tracks": [
+    {
+     "id": "trk-guitar",
+     "name": "Guitar",
+     "kind": "midi",
+     "armed": false,
+     "monitor": "auto",
+     "selected": true,
+     "color": "#50A0DC",
+     "instrument": "Acoustic Guitar (steel)",
+     "tuning": [
+      64,
+      59,
+      55,
+      50,
+      45,
+      40
+     ]
+    },
+    {
+     "id": "trk-vocals",
+     "name": "Vocals",
+     "kind": "audio",
+     "armed": false,
+     "monitor": "auto",
+     "selected": false,
+     "color": "#DC5050"
+    },
+    {
+     "id": "trk-keys",
+     "name": "Keys",
+     "kind": "midi",
+     "armed": false,
+     "monitor": "auto",
+     "selected": false,
+     "color": "#64BE64",
+     "instrument": "Electric Piano 1"
+    }
+   ],
+   "markers": [
+    {
+     "id": "mrk-intro",
+     "name": "Intro",
+     "bar": 1,
+     "beat": 1
+    },
+    {
+     "id": "mrk-verse",
+     "name": "Verse",
+     "bar": 9,
+     "beat": 1
+    },
+    {
+     "id": "mrk-chorus",
+     "name": "Chorus",
+     "bar": 25,
+     "beat": 1
+    },
+    {
+     "id": "mrk-solo",
+     "name": "Solo",
+     "bar": 41,
+     "beat": 1
+    }
+   ],
+   "takes": [],
+   "undo": {
+    "undo": null,
+    "redo": null
+   }
+  }
+ },
+ "steps": [
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "session.subscribe",
+    "params": {
+     "topics": [
+      "routing",
+      "undo"
+     ]
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "result": {
+     "seq": 10,
+     "t": 9000.0,
+     "project": {
+      "title": "My Song",
+      "unsaved": false,
+      "has_file": true
+     },
+     "transport": {
+      "state": "stopped",
+      "position": {
+       "bar": 1,
+       "beat": 1,
+       "seconds": 0.0
+      },
+      "tempo_bpm": 96.0,
+      "tempo_scale": 1.0,
+      "time_signature": {
+       "beats": 4,
+       "unit": 4
+      },
+      "loop": {
+       "enabled": false,
+       "start": null,
+       "end": null
+      },
+      "click": false,
+      "count_in_bars": 0,
+      "counting_in": false
+     },
+     "record": {
+      "recording": false,
+      "started": null,
+      "armed_track_ids": []
+     },
+     "tracks": [
+      {
+       "id": "trk-guitar",
+       "name": "Guitar",
+       "kind": "midi",
+       "armed": false,
+       "monitor": "auto",
+       "selected": true,
+       "color": "#50A0DC",
+       "instrument": "Acoustic Guitar (steel)",
+       "tuning": [
+        64,
+        59,
+        55,
+        50,
+        45,
+        40
+       ]
+      },
+      {
+       "id": "trk-vocals",
+       "name": "Vocals",
+       "kind": "audio",
+       "armed": false,
+       "monitor": "auto",
+       "selected": false,
+       "color": "#DC5050"
+      },
+      {
+       "id": "trk-keys",
+       "name": "Keys",
+       "kind": "midi",
+       "armed": false,
+       "monitor": "auto",
+       "selected": false,
+       "color": "#64BE64",
+       "instrument": "Electric Piano 1"
+      }
+     ],
+     "markers": [
+      {
+       "id": "mrk-intro",
+       "name": "Intro",
+       "bar": 1,
+       "beat": 1
+      },
+      {
+       "id": "mrk-verse",
+       "name": "Verse",
+       "bar": 9,
+       "beat": 1
+      },
+      {
+       "id": "mrk-chorus",
+       "name": "Chorus",
+       "bar": 25,
+       "beat": 1
+      },
+      {
+       "id": "mrk-solo",
+       "name": "Solo",
+       "bar": 41,
+       "beat": 1
+      }
+     ],
+     "takes": [],
+     "undo": {
+      "undo": null,
+      "redo": null
+     }
+    }
+   }
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 2,
+    "method": "routing.state",
+    "params": {}
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 2,
+    "result": {
+     "routing": {
+      "sources": [
+       {
+        "strip_id": "trk-guitar",
+        "kind": "track",
+        "name": "Guitar",
+        "output": "master"
+       },
+       {
+        "strip_id": "trk-vocals",
+        "kind": "track",
+        "name": "Vocals",
+        "output": "master"
+       },
+       {
+        "strip_id": "trk-keys",
+        "kind": "track",
+        "name": "Keys",
+        "output": "master"
+       },
+       {
+        "strip_id": "bus-reverb",
+        "kind": "bus",
+        "name": "Reverb",
+        "output": "master"
+       },
+       {
+        "strip_id": "bus-delay",
+        "kind": "bus",
+        "name": "Delay",
+        "output": "master"
+       }
+      ],
+      "sends": [
+       {
+        "strip_id": "trk-vocals",
+        "bus_id": "bus-reverb",
+        "level": 0.5,
+        "level_db": -6.0,
+        "level_label": "-6.0 dB",
+        "pre_fader": false
+       }
+      ]
+     }
+    }
+   }
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 3,
+    "method": "routing.set_output",
+    "params": {
+     "key": "0b6c3f1e-7a2d-4e59-9c84-000000000400",
+     "strip_id": "trk-guitar",
+     "output": "bus-delay"
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 3,
+    "result": {
+     "routing": {
+      "sources": [
+       {
+        "strip_id": "trk-guitar",
+        "kind": "track",
+        "name": "Guitar",
+        "output": "bus-delay"
+       },
+       {
+        "strip_id": "trk-vocals",
+        "kind": "track",
+        "name": "Vocals",
+        "output": "master"
+       },
+       {
+        "strip_id": "trk-keys",
+        "kind": "track",
+        "name": "Keys",
+        "output": "master"
+       },
+       {
+        "strip_id": "bus-reverb",
+        "kind": "bus",
+        "name": "Reverb",
+        "output": "master"
+       },
+       {
+        "strip_id": "bus-delay",
+        "kind": "bus",
+        "name": "Delay",
+        "output": "master"
+       }
+      ],
+      "sends": [
+       {
+        "strip_id": "trk-vocals",
+        "bus_id": "bus-reverb",
+        "level": 0.5,
+        "level_db": -6.0,
+        "level_label": "-6.0 dB",
+        "pre_fader": false
+       }
+      ]
+     },
+     "undo": {
+      "undo": {
+       "id": "u-51",
+       "label": "Routing change"
+      },
+      "redo": null
+     }
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "method": "event",
+    "params": {
+     "topic": "routing",
+     "seq": 11,
+     "t": 9001.1,
+     "data": {
+      "sources": [
+       {
+        "strip_id": "trk-guitar",
+        "kind": "track",
+        "name": "Guitar",
+        "output": "bus-delay"
+       },
+       {
+        "strip_id": "trk-vocals",
+        "kind": "track",
+        "name": "Vocals",
+        "output": "master"
+       },
+       {
+        "strip_id": "trk-keys",
+        "kind": "track",
+        "name": "Keys",
+        "output": "master"
+       },
+       {
+        "strip_id": "bus-reverb",
+        "kind": "bus",
+        "name": "Reverb",
+        "output": "master"
+       },
+       {
+        "strip_id": "bus-delay",
+        "kind": "bus",
+        "name": "Delay",
+        "output": "master"
+       }
+      ],
+      "sends": [
+       {
+        "strip_id": "trk-vocals",
+        "bus_id": "bus-reverb",
+        "level": 0.5,
+        "level_db": -6.0,
+        "level_label": "-6.0 dB",
+        "pre_fader": false
+       }
+      ]
+     }
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "method": "event",
+    "params": {
+     "topic": "undo",
+     "seq": 12,
+     "t": 9001.2,
+     "data": {
+      "undo": {
+       "id": "u-51",
+       "label": "Routing change"
+      },
+      "redo": null
+     }
+    }
+   }
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 4,
+    "method": "routing.set_output",
+    "params": {
+     "key": "0b6c3f1e-7a2d-4e59-9c84-000000000401",
+     "strip_id": "bus-delay",
+     "output": "bus-reverb"
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 4,
+    "result": {
+     "routing": {
+      "sources": [
+       {
+        "strip_id": "trk-guitar",
+        "kind": "track",
+        "name": "Guitar",
+        "output": "bus-delay"
+       },
+       {
+        "strip_id": "trk-vocals",
+        "kind": "track",
+        "name": "Vocals",
+        "output": "master"
+       },
+       {
+        "strip_id": "trk-keys",
+        "kind": "track",
+        "name": "Keys",
+        "output": "master"
+       },
+       {
+        "strip_id": "bus-reverb",
+        "kind": "bus",
+        "name": "Reverb",
+        "output": "master"
+       },
+       {
+        "strip_id": "bus-delay",
+        "kind": "bus",
+        "name": "Delay",
+        "output": "bus-reverb"
+       }
+      ],
+      "sends": [
+       {
+        "strip_id": "trk-vocals",
+        "bus_id": "bus-reverb",
+        "level": 0.5,
+        "level_db": -6.0,
+        "level_label": "-6.0 dB",
+        "pre_fader": false
+       }
+      ]
+     },
+     "undo": {
+      "undo": {
+       "id": "u-52",
+       "label": "Routing change"
+      },
+      "redo": null
+     }
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "method": "event",
+    "params": {
+     "topic": "routing",
+     "seq": 13,
+     "t": 9001.3,
+     "data": {
+      "sources": [
+       {
+        "strip_id": "trk-guitar",
+        "kind": "track",
+        "name": "Guitar",
+        "output": "bus-delay"
+       },
+       {
+        "strip_id": "trk-vocals",
+        "kind": "track",
+        "name": "Vocals",
+        "output": "master"
+       },
+       {
+        "strip_id": "trk-keys",
+        "kind": "track",
+        "name": "Keys",
+        "output": "master"
+       },
+       {
+        "strip_id": "bus-reverb",
+        "kind": "bus",
+        "name": "Reverb",
+        "output": "master"
+       },
+       {
+        "strip_id": "bus-delay",
+        "kind": "bus",
+        "name": "Delay",
+        "output": "bus-reverb"
+       }
+      ],
+      "sends": [
+       {
+        "strip_id": "trk-vocals",
+        "bus_id": "bus-reverb",
+        "level": 0.5,
+        "level_db": -6.0,
+        "level_label": "-6.0 dB",
+        "pre_fader": false
+       }
+      ]
+     }
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "method": "event",
+    "params": {
+     "topic": "undo",
+     "seq": 14,
+     "t": 9001.4,
+     "data": {
+      "undo": {
+       "id": "u-52",
+       "label": "Routing change"
+      },
+      "redo": null
+     }
+    }
+   }
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 5,
+    "method": "routing.set_output",
+    "params": {
+     "key": "0b6c3f1e-7a2d-4e59-9c84-000000000402",
+     "strip_id": "bus-reverb",
+     "output": "bus-delay"
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 5,
+    "error": {
+     "code": 1034,
+     "message": "That route would make a feedback loop.",
+     "data": {
+      "reason": "routing_loop",
+      "path": [
+       "Reverb",
+       "Delay",
+       "Reverb"
+      ],
+      "routing": {
+       "sources": [
+        {
+         "strip_id": "trk-guitar",
+         "kind": "track",
+         "name": "Guitar",
+         "output": "bus-delay"
+        },
+        {
+         "strip_id": "trk-vocals",
+         "kind": "track",
+         "name": "Vocals",
+         "output": "master"
+        },
+        {
+         "strip_id": "trk-keys",
+         "kind": "track",
+         "name": "Keys",
+         "output": "master"
+        },
+        {
+         "strip_id": "bus-reverb",
+         "kind": "bus",
+         "name": "Reverb",
+         "output": "master"
+        },
+        {
+         "strip_id": "bus-delay",
+         "kind": "bus",
+         "name": "Delay",
+         "output": "bus-reverb"
+        }
+       ],
+       "sends": [
+        {
+         "strip_id": "trk-vocals",
+         "bus_id": "bus-reverb",
+         "level": 0.5,
+         "level_db": -6.0,
+         "level_label": "-6.0 dB",
+         "pre_fader": false
+        }
+       ]
+      }
+     }
+    }
+   }
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 6,
+    "method": "routing.set_send",
+    "params": {
+     "key": "0b6c3f1e-7a2d-4e59-9c84-000000000403",
+     "strip_id": "trk-guitar",
+     "bus_id": "bus-reverb"
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 6,
+    "result": {
+     "routing": {
+      "sources": [
+       {
+        "strip_id": "trk-guitar",
+        "kind": "track",
+        "name": "Guitar",
+        "output": "bus-delay"
+       },
+       {
+        "strip_id": "trk-vocals",
+        "kind": "track",
+        "name": "Vocals",
+        "output": "master"
+       },
+       {
+        "strip_id": "trk-keys",
+        "kind": "track",
+        "name": "Keys",
+        "output": "master"
+       },
+       {
+        "strip_id": "bus-reverb",
+        "kind": "bus",
+        "name": "Reverb",
+        "output": "master"
+       },
+       {
+        "strip_id": "bus-delay",
+        "kind": "bus",
+        "name": "Delay",
+        "output": "bus-reverb"
+       }
+      ],
+      "sends": [
+       {
+        "strip_id": "trk-guitar",
+        "bus_id": "bus-reverb",
+        "level": 0.5,
+        "level_db": -6.0,
+        "level_label": "-6.0 dB",
+        "pre_fader": false
+       },
+       {
+        "strip_id": "trk-vocals",
+        "bus_id": "bus-reverb",
+        "level": 0.5,
+        "level_db": -6.0,
+        "level_label": "-6.0 dB",
+        "pre_fader": false
+       }
+      ]
+     },
+     "undo": {
+      "undo": {
+       "id": "u-53",
+       "label": "Add send → bus 1"
+      },
+      "redo": null
+     }
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "method": "event",
+    "params": {
+     "topic": "routing",
+     "seq": 15,
+     "t": 9001.5,
+     "data": {
+      "sources": [
+       {
+        "strip_id": "trk-guitar",
+        "kind": "track",
+        "name": "Guitar",
+        "output": "bus-delay"
+       },
+       {
+        "strip_id": "trk-vocals",
+        "kind": "track",
+        "name": "Vocals",
+        "output": "master"
+       },
+       {
+        "strip_id": "trk-keys",
+        "kind": "track",
+        "name": "Keys",
+        "output": "master"
+       },
+       {
+        "strip_id": "bus-reverb",
+        "kind": "bus",
+        "name": "Reverb",
+        "output": "master"
+       },
+       {
+        "strip_id": "bus-delay",
+        "kind": "bus",
+        "name": "Delay",
+        "output": "bus-reverb"
+       }
+      ],
+      "sends": [
+       {
+        "strip_id": "trk-guitar",
+        "bus_id": "bus-reverb",
+        "level": 0.5,
+        "level_db": -6.0,
+        "level_label": "-6.0 dB",
+        "pre_fader": false
+       },
+       {
+        "strip_id": "trk-vocals",
+        "bus_id": "bus-reverb",
+        "level": 0.5,
+        "level_db": -6.0,
+        "level_label": "-6.0 dB",
+        "pre_fader": false
+       }
+      ]
+     }
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "method": "event",
+    "params": {
+     "topic": "undo",
+     "seq": 16,
+     "t": 9001.6,
+     "data": {
+      "undo": {
+       "id": "u-53",
+       "label": "Add send → bus 1"
+      },
+      "redo": null
+     }
+    }
+   }
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 7,
+    "method": "routing.set_send",
+    "params": {
+     "key": "0b6c3f1e-7a2d-4e59-9c84-000000000404",
+     "strip_id": "trk-guitar",
+     "bus_id": "bus-reverb",
+     "level": 0.25
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 7,
+    "result": {
+     "routing": {
+      "sources": [
+       {
+        "strip_id": "trk-guitar",
+        "kind": "track",
+        "name": "Guitar",
+        "output": "bus-delay"
+       },
+       {
+        "strip_id": "trk-vocals",
+        "kind": "track",
+        "name": "Vocals",
+        "output": "master"
+       },
+       {
+        "strip_id": "trk-keys",
+        "kind": "track",
+        "name": "Keys",
+        "output": "master"
+       },
+       {
+        "strip_id": "bus-reverb",
+        "kind": "bus",
+        "name": "Reverb",
+        "output": "master"
+       },
+       {
+        "strip_id": "bus-delay",
+        "kind": "bus",
+        "name": "Delay",
+        "output": "bus-reverb"
+       }
+      ],
+      "sends": [
+       {
+        "strip_id": "trk-guitar",
+        "bus_id": "bus-reverb",
+        "level": 0.25,
+        "level_db": -12.0,
+        "level_label": "-12.0 dB",
+        "pre_fader": false
+       },
+       {
+        "strip_id": "trk-vocals",
+        "bus_id": "bus-reverb",
+        "level": 0.5,
+        "level_db": -6.0,
+        "level_label": "-6.0 dB",
+        "pre_fader": false
+       }
+      ]
+     },
+     "undo": {
+      "undo": {
+       "id": "u-53",
+       "label": "Add send → bus 1"
+      },
+      "redo": null
+     }
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "method": "event",
+    "params": {
+     "topic": "routing",
+     "seq": 17,
+     "t": 9001.7,
+     "data": {
+      "sources": [
+       {
+        "strip_id": "trk-guitar",
+        "kind": "track",
+        "name": "Guitar",
+        "output": "bus-delay"
+       },
+       {
+        "strip_id": "trk-vocals",
+        "kind": "track",
+        "name": "Vocals",
+        "output": "master"
+       },
+       {
+        "strip_id": "trk-keys",
+        "kind": "track",
+        "name": "Keys",
+        "output": "master"
+       },
+       {
+        "strip_id": "bus-reverb",
+        "kind": "bus",
+        "name": "Reverb",
+        "output": "master"
+       },
+       {
+        "strip_id": "bus-delay",
+        "kind": "bus",
+        "name": "Delay",
+        "output": "bus-reverb"
+       }
+      ],
+      "sends": [
+       {
+        "strip_id": "trk-guitar",
+        "bus_id": "bus-reverb",
+        "level": 0.25,
+        "level_db": -12.0,
+        "level_label": "-12.0 dB",
+        "pre_fader": false
+       },
+       {
+        "strip_id": "trk-vocals",
+        "bus_id": "bus-reverb",
+        "level": 0.5,
+        "level_db": -6.0,
+        "level_label": "-6.0 dB",
+        "pre_fader": false
+       }
+      ]
+     }
+    }
+   }
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 8,
+    "method": "routing.set_send",
+    "params": {
+     "key": "0b6c3f1e-7a2d-4e59-9c84-000000000405",
+     "strip_id": "trk-guitar",
+     "bus_id": "bus-reverb",
+     "pre_fader": true
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 8,
+    "result": {
+     "routing": {
+      "sources": [
+       {
+        "strip_id": "trk-guitar",
+        "kind": "track",
+        "name": "Guitar",
+        "output": "bus-delay"
+       },
+       {
+        "strip_id": "trk-vocals",
+        "kind": "track",
+        "name": "Vocals",
+        "output": "master"
+       },
+       {
+        "strip_id": "trk-keys",
+        "kind": "track",
+        "name": "Keys",
+        "output": "master"
+       },
+       {
+        "strip_id": "bus-reverb",
+        "kind": "bus",
+        "name": "Reverb",
+        "output": "master"
+       },
+       {
+        "strip_id": "bus-delay",
+        "kind": "bus",
+        "name": "Delay",
+        "output": "bus-reverb"
+       }
+      ],
+      "sends": [
+       {
+        "strip_id": "trk-guitar",
+        "bus_id": "bus-reverb",
+        "level": 0.25,
+        "level_db": -12.0,
+        "level_label": "-12.0 dB",
+        "pre_fader": true
+       },
+       {
+        "strip_id": "trk-vocals",
+        "bus_id": "bus-reverb",
+        "level": 0.5,
+        "level_db": -6.0,
+        "level_label": "-6.0 dB",
+        "pre_fader": false
+       }
+      ]
+     },
+     "undo": {
+      "undo": {
+       "id": "u-53",
+       "label": "Add send → bus 1"
+      },
+      "redo": null
+     }
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "method": "event",
+    "params": {
+     "topic": "routing",
+     "seq": 18,
+     "t": 9001.8,
+     "data": {
+      "sources": [
+       {
+        "strip_id": "trk-guitar",
+        "kind": "track",
+        "name": "Guitar",
+        "output": "bus-delay"
+       },
+       {
+        "strip_id": "trk-vocals",
+        "kind": "track",
+        "name": "Vocals",
+        "output": "master"
+       },
+       {
+        "strip_id": "trk-keys",
+        "kind": "track",
+        "name": "Keys",
+        "output": "master"
+       },
+       {
+        "strip_id": "bus-reverb",
+        "kind": "bus",
+        "name": "Reverb",
+        "output": "master"
+       },
+       {
+        "strip_id": "bus-delay",
+        "kind": "bus",
+        "name": "Delay",
+        "output": "bus-reverb"
+       }
+      ],
+      "sends": [
+       {
+        "strip_id": "trk-guitar",
+        "bus_id": "bus-reverb",
+        "level": 0.25,
+        "level_db": -12.0,
+        "level_label": "-12.0 dB",
+        "pre_fader": true
+       },
+       {
+        "strip_id": "trk-vocals",
+        "bus_id": "bus-reverb",
+        "level": 0.5,
+        "level_db": -6.0,
+        "level_label": "-6.0 dB",
+        "pre_fader": false
+       }
+      ]
+     }
+    }
+   }
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 9,
+    "method": "routing.remove_send",
+    "params": {
+     "key": "0b6c3f1e-7a2d-4e59-9c84-000000000406",
+     "strip_id": "trk-vocals",
+     "bus_id": "bus-reverb"
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 9,
+    "result": {
+     "routing": {
+      "sources": [
+       {
+        "strip_id": "trk-guitar",
+        "kind": "track",
+        "name": "Guitar",
+        "output": "bus-delay"
+       },
+       {
+        "strip_id": "trk-vocals",
+        "kind": "track",
+        "name": "Vocals",
+        "output": "master"
+       },
+       {
+        "strip_id": "trk-keys",
+        "kind": "track",
+        "name": "Keys",
+        "output": "master"
+       },
+       {
+        "strip_id": "bus-reverb",
+        "kind": "bus",
+        "name": "Reverb",
+        "output": "master"
+       },
+       {
+        "strip_id": "bus-delay",
+        "kind": "bus",
+        "name": "Delay",
+        "output": "bus-reverb"
+       }
+      ],
+      "sends": [
+       {
+        "strip_id": "trk-guitar",
+        "bus_id": "bus-reverb",
+        "level": 0.25,
+        "level_db": -12.0,
+        "level_label": "-12.0 dB",
+        "pre_fader": true
+       }
+      ]
+     },
+     "undo": {
+      "undo": {
+       "id": "u-54",
+       "label": "Remove send → bus 1"
+      },
+      "redo": null
+     }
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "method": "event",
+    "params": {
+     "topic": "routing",
+     "seq": 19,
+     "t": 9001.9,
+     "data": {
+      "sources": [
+       {
+        "strip_id": "trk-guitar",
+        "kind": "track",
+        "name": "Guitar",
+        "output": "bus-delay"
+       },
+       {
+        "strip_id": "trk-vocals",
+        "kind": "track",
+        "name": "Vocals",
+        "output": "master"
+       },
+       {
+        "strip_id": "trk-keys",
+        "kind": "track",
+        "name": "Keys",
+        "output": "master"
+       },
+       {
+        "strip_id": "bus-reverb",
+        "kind": "bus",
+        "name": "Reverb",
+        "output": "master"
+       },
+       {
+        "strip_id": "bus-delay",
+        "kind": "bus",
+        "name": "Delay",
+        "output": "bus-reverb"
+       }
+      ],
+      "sends": [
+       {
+        "strip_id": "trk-guitar",
+        "bus_id": "bus-reverb",
+        "level": 0.25,
+        "level_db": -12.0,
+        "level_label": "-12.0 dB",
+        "pre_fader": true
+       }
+      ]
+     }
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "method": "event",
+    "params": {
+     "topic": "undo",
+     "seq": 20,
+     "t": 9002.0,
+     "data": {
+      "undo": {
+       "id": "u-54",
+       "label": "Remove send → bus 1"
+      },
+      "redo": null
+     }
+    }
+   }
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 10,
+    "method": "routing.set_send",
+    "params": {
+     "key": "0b6c3f1e-7a2d-4e59-9c84-000000000407",
+     "strip_id": "bus-delay",
+     "bus_id": "bus-reverb",
+     "level": 0.5
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 10,
+    "error": {
+     "code": 1035,
+     "message": "That strip cannot be routed that way.",
+     "data": {
+      "reason": "wrong_kind",
+      "routing": {
+       "sources": [
+        {
+         "strip_id": "trk-guitar",
+         "kind": "track",
+         "name": "Guitar",
+         "output": "bus-delay"
+        },
+        {
+         "strip_id": "trk-vocals",
+         "kind": "track",
+         "name": "Vocals",
+         "output": "master"
+        },
+        {
+         "strip_id": "trk-keys",
+         "kind": "track",
+         "name": "Keys",
+         "output": "master"
+        },
+        {
+         "strip_id": "bus-reverb",
+         "kind": "bus",
+         "name": "Reverb",
+         "output": "master"
+        },
+        {
+         "strip_id": "bus-delay",
+         "kind": "bus",
+         "name": "Delay",
+         "output": "bus-reverb"
+        }
+       ],
+       "sends": [
+        {
+         "strip_id": "trk-guitar",
+         "bus_id": "bus-reverb",
+         "level": 0.25,
+         "level_db": -12.0,
+         "level_label": "-12.0 dB",
+         "pre_fader": true
+        }
+       ]
+      }
+     }
+    }
+   }
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 11,
+    "method": "routing.set_output",
+    "params": {
+     "key": "0b6c3f1e-7a2d-4e59-9c84-000000000408",
+     "strip_id": "trk-drums",
+     "output": "master"
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 11,
+    "error": {
+     "code": 1032,
+     "message": "That strip is gone from the mixer.",
+     "data": {
+      "reason": "unknown_strip",
+      "routing": {
+       "sources": [
+        {
+         "strip_id": "trk-guitar",
+         "kind": "track",
+         "name": "Guitar",
+         "output": "bus-delay"
+        },
+        {
+         "strip_id": "trk-vocals",
+         "kind": "track",
+         "name": "Vocals",
+         "output": "master"
+        },
+        {
+         "strip_id": "trk-keys",
+         "kind": "track",
+         "name": "Keys",
+         "output": "master"
+        },
+        {
+         "strip_id": "bus-reverb",
+         "kind": "bus",
+         "name": "Reverb",
+         "output": "master"
+        },
+        {
+         "strip_id": "bus-delay",
+         "kind": "bus",
+         "name": "Delay",
+         "output": "bus-reverb"
+        }
+       ],
+       "sends": [
+        {
+         "strip_id": "trk-guitar",
+         "bus_id": "bus-reverb",
+         "level": 0.25,
+         "level_db": -12.0,
+         "level_label": "-12.0 dB",
+         "pre_fader": true
+        }
+       ]
+      }
+     }
+    }
+   }
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 12,
+    "method": "edit.undo",
+    "params": {
+     "key": "0b6c3f1e-7a2d-4e59-9c84-000000000409",
+     "expect": "u-54"
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 12,
+    "result": {
+     "undo": {
+      "undo": {
+       "id": "u-53",
+       "label": "Add send → bus 1"
+      },
+      "redo": {
+       "id": "u-54",
+       "label": "Remove send → bus 1"
+      }
+     }
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "method": "event",
+    "params": {
+     "topic": "routing",
+     "seq": 21,
+     "t": 9002.1,
+     "data": {
+      "sources": [
+       {
+        "strip_id": "trk-guitar",
+        "kind": "track",
+        "name": "Guitar",
+        "output": "bus-delay"
+       },
+       {
+        "strip_id": "trk-vocals",
+        "kind": "track",
+        "name": "Vocals",
+        "output": "master"
+       },
+       {
+        "strip_id": "trk-keys",
+        "kind": "track",
+        "name": "Keys",
+        "output": "master"
+       },
+       {
+        "strip_id": "bus-reverb",
+        "kind": "bus",
+        "name": "Reverb",
+        "output": "master"
+       },
+       {
+        "strip_id": "bus-delay",
+        "kind": "bus",
+        "name": "Delay",
+        "output": "bus-reverb"
+       }
+      ],
+      "sends": [
+       {
+        "strip_id": "trk-guitar",
+        "bus_id": "bus-reverb",
+        "level": 0.25,
+        "level_db": -12.0,
+        "level_label": "-12.0 dB",
+        "pre_fader": true
+       },
+       {
+        "strip_id": "trk-vocals",
+        "bus_id": "bus-reverb",
+        "level": 0.5,
+        "level_db": -6.0,
+        "level_label": "-6.0 dB",
+        "pre_fader": false
+       }
+      ]
+     }
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "method": "event",
+    "params": {
+     "topic": "undo",
+     "seq": 22,
+     "t": 9002.2,
+     "data": {
+      "undo": {
+       "id": "u-53",
+       "label": "Add send → bus 1"
+      },
+      "redo": {
+       "id": "u-54",
+       "label": "Remove send → bus 1"
+      }
+     }
+    }
+   }
+  }
+ ]
+}
