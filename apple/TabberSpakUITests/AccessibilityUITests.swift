@@ -9,10 +9,18 @@ final class AccessibilityUITests: XCTestCase {
     }
 
     @MainActor
-    func audit(_ app: XCUIApplication, _ screen: String) throws {
+    func audit(_ app: XCUIApplication, _ screen: String, scrolls: Bool = false) throws {
+        // A list longer than the screen runs on under the transport and the
+        // tab bar, as iOS lists do; the text resting there reads as low
+        // contrast wherever the list stops. Only that is left out: contrast
+        // under the bars, and contrast the audit cannot place, which is text
+        // inside a combined control (the Routing view passes with nothing
+        // left out when its list fits on the screen, checked 7 Nov 2026).
+        let barTop = scrolls ? element(app, "play").frame.minY - 16 : .infinity
         try app.performAccessibilityAudit { issue in
             // The sheet's Done is iOS's own toolbar button, whose largest sizes iOS caps.
             if issue.auditType == .dynamicType, issue.element?.identifier == "done" { return true }
+            if scrolls, issue.auditType == .contrast, (issue.element?.frame.maxY ?? .infinity) > barTop { return true }
             print("AUDIT \(screen): \(issue.auditType) \(issue.compactDescription) | \(issue.detailedDescription) on \(issue.element?.debugDescription.prefix(160) ?? "the screen")")
             return false
         }
@@ -59,6 +67,10 @@ final class AccessibilityUITests: XCTestCase {
         app.tabBars.buttons["Mixer"].tap()
         XCTAssertTrue(element(app, "fader-Guitar").waitForExistence(timeout: 8))
         try audit(app, "Mixer")
+        app.segmentedControls.buttons["Routing"].tap()
+        XCTAssertTrue(element(app, "route-Vocals").waitForExistence(timeout: 8))
+        try audit(app, "Routing", scrolls: true)
+        app.segmentedControls.buttons["Mixer"].tap()
         app.tabBars.buttons["Tuner"].tap()
         XCTAssertTrue(element(app, "tuner-dial").waitForExistence(timeout: 8))
         try audit(app, "Tuner")

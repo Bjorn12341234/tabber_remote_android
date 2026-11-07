@@ -98,9 +98,9 @@ final class AppModel {
         }
     }
 
-    private var demoSpeaks = ["1.1"]
+    private var demoSpeaks = ["1.2"]
 
-    func startDemo(speaks: [String] = ["1.1"]) {
+    func startDemo(speaks: [String] = ["1.2"]) {
         isDemo = true
         demoSpeaks = speaks
         book = nil
@@ -403,6 +403,38 @@ final class AppModel {
         }
     }
 
+    // Routing (the Mixer's Routing view, routing/1)
+
+    var routingAvailable: Bool { state.capabilities.contains("routing/1") }
+
+    /// Where a track's or bus's sound goes: one undo step on the computer.
+    func setOutput(_ source: RoutingSource, to output: String) {
+        guard output != source.output else { return }
+        act("output-\(source.stripID)", "routing.set_output",
+            ["strip_id": .string(source.stripID), "output": .string(output)])
+    }
+
+    /// A new send, at Tabber Studio's -6 dB: an undo step.
+    func addSend(from track: String, to bus: String) {
+        act("send-\(track)>\(bus)", "routing.set_send", ["strip_id": .string(track), "bus_id": .string(bus)])
+    }
+
+    /// A send's level: no undo step, as the mixer's send controls; the newest value only.
+    func setSendLevel(_ send: RoutingSend, _ level: Double) {
+        self.send("sendlevel-\(send.id)", "routing.set_send",
+                  ["strip_id": .string(send.stripID), "bus_id": .string(send.busID),
+                   "level": .number((max(0, min(1, level)) * 10000).rounded() / 10000)])
+    }
+
+    func setPreFader(_ send: RoutingSend, _ on: Bool) {
+        act("pre-\(send.id)", "routing.set_send",
+            ["strip_id": .string(send.stripID), "bus_id": .string(send.busID), "pre_fader": .bool(on)])
+    }
+
+    func removeSend(_ send: RoutingSend) {
+        act("remove-\(send.id)", "routing.remove_send", ["strip_id": .string(send.stripID), "bus_id": .string(send.busID)])
+    }
+
     /// The Mixer's meters, only while it is on screen (plan: TR25).
     func watchMixerMeters(_ on: Bool) {
         guard let session else { return }
@@ -490,6 +522,9 @@ final class AppModel {
 
     static func explain(_ error: Error?) -> String {
         switch error {
+        case let failure as RemoteError where failure.reason == "routing_loop":
+            let path = failure.data["path"]?.arrayValue?.compactMap(\.stringValue) ?? []
+            return path.isEmpty ? failure.message : "\(failure.message) \(path.joined(separator: " → "))."
         case let failure as RemoteError: return failure.message
         case TransportFailure.wrongKey?: return "This is not the computer you paired with."
         case TransportFailure.closed?: return "Tabber Studio closed the connection."

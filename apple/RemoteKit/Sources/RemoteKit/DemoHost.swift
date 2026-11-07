@@ -22,6 +22,10 @@ public actor DemoHost {
         var muted: Set<String> = []
         var soloed: Set<String> = []
         var tabs: [String: DemoTab] = [:]
+        /// Routing, as Tabber Studio's Routing panel edits it: outputs and which
+        /// sends exist are undo steps; a send's level and Pre-fader are not.
+        var outputs: [String: String] = [:]      // source strip id → bus strip id; absent is the master
+        var sends: Set<String> = []              // "track>bus"
     }
 
     final class Connection {
@@ -60,6 +64,8 @@ public actor DemoHost {
     /// Fader travel and pan for every strip: direct writes, as in Tabber Studio.
     private var faders: [String: (volume: Double, pan: Double)] = [:]
     private let buses: [(id: String, name: String)] = [("demo-bus-reverb", "Reverb")]
+    /// Each send's level and Pre-fader: direct writes, as the mixer's send controls.
+    private var sendLevels: [String: (level: Double, pre: Bool)] = [:]
     /// The Tab view's cursor on each tab track, and the duration a new note gets.
     private var tabCursors: [String: TabCursor] = [:]
     private var tabDuration = NoteValue(value: 4)
@@ -73,7 +79,7 @@ public actor DemoHost {
     /// shows the app's Update cards (TR6).
     public let speaks: [String]
 
-    public init(speaks: [String] = ["1.1"]) {
+    public init(speaks: [String] = ["1.2"]) {
         self.speaks = speaks
         // Tabber Studio's own track colours (core/models.py TRACK_COLORS), in its strip order.
         song = Song(
@@ -93,7 +99,9 @@ public actor DemoHost {
                       Marker(id: "demo-solo", name: "Solo", bar: 41, beat: 1)],
             takes: [],
             project: ProjectState(title: "Demo Song", unsaved: false, hasFile: true),
-            tabs: ["demo-guitar": DemoTab.demoGuitar(), "demo-bass": DemoTab.demoBass()])
+            tabs: ["demo-guitar": DemoTab.demoGuitar(), "demo-bass": DemoTab.demoBass()],
+            sends: ["demo-lead>demo-bus-reverb", "demo-vocals>demo-bus-reverb"])
+        sendLevels = ["demo-lead>demo-bus-reverb": (0.25, false), "demo-vocals>demo-bus-reverb": (0.5, false)]
         faders = ["demo-guitar": (0.7, -0.3), "demo-bass": (0.62, 0), "demo-drums": (0.66, 0),
                   "demo-lead": (0.7, 0.32), "demo-vocals": (0.74, 0), "demo-bus-reverb": (0.52, 0), "master": (0.7, 0)]
     }
@@ -189,10 +197,10 @@ public actor DemoHost {
             }
             connection.challenge = Data((0..<32).map { _ in UInt8.random(in: 0...255) })
             return ["host": ["id": .string(Self.hostID), "name": .string(Self.name), "app_version": "demo"],
-                    "protocol_version": "1.1",
+                    "protocol_version": "1.2",
                     "capabilities": ["transport/1", "record/1", "tempo_scale/1", "tracks/1", "tracks.monitor/1",
                                      "markers/1", "takes/1", "takes.discard/1", "takes.go_again/1", "undo/1",
-                                     "save/1", "meters/1", "mixer/1", "tab/1"],
+                                     "save/1", "meters/1", "mixer/1", "tab/1", "routing/1"],
                     "limits": ["max_frame_bytes": 65536, "requests_per_second": 20, "burst": 40,
                                "heartbeat_ms": 2000, "heartbeat_misses": 3, "connections_per_device": 2],
                     "challenge": .string(Base64URL.encode(connection.challenge))]
@@ -399,6 +407,11 @@ public actor DemoHost {
                 }
             }
             return ["mixer": try JSONCoding.value(mixerState()), "undo": try JSONCoding.value(undoState())]
+        case "routing.state":
+            return ["routing": try JSONCoding.value(routingState())]
+        case "routing.set_output", "routing.set_send", "routing.remove_send":
+            try routingVerb(method, p)
+            return ["routing": try JSONCoding.value(routingState()), "undo": try JSONCoding.value(undoState())]
         case "tab.state":
             return ["tab": tabValue()]
         case "tab.set_cursor", "tab.move", "tab.put", "tab.put_pitch", "tab.set_duration", "tab.rest", "tab.delete":
@@ -451,6 +464,70 @@ public actor DemoHost {
     private func mixerState() -> MixerState {
         let ids = song.tracks.map(\.id) + buses.map(\.id) + ["master"]
         return MixerState(strips: ids.compactMap(strip), scale: Self.scale)
+    }
+
+    // MARK: routing
+
+    private func routingState() -> RoutingState {
+        let sources = song.tracks.map { RoutingSource(stripID: $0.id, kind: "track", name: $0.name,
+                                                      output: song.outputs[$0.id] ?? RoutingState.master) }
+            + buses.map { RoutingSource(stripID: $0.id, kind: "bus", name: $0.name,
+                                        output: song.outputs[$0.id] ?? RoutingState.master) }
+        var sends: [RoutingSend] = []
+        for track in song.tracks {
+            for bus in buses where song.sends.contains("\(track.id)>\(bus.id)") {
+                let value = sendLevels["\(track.id)>\(bus.id)"] ?? (0.5, false)
+                sends.append(RoutingSend(stripID: track.id, busID: bus.id, level: (value.level * 10000).rounded() / 10000,
+                                         levelDB: SendLevel.db(value.level).map { ($0 * 10).rounded() / 10 },
+                                         levelLabel: SendLevel.label(value.level), preFader: value.pre))
+            }
+        }
+        return RoutingState(sources: sources, sends: sends)
+    }
+
+    private func routingError(_ reason: String, _ extra: [String: JSONValue] = [:]) -> Error {
+        var data = extra
+        data["routing"] = try? JSONCoding.value(routingState())
+        return DemoErrors.make(reason, data)
+    }
+
+    /// Tabber Studio's Routing panel: an output moves (one step, "Routing
+    /// change"), a send is added at -6 dB or taken away (each a step), and
+    /// its level and Pre-fader change without one. A loop is refused, named.
+    private func routingVerb(_ method: String, _ p: JSONValue) throws {
+        let isBus = { (id: String) in self.buses.contains { $0.id == id } }
+        let isTrack = { (id: String) in self.song.tracks.contains { $0.id == id } }
+        let id = p["strip_id"]?.stringValue ?? ""
+        guard isBus(id) || isTrack(id) || id == "master" else { throw routingError("unknown_strip") }
+        switch method {
+        case "routing.set_output":
+            let output = p["output"]?.stringValue ?? ""
+            guard output == RoutingState.master || isBus(output) || isTrack(output) else { throw routingError("unknown_strip") }
+            guard id != "master", output == RoutingState.master || isBus(output) else { throw routingError("wrong_kind") }
+            if let loop = routingState().wouldLoop(id, into: output) {
+                throw routingError("routing_loop", ["path": .array(loop.map { .string($0) })])
+            }
+            guard (song.outputs[id] ?? RoutingState.master) != output else { return }
+            edit("Routing change") { $0.outputs[id] = output == RoutingState.master ? nil : output }
+        default:
+            let bus = p["bus_id"]?.stringValue ?? ""
+            guard isBus(bus) || isTrack(bus) || bus == "master" else { throw routingError("unknown_strip") }
+            guard isTrack(id), isBus(bus) else { throw routingError("wrong_kind") }
+            let send = "\(id)>\(bus)"
+            let name = buses.first { $0.id == bus }?.name ?? bus
+            if method == "routing.remove_send" {
+                if song.sends.contains(send) { edit("Remove send → \(name)") { $0.sends.remove(send) } }
+                return
+            }
+            if !song.sends.contains(send) {
+                sendLevels[send] = (0.5, false)                // Tabber Studio's -6 dB
+                edit("Add send → \(name)") { $0.sends.insert(send) }
+            }
+            var value = sendLevels[send] ?? (0.5, false)
+            if let level = p["level"]?.doubleValue { value.level = max(0, min(1, level)) }
+            if let pre = p["pre_fader"]?.boolValue { value.pre = pre }
+            sendLevels[send] = value
+        }
     }
 
     /// The selected track, when it has tab.
@@ -654,6 +731,7 @@ public actor DemoHost {
         data["project"] = try? JSONCoding.value(song.project)
         data["mixer"] = try? JSONCoding.value(mixerState())
         data["tab"] = ["tab": tabValue()]
+        data["routing"] = try? JSONCoding.value(routingState())
         return data
     }
 
@@ -667,13 +745,14 @@ public actor DemoHost {
         case "undo": return (try? JSONCoding.value(undoState())) ?? .null
         case "mixer": return (try? JSONCoding.value(mixerState())) ?? .null
         case "tab": return ["tab": tabValue()]
+        case "routing": return (try? JSONCoding.value(routingState())) ?? .null
         default: return (try? JSONCoding.value(song.project)) ?? .null
         }
     }
 
     private func broadcastChanges(from before: [String: JSONValue]) {
         let after = topicData()
-        for topic in ["transport", "record", "tracks", "markers", "takes", "undo", "project", "mixer", "tab"]
+        for topic in ["transport", "record", "tracks", "markers", "takes", "undo", "project", "mixer", "tab", "routing"]
         where before[topic] != after[topic] {
             emit(topic, full(topic))
         }

@@ -774,7 +774,7 @@
      "undo": {
       "undo": {
        "id": "u-53",
-       "label": "Add send → bus 1"
+       "label": "Add send → Reverb"
       },
       "redo": null
      }
@@ -857,7 +857,7 @@
      "data": {
       "undo": {
        "id": "u-53",
-       "label": "Add send → bus 1"
+       "label": "Add send → Reverb"
       },
       "redo": null
      }
@@ -939,7 +939,7 @@
      "undo": {
       "undo": {
        "id": "u-53",
-       "label": "Add send → bus 1"
+       "label": "Add send → Reverb"
       },
       "redo": null
      }
@@ -1085,7 +1085,7 @@
      "undo": {
       "undo": {
        "id": "u-53",
-       "label": "Add send → bus 1"
+       "label": "Add send → Reverb"
       },
       "redo": null
      }
@@ -1222,7 +1222,7 @@
      "undo": {
       "undo": {
        "id": "u-54",
-       "label": "Remove send → bus 1"
+       "label": "Remove send → Reverb"
       },
       "redo": null
      }
@@ -1297,7 +1297,7 @@
      "data": {
       "undo": {
        "id": "u-54",
-       "label": "Remove send → bus 1"
+       "label": "Remove send → Reverb"
       },
       "redo": null
      }
@@ -1468,11 +1468,11 @@
      "undo": {
       "undo": {
        "id": "u-53",
-       "label": "Add send → bus 1"
+       "label": "Add send → Reverb"
       },
       "redo": {
        "id": "u-54",
-       "label": "Remove send → bus 1"
+       "label": "Remove send → Reverb"
       }
      }
     }
@@ -1554,11 +1554,11 @@
      "data": {
       "undo": {
        "id": "u-53",
-       "label": "Add send → bus 1"
+       "label": "Add send → Reverb"
       },
       "redo": {
        "id": "u-54",
-       "label": "Remove send → bus 1"
+       "label": "Remove send → Reverb"
       }
      }
     }

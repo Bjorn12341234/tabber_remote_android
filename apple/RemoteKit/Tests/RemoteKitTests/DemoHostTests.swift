@@ -122,6 +122,63 @@ struct DemoHostTests {
         #expect(back.takes.map(\.active) == [true, false])
     }
 
+    @Test func routingMovesOutputsAndSendsAsTabberStudioDoes() async throws {
+        let session = session(DemoHost())
+        _ = try await connected(session)
+        let start = try await eventually(session) { $0.routing != nil }
+        let routing = try #require(start.routing)
+        #expect(routing.sources.map(\.name) == ["Guitar", "Bass", "Drums", "Lead guitar", "Vocals", "Reverb"])
+        #expect(routing.sources.allSatisfy { $0.output == RoutingState.master }, "every output is the master at first")
+        #expect(routing.sends.map(\.levelLabel) == ["-12.0 dB", "-6.0 dB"])
+
+        let moved = try await session.perform("routing.set_output", ["strip_id": "demo-vocals", "output": "demo-bus-reverb"])
+        #expect(moved["undo"]?["undo"]?["label"]?.stringValue == "Routing change")
+        let added = try await session.perform("routing.set_send", ["strip_id": "demo-guitar", "bus_id": "demo-bus-reverb"])
+        #expect(added["undo"]?["undo"]?["label"]?.stringValue == "Add send → Reverb")
+        let quieter = try await session.perform("routing.set_send",
+                                                ["strip_id": "demo-guitar", "bus_id": "demo-bus-reverb", "level": 0.25])
+        #expect(quieter["undo"]?["undo"]?["label"]?.stringValue == "Add send → Reverb", "a level is no undo step")
+        let state = try await eventually(session) { $0.routing?.sends(from: "demo-guitar").first?.levelLabel == "-12.0 dB" }
+        #expect(state.routing?.feeding("demo-bus-reverb").outputs.map(\.name) == ["Vocals"])
+        #expect(state.routing?.feeding("demo-bus-reverb").sends.map(\.stripID) == ["demo-guitar", "demo-lead", "demo-vocals"])
+
+        do {
+            _ = try await session.perform("routing.set_output", ["strip_id": "demo-bus-reverb", "output": "demo-bus-reverb"])
+            Issue.record("a bus fed itself")
+        } catch let failure as RemoteError {
+            #expect(failure.reason == "routing_loop")
+            #expect(failure.data["path"]?.arrayValue?.compactMap(\.stringValue) == ["Reverb", "Reverb"])
+        }
+        do {
+            _ = try await session.perform("routing.set_send", ["strip_id": "demo-bus-reverb", "bus_id": "demo-bus-reverb"])
+            Issue.record("a bus sent")
+        } catch let failure as RemoteError {
+            #expect(failure.reason == "wrong_kind")
+        }
+
+        let removed = try await session.perform("routing.remove_send", ["strip_id": "demo-guitar", "bus_id": "demo-bus-reverb"])
+        let step = try #require(removed["undo"]?["undo"]?["id"]?.stringValue)
+        #expect(removed["undo"]?["undo"]?["label"]?.stringValue == "Remove send → Reverb")
+        _ = try await session.perform("edit.undo", ["expect": .string(step)])
+        let back = try await eventually(session) { $0.routing?.sends(from: "demo-guitar").count == 1 }
+        #expect(back.routing?.sends(from: "demo-guitar").first?.levelLabel == "-12.0 dB", "Undo brings it back as it was")
+    }
+
+    @Test func aLoopIsNamedFromTheSourceBackToIt() {
+        let routing = RoutingState(sources: [
+            RoutingSource(stripID: "t", kind: "track", name: "Vocals", output: "bus-a"),
+            RoutingSource(stripID: "bus-a", kind: "bus", name: "Reverb", output: "bus-b"),
+            RoutingSource(stripID: "bus-b", kind: "bus", name: "Delay", output: "master"),
+            RoutingSource(stripID: "bus-c", kind: "bus", name: "Echo", output: "bus-a"),
+        ], sends: [])
+        #expect(routing.wouldLoop("bus-b", into: "bus-a") == ["Delay", "Reverb", "Delay"])
+        #expect(routing.wouldLoop("bus-b", into: "bus-c") == ["Delay", "Echo", "Reverb", "Delay"])
+        #expect(routing.wouldLoop("bus-a", into: "bus-a") == ["Reverb", "Reverb"])
+        #expect(routing.wouldLoop("bus-c", into: "bus-b") == nil, "Delay goes to the master")
+        #expect(routing.wouldLoop("bus-a", into: "master") == nil)
+        #expect(routing.outputName(of: routing.sources[0]) == "Reverb")
+    }
+
     @Test func aResendAfterADropRecordsOnce() async throws {
         let host = DemoHost()
         let session = session(host)

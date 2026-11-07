@@ -32,6 +32,8 @@ public struct SessionState: Sendable, Hashable {
     public var stripMeters: [String: [Double]] = [:]
     /// The selected tab track's bars around the cursor (tab/1); nil when the selected track has no tab.
     public var tab: TabState?
+    /// Each track's and bus's output and every send (routing/1); nil when the computer has no routing for phones.
+    public var routing: RoutingState?
     public var seq = 0
     /// The host time of the newest message, and when it arrived here.
     public var hostTime = 0.0
@@ -71,7 +73,7 @@ public actor RemoteSession {
         case paired(KnownHost, any DeviceSigner)
     }
 
-    public static let reads: Set<String> = ["takes.list", "session.snapshot", "mixer.state", "tab.state"]
+    public static let reads: Set<String> = ["takes.list", "session.snapshot", "mixer.state", "tab.state", "routing.state"]
     public static let topics = ["transport", "position", "record", "tracks", "markers", "takes", "undo", "project", "meters"]
 
     /// The topics to follow on a computer with these capabilities: a 1.0 host
@@ -80,6 +82,7 @@ public actor RemoteSession {
         var topics = Self.topics
         if capabilities.contains("mixer/1") { topics.append("mixer") }
         if capabilities.contains("tab/1") { topics.append("tab") }
+        if capabilities.contains("routing/1") { topics.append("routing") }
         return topics
     }
 
@@ -266,13 +269,18 @@ public actor RemoteSession {
         await readExtras(client)
     }
 
-    /// The mixer and the tab are not in the snapshot: they are read once, then
-    /// followed by their topics (spec 7: mixer/1, tab/1).
+    /// The mixer, the tab and the routing are not in the snapshot: they are
+    /// read once, then followed by their topics (spec 7: mixer/1, tab/1, routing/1).
     private func readExtras(_ client: RemoteClient) async {
         if state.capabilities.contains("mixer/1"), let result = try? await client.call("mixer.state", [:]) {
             applyResult(result)
         } else if !state.capabilities.contains("mixer/1") {
             state.mixer = nil
+        }
+        if state.capabilities.contains("routing/1"), let result = try? await client.call("routing.state", [:]) {
+            applyResult(result)
+        } else if !state.capabilities.contains("routing/1") {
+            state.routing = nil
         }
         if state.capabilities.contains("tab/1"), let result = try? await client.call("tab.state", [:]) {
             applyResult(result)
@@ -341,6 +349,7 @@ public actor RemoteSession {
             }
         case "tab":
             if let value = data["tab"] { state.tab = value == .null ? nil : try? JSONCoding.decode(TabState.self, from: value) }
+        case "routing": if let v = try? JSONCoding.decode(RoutingState.self, from: data) { state.routing = v }
         default: break
         }
         publish()
@@ -363,6 +372,7 @@ public actor RemoteSession {
             state.mixer?.strips[index] = strip
         }
         if let v = result["tab"] { state.tab = v == .null ? nil : try? JSONCoding.decode(TabState.self, from: v) }
+        if let v = result["routing"], let r = try? JSONCoding.decode(RoutingState.self, from: v) { state.routing = r }
         publish()
     }
 

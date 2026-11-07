@@ -3,15 +3,24 @@ import SwiftUI
 
 /// Tabber Studio's mixer: a strip for every track, then the buses and the
 /// master, each with pan, S and M, a fader on Tabber Studio's scale and its
-/// meter. Double-tap a fader for 0 dB, a pan knob for the centre.
+/// meter. Double-tap a fader for 0 dB, a pan knob for the centre. Routing is
+/// the Mixer's other view, as Tabber Studio's Routing panel can be a tab
+/// beside its Mixer.
 struct MixerScreen: View {
+    enum Page: String { case mixer = "Mixer", routing = "Routing" }
+
     @Bindable var model: AppModel
+    @State private var page = Page.mixer
 
     var body: some View {
         NavigationStack {
             Connected(model: model) {
                 if !model.mixerAvailable {
                     Unavailable(text: "Update Tabber Studio on \(model.computerName) to use its mixer from this phone.")
+                } else if page == .routing, model.routingAvailable {
+                    if let routing = model.state.routing {
+                        RoutingView(model: model, routing: routing)
+                    }
                 } else if let mixer = model.state.mixer {
                     GeometryReader { proxy in
                         ScrollView(.horizontal) {
@@ -29,9 +38,28 @@ struct MixerScreen: View {
                 }
             }
             .background(Studio.bg1)
-            .navigationTitle("Mixer")
+            .navigationTitle(model.routingAvailable ? "" : "Mixer")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .topBarTrailing) { ComputerChip(model: model) } }
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button { model.undo() } label: { Image(systemName: "arrow.uturn.backward") }
+                        .disabled(model.state.undo.undo == nil || !model.mixerAvailable)
+                        .accessibilityLabel(model.state.undo.undo.map { "Undo \($0.label)" } ?? "Undo")
+                        .accessibilityIdentifier("undo")
+                }
+                if model.routingAvailable {
+                    ToolbarItem(placement: .principal) {
+                        Picker("View", selection: $page) {
+                            Text(Page.mixer.rawValue).tag(Page.mixer)
+                            Text(Page.routing.rawValue).tag(Page.routing)
+                        }
+                        .pickerStyle(.segmented)
+                        .frame(width: 200)
+                        .accessibilityIdentifier("mixer-page")
+                    }
+                }
+                ToolbarItem(placement: .topBarTrailing) { ComputerChip(model: model) }
+            }
             .takeSlot(model: model)
             .onAppear { model.watchMixerMeters(true) }
             .onDisappear { model.watchMixerMeters(false) }

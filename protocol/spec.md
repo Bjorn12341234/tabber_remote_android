@@ -539,7 +539,7 @@ shows it. Ids are the mixer's strip ids: a track's id, a bus's strip id, and
   another moves it there, as the matrix does, and it is one undo step,
   "Routing change".
 - **A send taps a track's sound into a bus,** beside its output. Adding one
-  is an undo step ("Add send → bus 1") and starts it where Tabber Studio
+  is an undo step ("Add send → Reverb") and starts it where Tabber Studio
   does, at -6 dB. Its level and Pre-fader are not undo steps, there or here,
   like the mixer's faders. A slider drag is many `routing.set_send` calls:
   the remote sends the newest value only, one at a time.
