@@ -967,6 +967,10 @@ Default order: the mixer first, then routing, then chat, after TR9. The
 mixer can join the Pustervik demo only if every demo gate is green by 19
 November (The demo cut, Stretch).
 
+| # | Sprint | Where | Gate |
+|---|---|---|---|
+| TR33 | Take lanes for passes (decision 20), after Pustervik: a linear pass over an earlier one on the same track joins it in take lanes, as loop recording does. The newest plays; the take loop's Delete and Go again work on lanes; the phone's takes list shows which take plays | Studio, this repo | Headless: three passes over one bar give three lanes, only the newest audible, each one undo step; Undo and Redo keep the lanes; loop recording is unchanged (its tests stay green); S1 on a device |
+
 ### M2, the Lock Screen and the Action Button (1.1)
 
 | # | Sprint | Where | Gate |
@@ -1062,9 +1066,10 @@ Each needs the owner's go-ahead:
 15. **This repository's visibility and licence.** The owner's call; no
     default.
 16. **Live phone-mic streaming.** Default: not built (see Ideas).
-17. **Languages.** Default: English, plus Swedish from 1.0, since an Xcode
-    String Catalog makes a second language cheap. The App Store copy is in
-    both.
+17. **Languages.** Decided (the owner, 2026-11-07: "wait with other
+    languages"): English only for now. Swedish and others come when the
+    owner says. Until then, keep every string in one place so an Xcode
+    String Catalog can take them later.
 18. **The Pustervik demo.** Default: a stage demo of S1 and S2 on the owner's
     devices, from the demo cut. Open: whether visitors can join a public
     TestFlight beta that day. That needs Beta App Review and a Tabber Studio
@@ -1073,19 +1078,42 @@ Each needs the owner's go-ahead:
     builder works both repositories, in turns (One builder, in turns).
 20. **Recording over a kept take.** In Tabber Studio a linear recording is a
     plain clip, so recording again over a kept take leaves both audible (TR1
-    record). Default for 1.0: unchanged, since the take loop discards before
-    it goes again. Open: should a new pass over an earlier one on the same
-    track build take lanes, as loop recording does? That changes Tabber
-    Studio's recording for every user, so it is the owner's call.
+    record). Decided (the owner, 2026-11-07, "do what you recommend"):
+    - **Yes:** a new pass over an earlier one on the same track builds take
+      lanes, as loop recording already does. The newest pass plays and the
+      earlier ones wait in their lanes, ready to audition and comp.
+    - **After Pustervik (TR33):** it changes Tabber Studio's recording for
+      every user, so not 17 days before a demo.
+    - **Until then:** the take loop deletes before it goes again, and the
+      demo script does the same.
 
 21. **Chat on the phone.** The remote's vocabulary rules out raw Control API
     methods, so a paired phone can only do what the remote's verbs allow.
     The chat reaches the whole Control API through Tabber Studio's planner,
-    so with chat on, a paired phone can do anything the chat can. Default:
-    off until the owner turns it on in Settings › Remote; every plan is
-    shown on the phone before it runs, runs as one undo step, and is logged
-    on the computer. Open: is that enough, or should the chat also be
-    limited to some kinds of commands?
+    so with chat on, a paired phone can do anything the chat can. Decided
+    (the owner, 2026-11-07, "do what you recommend"):
+    - **Off by default:** off until the owner turns it on in Settings ›
+      Remote.
+    - **Shown and confirmed:** every plan is shown on the phone before it
+      runs, runs as one undo step, and is logged on the computer.
+    - **Limited from a phone:** the chat may only edit the open song and
+      drive playback, mixing and routing. A plan that touches files, app
+      settings, plug-in installs or the network is refused, in words, before
+      anything runs. That is the same line the remote's own vocabulary draws
+      (section 12 of the spec).
+
+22. **Light mode.** Decided (the owner, 2026-11-07, "do what you
+    recommend"): dark only for 1.x. The phone is a studio and stage tool,
+    used in dark rooms, so it keeps one look, well tested. It can be
+    revisited when people ask.
+
+23. **A numbered Tabber Studio release with the remote.** Decided (the
+    owner, 2026-11-07, "do what you recommend"):
+    - **The release:** 0.3.17, with the render-certified engine (abc7bd5e),
+      the release locks for the remote's packages, and its release notes.
+    - **Here:** built, signed, notarized and installed on this Mac.
+    - **Published** (website, download) only on the owner's go, since that
+      is public.
 
 ## Rules for every sprint
 
