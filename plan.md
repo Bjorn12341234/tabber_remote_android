@@ -771,7 +771,7 @@ toggle loops the range set on the computer.
 2026-11-07: "we have time to build stuff"):
 1. Take lanes for passes (TR33, done 7 November).
 2. Routing (TR27, TR28, done 7 November).
-3. Chat (TR29, TR30).
+3. Chat (TR29, TR30, done 7 November).
 
 From the freeze to the summit: rehearsal and fixes only.
 
@@ -1882,6 +1882,90 @@ what was measured, and what changed in the plan.
   - **Lesson:** a block that a system framework calls on its own thread is
     made in nonisolated code. The app has no other such block; Discovery's
     network handler is already nonisolated.
+
+- **TR29 ✅ 2026-11-07, Tabber Studio (975ba81a); protocol 1.3 (812fa1c).**
+  Tabber Studio's chat from a phone, `chat/1`.
+  - **The protocol:** `chat.state` and the `chat` topic (available,
+    idle/thinking/waiting/running, the conversation, a waiting plan);
+    `chat.send` answers at once and the answer follows on the topic;
+    `chat.confirm`, `chat.cancel`, `chat.stop`; new errors
+    `chat_unavailable`, `chat_busy`, `unknown_plan`.
+  - **The chat bubble's own pieces, without its window**
+    (`remote_host/chat.py`):
+    - the planner, as a copy that knows only what a phone may use;
+    - `run_agentic_loop`, so Execute runs the plan and then the AI's
+      further rounds;
+    - `_execute_plan_on_main` inside the undo stack's chat turn, so one
+      request is one undo step ("AI: ...").
+    - The phone's conversation and memory are its own, so the computer's
+      bubble and the phone can never run each other's plan (the bubble
+      keeps single slots for its plan and Stop).
+  - **Safe, as the owner asked:**
+    - Lock a (`remote_host/chat_guard.py`) leaves out of the planner the
+      AI's settings and tools, the remote's pairing and devices,
+      preferences, macros, the computer itself, downloads, installs, scans
+      and modal windows. It checks every step again on the main thread
+      right before it runs, after Execute too, because later rounds are
+      never shown first. It also refuses files outside the song's folder,
+      a new or other song over unsaved changes, and plug-ins that are not
+      installed. Refusals are words, before anything runs.
+    - Lock b (`remote_host/redact.py`) scrubs every message: the secrets
+      this computer knows by value (every provider's key, the host key,
+      the pairing token, device keys), fields named like secrets, and text
+      shaped like keys, tokens and PEM blocks. A song's key ("E minor"),
+      track ids and file names still read.
+    - 10 chat requests a minute per phone. Every request and action goes
+      in the remote's activity log and the computer's notices.
+    - Found while mapping the chat, worth knowing on the computer too:
+      `ai.query_graph` may reach files through its query language (not
+      verified), and one Execute lets the AI run up to 40 rounds that
+      nobody previews. The phone's chat refuses the first and checks the
+      second; the computer's own chat is unchanged.
+  - **Gate met:** 12 tests over a real connection (`test_tr29_chat.py`), with
+    a scripted planner and real Control API calls:
+    - a plan, Execute as one undo step, Undo on the phone;
+    - four refusals in words with nothing run;
+    - a later round stopped after Execute;
+    - the key hidden in an answer;
+    - the 11th request refused, busy and Stop, no AI on the computer;
+    - the activity log;
+    - a 1.2 phone seeing no chat.
+    - Every frame sent to the phone in those tests is scanned for the key,
+      the host key and the pairing token, and none carries them.
+    - Taking out the scrub, the per-round check or the planner's
+      restriction each fails a test.
+    - Plus 5 filter tests; all 87 remote tests pass.
+  - **Owed:** a real AI on a device: a few requests, one refused.
+
+- **TR30 ✅ 2026-11-07, this repository (50b89e9).** Chat on the phone.
+  - **A fifth tab, Chat:**
+    - the conversation;
+    - a plan card with numbered steps, Execute and Cancel, as the chat
+      bubble names them;
+    - "Thinking…" with Stop;
+    - the keyboard's microphone for speaking a request.
+  - **Locked to the owner:** Face ID, Touch ID or the passcode before it
+    opens, and locked again when the tab or the app is left. A phone
+    without a passcode is told to set one. The demo has no computer
+    behind it and opens at once, so the UI tests cannot reach the real
+    lock; the lock is owed on a device.
+  - **Undo** in the toolbar takes a whole request back.
+  - **Gate met:**
+    - RemoteKit 31: the demo's chat, and the chat vectors round-tripping;
+    - UI tests 30, three new: locked until opened; a plan then Execute as
+      one undo step; a key refused;
+    - locked again after leaving; the accessibility audit passes on Chat,
+      locked and with a plan.
+  - **Owed:** Face ID on the owner's iPhone; a request by dictation.
+
+- **Reaching Studio away from the Wi-Fi (2026-11-07).** The owner asked for
+  a way through the Contabo VPS to test on mobile data. No VPS is needed:
+  this Mac is already on the owner's Tailscale network (100.114.215.101,
+  with the Linux laptop). Studio already puts that address in the pairing
+  QR, and listens on it, and the phone keeps and tries it. With Tailscale
+  on the iPhone, signed in to the same account, the phone reaches Studio
+  over mobile data, end-to-end encrypted, with no port opened to the
+  internet. This Mac does not sleep.
 
 ## Sources
 
