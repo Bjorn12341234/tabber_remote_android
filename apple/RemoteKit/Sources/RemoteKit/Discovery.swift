@@ -172,6 +172,19 @@ public actor RouteBook {
         return lastTried ?? Route(host: "127.0.0.1", port: 9474)
     }
 
+    /// Every address to try at once (``RacingTransport``): the remembered
+    /// ones, and on every other attempt the one Bonjour finds now.
+    public func candidates(for attempt: Int) async -> [Route] {
+        var all = routes
+        if attempt % 2 == 1 || all.isEmpty, let found = await lookup(hostID), !all.contains(found) {
+            all.append(found)
+        }
+        return all
+    }
+
+    /// The address that answered, for ``connected()``.
+    public func use(_ route: Route) { lastTried = route }
+
     /// After a connection: the route that worked goes first, and when the port
     /// moved, the other addresses move with it (the computer has one port).
     /// Returns the new list when it changed, for the app to remember.

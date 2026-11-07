@@ -1966,6 +1966,44 @@ what was measured, and what changed in the plan.
   on the iPhone, signed in to the same account, the phone reaches Studio
   over mobile data, end-to-end encrypted, with no port opened to the
   internet. This Mac does not sleep.
+  - **The owner's iPhone joined** the tailnet as `iphone-13`
+    (100.80.172.36) the same evening; `tailscale ping` from this Mac
+    answers.
+  - **Every address at once (RemoteKit `RacingTransport`, build 6).** The
+    phone used to try its remembered addresses one after another, each
+    with a 3-second hello timeout, so away from the Wi-Fi it waited out
+    the local ones before the Tailscale one. Now the hello goes to every
+    address at once, the first to answer is the connection, and the
+    others' work is cancelled. Pairing does the same.
+    - Nothing is weaker: each address is its own TLS connection, pinned
+      to the paired computer's key before any frame is sent, and only the
+      hello is sent before an answer.
+    - A wrong key at one address is only a failure there.
+    - 4 RemoteKit tests, among them a session connecting through a dead
+      address in under a second.
+  - **The fix-it card** no longer says to turn every VPN off: it says the
+    same Wi-Fi, or Tailscale on both with the same account, and no other
+    VPN.
+
+- **Tabber Studio 0.3.18, built and installed 2026-11-07.**
+  - **What it adds:** take lanes, chat and routing for phones, and the
+    routing fixes.
+  - **The build:**
+    - from Tabber Studio 5553bd20, with the certified engine abc7bd5e
+      (byte for byte once signatures are removed; no engine source changed
+      since 0.3.17);
+    - signed, notarized and stapled, and Gatekeeper accepts the app and the
+      DMG; the DMG holds this app.
+  - **The frozen-app smoke test passes 13 of 13:**
+    - protocol 1.3 with `routing/1` and `chat/1`;
+    - TLS 1.3 with the pinned key;
+    - the chat's modules and its secret filter, every module from the
+      bundle.
+  - **Installed** in /Applications, with 0.3.17 kept beside it as "Tabber
+    Studio 0.3.17".
+  - **The DMG** is at
+    /Volumes/Data/tabber_work/rel0318/download/Tabber-Studio-0.3.18-macOS-arm64.dmg
+    (plain layout). Publishing it is the owner's call.
 
 ## Sources
 

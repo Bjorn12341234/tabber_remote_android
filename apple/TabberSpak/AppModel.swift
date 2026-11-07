@@ -129,30 +129,29 @@ final class AppModel {
         pairing = .working(link.name)
         do {
             let signer = try DeviceKeyStore.loadOrCreate()
+            // Every address in the code at once; the first to answer pairs.
+            let book = RouteBook(routes: link.routes, hostID: link.hostID)
+            let client = RemoteClient(transport: RacingTransport(routes: link.routes,
+                                                                 make: { NetworkTransport(route: $0, pin: link.pin) },
+                                                                 onWinner: { await book.use($0) }))
+            await client.start()
             var lastError: Error?
-            for route in link.routes {
-                let client = RemoteClient(transport: NetworkTransport(route: route, pin: link.pin))
-                await client.start()
-                do {
-                    _ = try await client.sayHello(app: Self.app, timeout: .seconds(4))
-                    _ = try await client.pair(token: link.token, pin: link.pin, device: signer,
-                                              name: DeviceName.current, model: DeviceName.model)
-                    await client.close()
-                    let host = KnownHost(id: link.hostID, name: link.name, pin: link.pin, routes: [route] + link.routes.filter { $0 != route })
-                    HostStore.save(host)
-                    known = host
-                    isDemo = false
-                    pairing = .idle
-                    start(host, signer)
-                    return
-                } catch let refusal as RemoteError {
-                    await client.close()
-                    lastError = refusal
-                    break                   // the computer answered: another address would say the same
-                } catch {
-                    lastError = error
-                    await client.close()
-                }
+            do {
+                _ = try await client.sayHello(app: Self.app, timeout: .seconds(6))
+                _ = try await client.pair(token: link.token, pin: link.pin, device: signer,
+                                          name: DeviceName.current, model: DeviceName.model)
+                await client.close()
+                let routes = await book.connected() ?? link.routes
+                let host = KnownHost(id: link.hostID, name: link.name, pin: link.pin, routes: routes)
+                HostStore.save(host)
+                known = host
+                isDemo = false
+                pairing = .idle
+                start(host, signer)
+                return
+            } catch {
+                lastError = error
+                await client.close()
             }
             pairing = .failed(Self.explainPairing(lastError, name: link.name))
         } catch {
@@ -169,7 +168,7 @@ final class AppModel {
         case TransportFailure.wrongKey?: return "The computer that answered is not the one that showed this code. Scan the code again."
         case TransportFailure.localNetworkDenied?: return "Tabber Spak may not use the local network. Turn on Local Network in Settings › Tabber Spak, then scan again."
         case TransportFailure.closed(.some(4002))?: return "\(name) runs a newer Tabber Studio. Update Tabber Spak, then scan again."
-        default: return "Can't reach \(name). Check that this iPhone is on the same Wi-Fi as the computer and that Tabber Studio is open, then scan again."
+        default: return "Can't reach \(name). Check that this iPhone is on the same Wi-Fi as the computer, or that Tailscale is on, on both, and that Tabber Studio is open, then scan again."
         }
     }
 
@@ -177,8 +176,13 @@ final class AppModel {
         let book = RouteBook(routes: host.routes, hostID: host.id)
         self.book = book
         let pin = host.pin
+        // Every remembered address at once, so away from the Wi-Fi the phone
+        // reaches the computer's Tailscale address without waiting out the
+        // local ones first; the one that answers is remembered first.
         attach(RemoteSession(credentials: .paired(host, signer), app: Self.app) { attempt in
-            NetworkTransport(route: await book.route(for: attempt), pin: pin)
+            RacingTransport(routes: await book.candidates(for: attempt),
+                            make: { NetworkTransport(route: $0, pin: pin) },
+                            onWinner: { await book.use($0) })
         })
     }
 

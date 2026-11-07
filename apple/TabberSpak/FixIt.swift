@@ -74,9 +74,9 @@ struct FixItView: View {
     private var checks: [String] {
         guard trouble == .unreachable else { return [] }
         return ["Tabber Studio is open, with Settings › Remote turned on. If Settings has no Remote page, update Tabber Studio.",
-                "This iPhone is on the same Wi-Fi as the computer.",
+                "This iPhone is on the same Wi-Fi as the computer. Away from it, Tailscale is on, on both, with the same account.",
                 "The Wi-Fi isn't a guest or venue network. Those keep devices apart, so bring your own router.",
-                "This iPhone has no VPN turned on."]
+                "No VPN but Tailscale is on. Another VPN can keep this iPhone from the computer."]
     }
 
     @ViewBuilder private var actions: some View {
