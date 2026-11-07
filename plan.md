@@ -1233,6 +1233,11 @@ what was measured, and what changed in the plan.
     Network framework traps now in Known traps.
   - **Owed to the owner:** the same connection from a real iPhone on the
     Wi-Fi, once a TestFlight build is installed.
+  - **TestFlight, waiting for the owner:** `apple/scripts/release-ios.sh`
+    archived and signed build 1, and the upload stopped at
+    `missingApp(bundleId: "studio.tabber.spak")`: App Store Connect has no app
+    record yet. Once the owner creates it (Apps, New App, iOS, "Tabber Spak",
+    bundle id `studio.tabber.spak`), the same script uploads build 1.
 
 ## Sources
 
