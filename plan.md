@@ -1361,6 +1361,43 @@ what was measured, and what changed in the plan.
   - **Owed to the owner, on the iPhone against Tabber Studio:** S1 complete,
     five takes with two discarded and one brought back with Undo on the
     computer, files intact.
+- **TR9 🟡 2026-11-07, this repository.** The design pass: Tabber Studio's
+  design language (`apple/TabberSpak/Theme.swift`), from its dark design
+  tokens (`ui/design_tokens.py`) and the owner's screenshots of Arrange, Tab,
+  the Mixer and Routing ("just so we are talking about the same app").
+  - **What carries over:** four surfaces where lighter is closer, depth
+    without shadows, teal only for the one selected choice, record red, the
+    playhead's amber, and Studio's small corners and small uppercase labels.
+    The Session screen's readout is Studio's: POS, TIME and BPM in a well,
+    monospaced, the position written `25 : 4`. Count-in, Metro and Loop are
+    text toggles in one well, ON a lighter fill, as in Studio's toolbar.
+    Stop and play are white, and record is a red dot. Each track carries its
+    colour as a leading edge, and the selected track a teal outline.
+  - **Dark only,** with a dark launch screen. Tabber Studio also has a light
+    mode: whether the phone needs one is the owner's call.
+  - **Gate, met in the Simulator:** Xcode's accessibility audit passes on
+    every screen (Welcome, the explainer, Find your computer, Session,
+    Takes, Tracks, Computer). It found arm buttons under 44 pt; text that
+    shrank, or would clip at large sizes; labels and a footer whose type did
+    not scale at every size; decorative icons read aloud; and a Monitor
+    control reachable only by swiping, now a menu. At the largest
+    accessibility text size, the Session screen stacks its header and
+    readout (checked by eye). All 14 UI tests pass.
+  - **Screenshots:** `ScreenshotUITests` drives demo mode through every
+    screen and writes PNGs when `TEST_RUNNER_SCREENSHOT_DIR` is set, for
+    review now and the App Store later (the 6.9-inch and iPhone Duo sizes).
+  - **Privacy:** `PrivacyInfo.xcprivacy` declares UserDefaults (CA92.1) and
+    the system boot time (35F9.1: the playhead is counted on locally). No
+    data is collected and nothing tracks. Export compliance stays "no
+    non-exempt encryption": only the system's TLS, and signatures.
+  - **A Tabber Studio without the remote:** nothing listens, so the phone
+    shows Can't reach, whose first check now says to update Tabber Studio
+    when Settings has no Remote page. Another protocol version shows the
+    Update cards (TR6).
+  - **Owed to the owner:** S1 from the TestFlight build on the iPhone, once
+    with VoiceOver; the App Store privacy label (Data Not Collected) and a
+    privacy page on the website; light mode or not; Swedish (after the demo,
+    decision 17).
 
 ## Sources
 

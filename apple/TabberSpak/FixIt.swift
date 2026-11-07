@@ -14,18 +14,20 @@ struct FixItCard: View {
             Label {
                 Text(title).accessibilityIdentifier("fix-it-title")
             } icon: {
-                Image(systemName: symbol).accessibilityHidden(true)
+                Image(systemName: symbol).foregroundStyle(Studio.playhead).accessibilityHidden(true)
             }
             .font(.headline)
+            .foregroundStyle(Studio.text1)
             Text(message)
                 .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Studio.text2)
                 .fixedSize(horizontal: false, vertical: true)
             if !checks.isEmpty {
                 VStack(alignment: .leading, spacing: 6) {
                     ForEach(checks, id: \.self) { check in
                         Label(check, systemImage: "checkmark.circle")
                             .font(.subheadline)
+                            .foregroundStyle(Studio.text1)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                 }
@@ -38,7 +40,8 @@ struct FixItCard: View {
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.orange.opacity(0.14), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .studioCard(Studio.bg2, radius: 18)
+        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(Studio.playhead.opacity(0.5), lineWidth: 1))
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("fix-it")
     }
@@ -82,7 +85,7 @@ struct FixItCard: View {
 
     private var checks: [String] {
         guard trouble == .unreachable else { return [] }
-        return ["Tabber Studio is open on the computer, with Settings › Remote turned on.",
+        return ["Tabber Studio is open on the computer, with Settings › Remote turned on. No Remote page there? Update Tabber Studio.",
                 "This iPhone is on the same Wi-Fi as the computer.",
                 "It is not a guest or venue Wi-Fi: those keep devices apart. Bring your own router.",
                 "No VPN is on on this iPhone."]
@@ -91,22 +94,22 @@ struct FixItCard: View {
     @ViewBuilder private var actions: some View {
         switch trouble {
         case .unreachable:
-            Button("Try Again") { model.wake() }
+            Button { model.wake() } label: { Text("Try Again").foregroundStyle(Studio.onAccent) }
                 .buttonStyle(.borderedProminent)
                 .accessibilityIdentifier("fix-it-retry")
             Button("Pair Again") { model.scanning = true }
                 .buttonStyle(.bordered)
                 .accessibilityIdentifier("fix-it-pair")
         case .localNetworkDenied:
-            Button("Open Settings") { Self.openSettings() }
+            Button { Self.openSettings() } label: { Text("Open Settings").foregroundStyle(Studio.onAccent) }
                 .buttonStyle(.borderedProminent)
                 .accessibilityIdentifier("fix-it-settings")
         case .updateStudio, .updateSpak:
-            Button("Try Again") { model.retry() }
+            Button { model.retry() } label: { Text("Try Again").foregroundStyle(Studio.onAccent) }
                 .buttonStyle(.borderedProminent)
                 .accessibilityIdentifier("fix-it-retry")
         case .forgotten, .otherComputer:
-            Button("Pair Again") { model.scanning = true }
+            Button { model.scanning = true } label: { Text("Pair Again").foregroundStyle(Studio.onAccent) }
                 .buttonStyle(.borderedProminent)
                 .accessibilityIdentifier("fix-it-pair")
         }

@@ -36,7 +36,7 @@ struct RootView: View {
         .onChange(of: phase) { _, now in
             if now == .active { model.wake() }       // back within a second (TR6)
         }
-        .tint(Color(red: 0.898, green: 0.282, blue: 0.302))
+        .tint(Studio.accent)
         .sensoryFeedback(trigger: model.feedback.count) { _, _ in
             switch model.feedback.kind {
             case .tap: .selection
@@ -74,9 +74,10 @@ struct TransportBar: View {
         let armed = model.bar.armed
         HStack(spacing: 0) {
             Button(action: model.goAgain) {
-                Label("Go again", systemImage: "arrow.counterclockwise.circle.fill")
+                Label("Go again", systemImage: "arrow.counterclockwise")
                     .labelStyle(.iconOnly)
-                    .font(.system(size: 30))
+                    .font(.system(size: 24, weight: .semibold))
+                    .foregroundStyle(Studio.text1)
                     .frame(maxWidth: .infinity, minHeight: 44)
             }
             .disabled(model.lastTake == nil && !model.bar.hasTake)
@@ -85,17 +86,16 @@ struct TransportBar: View {
             .accessibilityIdentifier(id("go-again"))
 
             Button(action: model.record) {
-                ZStack {
-                    Circle().fill(recording ? Color.red : Color.clear)
-                    Circle().strokeBorder(Color.red, lineWidth: 4)
+                ZStack {                            // Tabber Studio's record: a red dot
+                    Circle().fill(Studio.record)
+                        .frame(width: recording ? 40 : 30, height: recording ? 40 : 30)
                     if recording {
-                        RoundedRectangle(cornerRadius: 3).fill(.white).frame(width: 14, height: 14)
-                    } else {
-                        Circle().fill(Color.red).padding(10)
+                        RoundedRectangle(cornerRadius: 2).fill(.white).frame(width: 13, height: 13)
                     }
                 }
                 .frame(width: 46, height: 46)
-                .opacity(model.pending.contains("record") || model.pending.contains("stop") ? 0.5 : 1)
+                .animation(.spring(duration: 0.25), value: recording)
+                .opacity(model.pending.contains("record") || model.pending.contains("stop") ? 0.5 : model.bar.connected ? 1 : 0.35)
                 .frame(maxWidth: .infinity)
             }
             .accessibilityLabel(recording ? "Stop recording" : armed.isEmpty ? "Record" : "Record on \(armed.joined(separator: ", "))")
@@ -103,7 +103,8 @@ struct TransportBar: View {
 
             Button(action: model.playOrStop) {
                 Image(systemName: playing ? "stop.fill" : "play.fill")
-                    .font(.system(size: 26))
+                    .font(.system(size: 24))
+                    .foregroundStyle(Studio.text1)
                     .frame(maxWidth: .infinity, minHeight: 44)
             }
             .opacity(model.pending.contains("play") ? 0.5 : 1)
@@ -111,5 +112,6 @@ struct TransportBar: View {
             .accessibilityIdentifier(id("play"))
         }
         .disabled(!model.bar.connected)
+        .opacity(model.bar.connected ? 1 : 0.5)
     }
 }

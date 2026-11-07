@@ -22,8 +22,10 @@ struct ComputerView: View {
                     if let trouble = model.state.trouble {
                         FixItCard(model: model, trouble: trouble, computer: computerName)
                             .listRowInsets(EdgeInsets())
+                            .listRowBackground(Color.clear)
                     }
                 }
+                .listRowBackground(Studio.bg1)
                 Section {
                     Button("Pair Again…") {
                         model.scanTarget = model.known?.name
@@ -38,14 +40,18 @@ struct ComputerView: View {
                             .accessibilityIdentifier("forget")
                     }
                 }
-                Section("This iPhone") {
-                    Toggle("Keep the screen awake", isOn: $model.keepAwake)
+                .listRowBackground(Studio.bg1)
+                Section {
+                    Toggle("Keep the screen awake during a session", isOn: $model.keepAwake)
                 }
+                .listRowBackground(Studio.bg1)
                 Section {
                     LabeledContent("Tabber Spak", value: "\(AppModel.app.version) (\(AppModel.app.build))")
                     LabeledContent("Protocol", value: RemoteClient.protocolVersions.joined(separator: ", "))
                 }
+                .listRowBackground(Studio.bg1)
             }
+            .studioList()
             .navigationTitle("Computer")
             .confirmationDialog("Forget \(computerName)?", isPresented: $confirmForget, titleVisibility: .visible) {
                 Button("Forget", role: .destructive) { model.forget() }
