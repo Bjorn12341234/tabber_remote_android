@@ -1601,8 +1601,20 @@ what was measured, and what changed in the plan.
     - The mixer topic follows a change made on the computer.
     - The meters stop when the last phone leaves.
     - 7 new tests; all 45 remote tests pass.
-  - **Owed:** the feed's cost with the mixer open, measured on a real song
-    (TR3's rule), and a fader drag on a device against Tabber Studio.
+  - **Measured** (headless, 2026-11-07): the feed's 100 ms tick on a song of
+    16 tracks (a written guitar part, 7 more tab tracks, 8 audio tracks), a
+    bus and 8 markers.
+
+    | Subscribed topics | Median | p95 | Worst | Ticks |
+    |---|---|---|---|---|
+    | The 1.0 topics | 0.46 ms | 1.22 ms | 1.39 ms | 48 |
+    | Plus the mixer, its meters and tab | 0.66 ms | 0.81 ms | 0.98 ms | 47 |
+
+    That is about 0.2 ms more per tick, far under TR3's 15 ms limit.
+  - **Owed:**
+    - The meter tick is timed apart, and the fake engine has no meters, so
+      its cost waits for a run on the real engine.
+    - A fader drag on a device against Tabber Studio.
 
 - **TR15 ✅ 2026-11-07, Tabber Studio and this repository.** Writing tab from
   the phone, `tab/1`, on the real Tabber Studio (`remote_host/tablature.py`).
