@@ -2115,6 +2115,39 @@ what was measured, and what changed in the plan.
   - **Owed:** on a device against Studio 0.3.21: the view row, and Studio
     coming to the front.
 
+- **Response time on the phone, 2026-11-08 (TR7's gate; TestFlight build
+  10).** The target is 19 taps in 20 confirmed within 150 ms on home Wi-Fi,
+  with AirDrop on and off, and nothing measured it.
+  - **The Computer sheet** (tap the computer's name at the top) has a
+    Response time section:
+    - Typical (the median) and "19 in 20 taps within" (p95), over the last
+      taps, newest 500;
+    - Start again, for a second run such as AirDrop on after AirDrop off.
+  - **What counts:**
+    - every change, from sending it to applying the computer's answer,
+      which is when the phone shows the confirmed state;
+    - not reads, and not the chat, whose answers wait for the AI;
+    - one answer per request: a resend after a drop is timed on its own
+      connection, and the wait for the connection is not;
+    - kept across reconnects.
+  - **Studio answers Record at once:** `recording.start` returns without
+    waiting for the count-in, so Record taps don't skew the numbers.
+  - **Gate:**
+    - RemoteKit 41: the percentiles, what counts, Start again;
+    - UI tests: the sheet before and after a tap on Play, and Start again;
+    - the rows grow with the text: at the largest size, Start again is
+      over 70 points tall and the note wraps;
+    - the accessibility audit passes. It leaves out Dynamic Type for these
+      two rows only, because it flags rows at the foot of this long sheet:
+      "Leave the demo" failed there too, and passes higher up.
+  - **The demo** now offers the app's own protocol version (1.4) rather than
+    1.3. Nothing changes on screen: the demo checks only the major version
+    and lists every capability.
+  - **Owed to the owner,** on the iPhone against Studio 0.3.21 on the home
+    Wi-Fi:
+    - about 30 taps with AirDrop off, then a screenshot of the sheet;
+    - Start again, about 30 taps with AirDrop on, then another.
+
 ## Sources
 
 Collected 2026-11-06.

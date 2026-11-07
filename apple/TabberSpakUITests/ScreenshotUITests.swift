@@ -85,4 +85,18 @@ final class ScreenshotUITests: SpakUITestCase {
         sleep(1)
         try shoot("10-computer")
     }
+
+    /// The Computer sheet at the largest text, with a measured tap: the
+    /// response time rows grow and wrap rather than clip.
+    @MainActor
+    func testTheComputerSheetAtTheLargestText() throws {
+        app = XCUIApplication()
+        app.launchArguments = ["-demo", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
+        app.launch()
+        XCTAssertTrue(waitFor("connection", "Demo Studio"))
+        tap("play")
+        tap("connection")
+        for _ in 0..<8 where !element("response-again").isHittable { app.swipeUp() }
+        try shoot("computer-largest-text")
+    }
 }

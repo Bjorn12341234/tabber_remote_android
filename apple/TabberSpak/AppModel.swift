@@ -98,9 +98,9 @@ final class AppModel {
         }
     }
 
-    private var demoSpeaks = ["1.3"]
+    private var demoSpeaks = RemoteClient.protocolVersions
 
-    func startDemo(speaks: [String] = ["1.3"]) {
+    func startDemo(speaks: [String] = RemoteClient.protocolVersions) {
         isDemo = true
         demoSpeaks = speaks
         book = nil
@@ -261,6 +261,17 @@ final class AppModel {
     }
 
     var isConnected: Bool { if case .connected = state.link { return true }; return false }
+
+    /// How long the computer took to answer this phone's taps (the Computer sheet; TR7's gate).
+    func responseTimes() async -> ResponseTimes {
+        guard let session else { return ResponseTimes() }
+        return await session.responseTimes
+    }
+
+    /// Measure from now on, as for a run with AirDrop on after one with it off.
+    func startResponseTimesAgain() async {
+        await session?.resetResponseTimes()
+    }
 
     /// The computer's name for the screen: as it says, as remembered, or in general words.
     var computerName: String { state.host?.name ?? known?.name ?? (isDemo ? DemoHost.name : "your computer") }

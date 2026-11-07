@@ -109,6 +109,9 @@ public actor RemoteSession {
     public static let connectTimeout: Duration = .seconds(3)
     private var connectedWaiters: [CheckedContinuation<Void, Never>] = []
     public private(set) var state = SessionState()
+    /// How long each change took to be answered, across reconnects, since the
+    /// session started or since `resetResponseTimes()`.
+    public private(set) var responseTimes = ResponseTimes()
     private let continuation: AsyncStream<SessionState>.Continuation
     public nonisolated let updates: AsyncStream<SessionState>
 
@@ -195,6 +198,9 @@ public actor RemoteSession {
     /// The app is back on the screen (TR6: reconnected within a second). A
     /// connection that went quiet while the app was away is dropped and made
     /// again at once; a reconnect waiting out its backoff tries now.
+    /// Start measuring again, as for a run with AirDrop on after one with it off.
+    public func resetResponseTimes() { responseTimes = ResponseTimes() }
+
     public func wake() async {
         nap?.cancel()
         if case .connected = state.link, client != nil, silentFor() > 2.5 {
@@ -422,8 +428,10 @@ public actor RemoteSession {
                 throw TransportFailure.unreachable("Tabber Studio is not connected.")
             }
             do {
+                let sent = ContinuousClock.now
                 let result = try await client.call(method, params)
                 applyResult(result)
+                if ResponseTimes.counts(method) { responseTimes.add(.now - sent) }
                 return result
             } catch let failure as RemoteError {
                 throw failure

@@ -25,6 +25,11 @@ final class AccessibilityUITests: XCTestCase {
         try app.performAccessibilityAudit { issue in
             // The sheet's Done is iOS's own toolbar button, whose largest sizes iOS caps.
             if issue.auditType == .dynamicType, issue.element?.identifier == "done" { return true }
+            // The audit flags rows at the foot of the long Computer sheet: "Leave the
+            // demo" failed there too, and passes higher up (8 Nov 2026). Those rows'
+            // growth is checked at the largest text by ComputerSheetUITests instead.
+            if issue.auditType == .dynamicType,
+               ["response-again", "response-note"].contains(issue.element?.identifier ?? "") { return true }
             if scrolls, issue.auditType == .contrast, (issue.element?.frame.maxY ?? .infinity) > barTop { return true }
             print("AUDIT \(screen): \(issue.auditType) \(issue.compactDescription) | \(issue.detailedDescription) on \(issue.element?.debugDescription.prefix(160) ?? "the screen")")
             return false
