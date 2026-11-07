@@ -947,6 +947,31 @@ repo" means `tabber_remote`.
 | TR8 | Take card (keep, discard with hold and Undo, go again), takes list with ratings, Tracks screen (arm, monitor, select), flag a moment | this repo | S1 complete on a device: five takes, two discarded, one brought back with Undo on the computer, files intact, nothing on the computer touched during the run |
 | TR9 | Polish and TestFlight: design pass, icon, accessibility audit, Dynamic Type at the largest sizes, a VoiceOver run of S1, demo mode for App Review and screenshots, privacy label (Data Not Collected), privacy page, export compliance, checks against a Tabber Studio without the remote | this repo, website | The TestFlight build runs S1 on the owner's phone; the XCUITest accessibility audit passes; a too-old Tabber Studio is explained in plain words; the owner decides when to submit |
 
+### The mixer, routing and chat (asked for 2026-11-07)
+
+The owner, during TR9: "the chat would be good to have in the app as well. so
+you can use the control api via the chat?" and "the mixer and routing as
+well." Tabber Studio already has the verbs underneath: `mixer.*` (strips,
+volume, pan, mute, solo, master gain, peak levels), `buses.*` (buses, their
+gain, pan, mute and solo, routing, sends, sidechains, `routing_overview`,
+`would_cycle`) and the chat's pipeline (`ai.execute_command`, which plans
+from text and runs the plan only when told to, as the chat bubble's Confirm
+does). As in TR1, the remote wraps them in its own verbs and never exposes
+them raw.
+
+| # | Sprint | Where | Gate |
+|---|---|---|---|
+| TR25 | Mixer verbs and the `mixer` topic: a strip for each track and bus and the master (name, colour, volume in dB, pan, mute, solo), `mixer.set_volume`, `set_pan`, `set_mute`, `set_solo` and `set_master`; a fader drag is one undo step (the phone marks the gesture's start and end); meters for every strip, only while a phone has the mixer open | spec, Studio | Vectors; every change equals the Control API's read-back; a drag of 50 changes is one undo step; the feed's cost with the mixer open, recorded |
+| TR26 | Mixer screen: strips for tracks and buses and the master, with fader, pan, mute, solo and meter in Tabber Studio's mixer colours; a tapped strip opens a long-throw fader for fine moves; faders adjustable with VoiceOver | this repo | UI tests against DemoHost; on a device, a fader move confirmed within the latency target |
+| TR27 | Routing verbs and the `routing` topic: each track's output (the master or a bus) and its sends (bus, level, pre or post); `routing.set_output`, `routing.set_send`, `routing.remove_send`; a cycle is refused in words (`buses.would_cycle`) | spec, Studio | Vectors; read-backs; a refused cycle leaves the routing unchanged |
+| TR28 | Routing screen: for each track its Output and its Sends, and for each bus what feeds it; a send's level as a slider. A list, not the Flow graph: it must work with one thumb | this repo | UI tests against DemoHost; on a device against Tabber Studio |
+| TR29 | Chat on the computer's side: `chat.send` (text in, the plan out, in the words the chat bubble shows), `chat.confirm`, `chat.cancel`, and the `chat` topic (messages, thinking, results). The planner runs off the main thread. Off by default: "Let paired phones use the chat" in Settings › Remote (decision 21) | spec, Studio | A typed request becomes a plan and nothing runs until Confirm; the confirmed plan is one undo step, and Undo on the phone takes it back; with the setting off, the chat verbs are refused; every chat action is logged like other remote actions |
+| TR30 | Chat screen: the conversation, the plan with Confirm and Cancel, and the keyboard's dictation for speaking a request | this repo | UI tests against DemoHost with a scripted planner; on a device against Tabber Studio |
+
+Default order: the mixer first, then routing, then chat, after TR9. The
+mixer can join the Pustervik demo only if every demo gate is green by 19
+November (The demo cut, Stretch).
+
 ### M2, the Lock Screen and the Action Button (1.1)
 
 | # | Sprint | Where | Gate |
@@ -1057,6 +1082,15 @@ Each needs the owner's go-ahead:
     it goes again. Open: should a new pass over an earlier one on the same
     track build take lanes, as loop recording does? That changes Tabber
     Studio's recording for every user, so it is the owner's call.
+
+21. **Chat on the phone.** The remote's vocabulary rules out raw Control API
+    methods, so a paired phone can only do what the remote's verbs allow.
+    The chat reaches the whole Control API through Tabber Studio's planner,
+    so with chat on, a paired phone can do anything the chat can. Default:
+    off until the owner turns it on in Settings › Remote; every plan is
+    shown on the phone before it runs, runs as one undo step, and is logged
+    on the computer. Open: is that enough, or should the chat also be
+    limited to some kinds of commands?
 
 ## Rules for every sprint
 
@@ -1394,6 +1428,8 @@ what was measured, and what changed in the plan.
     shows Can't reach, whose first check now says to update Tabber Studio
     when Settings has no Remote page. Another protocol version shows the
     Update cards (TR6).
+  - **TestFlight:** build 2 carries TR6 to TR9 (tag `ios-b2`, Xcode 26.3,
+    internal testing). Xcode 27.2 was never downloaded, so 26.3 stays.
   - **Owed to the owner:** S1 from the TestFlight build on the iPhone, once
     with VoiceOver; the App Store privacy label (Data Not Collected) and a
     privacy page on the website; light mode or not; Swedish (after the demo,
