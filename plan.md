@@ -767,10 +767,18 @@ toggle loops the range set on the computer.
   devices with Remove, and activity notices.
 - DemoHost. The tests need it anyway, and it is the stage fallback.
 
+**Before the stage freeze on 19 November,** in this order (the owner,
+2026-11-07: "we have time to build stuff"):
+1. Take lanes for passes (TR33).
+2. Routing (TR27, TR28).
+3. Chat (TR29, TR30).
+
+From the freeze to the summit: rehearsal and fixes only.
+
 **After the demo,** still in 1.0:
 - the 6-digit fallback, several computers, and every fix-it card except "Can't
   reach your computer" and "Update Tabber Studio"
-- Settings, routing (TR27, TR28), chat (TR29, TR30)
+- Settings
 - App Store submission (languages wait for the owner, decision 17)
 
 **Stretch,** only if every demo gate is green by 19 November:
@@ -982,13 +990,12 @@ them raw.
 | TR29 | Chat on the computer's side: `chat.send` (text in, the plan out, in the words the chat bubble shows), `chat.confirm`, `chat.cancel`, and the `chat` topic (messages, thinking, results). The planner runs off the main thread. Off by default: "Let paired phones use the chat" in Settings › Remote (decision 21) | spec, Studio | A typed request becomes a plan and nothing runs until Confirm; the confirmed plan is one undo step, and Undo on the phone takes it back; with the setting off, the chat verbs are refused; every chat action is logged like other remote actions |
 | TR30 | Chat screen: the conversation, the plan with Confirm and Cancel, and the keyboard's dictation for speaking a request | this repo | UI tests against DemoHost with a scripted planner; on a device against Tabber Studio |
 
-Default order: the mixer first, then routing, then chat, after TR9. The
-mixer can join the Pustervik demo only if every demo gate is green by 19
-November (The demo cut, Stretch).
+Order: the mixer first (done, TR25), then take lanes (TR33), routing and
+chat, all before the stage freeze on 19 November (The demo cut).
 
 | # | Sprint | Where | Gate |
 |---|---|---|---|
-| TR33 | Take lanes for passes (decision 20), after Pustervik: a linear pass over an earlier one on the same track joins it in take lanes, as loop recording does. The newest plays; the take loop's Delete and Go again work on lanes; the phone's takes list shows which take plays | Studio, this repo | Headless: three passes over one bar give three lanes, only the newest audible, each one undo step; Undo and Redo keep the lanes; loop recording is unchanged (its tests stay green); S1 on a device |
+| TR33 | Take lanes for passes (decision 20), before the stage freeze: a linear pass over an earlier one on the same track joins it in take lanes, as loop recording does. The newest plays; the take loop's Delete and Go again work on lanes; the phone's takes list shows which take plays | Studio, this repo | Headless: three passes over one bar give three lanes, only the newest audible, each one undo step; Undo and Redo keep the lanes; loop recording is unchanged (its tests stay green); S1 on a device |
 
 ### M2, the Lock Screen and the Action Button (1.1)
 
@@ -1101,10 +1108,10 @@ Each needs the owner's go-ahead:
     - **Yes:** a new pass over an earlier one on the same track builds take
       lanes, as loop recording already does. The newest pass plays and the
       earlier ones wait in their lanes, ready to audition and comp.
-    - **After Pustervik (TR33):** it changes Tabber Studio's recording for
-      every user, so not 17 days before a demo.
-    - **Until then:** the take loop deletes before it goes again, and the
-      demo script does the same.
+    - **Before the summit (TR33):** the owner, 2026-11-07: "there's a long
+      time to music tech summit" and "we have time to build stuff". It
+      changes Tabber Studio's recording for every user, so it gets its own
+      sprint and its tests, done before the stage freeze on 19 November.
 
 21. **Chat on the phone.** The remote's vocabulary rules out raw Control API
     methods, so a paired phone can only do what the remote's verbs allow.
