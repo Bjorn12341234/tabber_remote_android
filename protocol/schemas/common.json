@@ -488,7 +488,8 @@
         "mixer_meters",
         "tab",
         "routing",
-        "chat"
+        "chat",
+        "view"
       ]
     },
     "host": {
@@ -1059,6 +1060,27 @@
         "state",
         "messages",
         "plan"
+      ],
+      "additionalProperties": false
+    },
+    "view": {
+      "type": "object",
+      "properties": {
+        "editor": {
+          "enum": [
+            "arrange",
+            "tab",
+            "piano_roll"
+          ],
+          "description": "The editor on screen; in Split, the one beside Arrange."
+        },
+        "split": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "editor",
+        "split"
       ],
       "additionalProperties": false
     }

@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tabber.studio/schemas/remote/1/methods/view.set.json",
+  "title": "view.set",
+  "x-capability": "view/1",
+  "x-changes": true,
+  "$defs": {
+    "params": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "$ref": "../common.json#/$defs/key"
+        },
+        "editor": {
+          "enum": [
+            "arrange",
+            "tab",
+            "piano_roll"
+          ]
+        },
+        "split": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "key"
+      ],
+      "additionalProperties": false
+    },
+    "result": {
+      "type": "object",
+      "properties": {
+        "view": {
+          "$ref": "../common.json#/$defs/view"
+        }
+      },
+      "required": [
+        "view"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

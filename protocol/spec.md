@@ -254,7 +254,7 @@ whether Tabber Studio is busy:
 ## 7. Versions and capabilities
 
 - **The protocol version** is `major.minor`. `hello` lists what the remote
-  speaks (`"protocol_versions": ["1.3"]`, one entry per major, the highest
+  speaks (`"protocol_versions": ["1.4"]`, one entry per major, the highest
   minor it knows); the host answers with the version it chose: the major
   both speak, and the lower of the two minors. It lists only that version's
   capabilities, refuses the verbs of any other with `not_supported` and
@@ -308,6 +308,13 @@ shows Chat only when the host lists it:
 |---|---|
 | `chat/1` | `chat.state`, `chat.send`, `chat.confirm`, `chat.cancel`, `chat.stop`, the `chat` topic |
 
+Version 1.4 adds one capability. A 1.4 remote works with any 1.x host and
+shows the view buttons only when the host lists it:
+
+| Capability | Gives |
+|---|---|
+| `view/1` | `view.state`, `view.set`, the `view` topic |
+
 ## 8. Snapshot and events
 
 ### 8.1 The snapshot
@@ -327,10 +334,11 @@ object (`schemas/snapshot.json`):
 - `takes`: the newest takes on any track, newest first, at most 20
 - `undo`: the next undo and redo steps
 
-The mixer, the tab, the routing and the chat are not in the snapshot. A
-remote that subscribes to `mixer`, `tab`, `routing` or `chat` reads them once
-with `mixer.state`, `tab.state`, `routing.state` and `chat.state`, then
-follows their topics; it reads them again after every new snapshot.
+The mixer, the tab, the routing, the chat and the view are not in the
+snapshot. A remote that subscribes to `mixer`, `tab`, `routing`, `chat` or
+`view` reads them once with `mixer.state`, `tab.state`, `routing.state`,
+`chat.state` and `view.state`, then follows their topics; it reads them again
+after every new snapshot.
 
 ### 8.2 Events
 
@@ -362,6 +370,7 @@ follows their topics; it reads them again after every new snapshot.
 | `tab` | `{tab}`, the selected track's tab or null (tab/1) | on every change, the cursor's included |
 | `routing` | `{sources, sends}` (routing/1) | on every change |
 | `chat` | `{available, state, messages, plan}` (chat/1) | on every change |
+| `view` | `{editor, split}` (view/1) | on every change |
 
 `position` and `meters` are sent only to remotes that subscribed to them, and
 the host does no meter work at all while nobody is subscribed (principle 7).
@@ -600,6 +609,21 @@ and gets words back. The AI and its key stay on the computer.
   shows the remote's other actions.
 - **`available` is false** when Tabber Studio has no AI set up. `chat.send`
   is then refused with `chat_unavailable`.
+
+### The computer's view (view/1)
+
+What Tabber Studio shows on the computer's screen, switched as its own view
+buttons switch it: Arrange, Tab or Piano Roll, and Split beside them.
+
+| Verb | Params | Result | In Tabber Studio |
+|---|---|---|---|
+| `view.state` | none | `view` | the view buttons |
+| `view.set` | `key`, `editor` (`arrange`, `tab` or `piano_roll`, optional), `split` (optional) | `view` | Arrange, Tab or Piano Roll; Split (F8) |
+
+- **`editor`** is the editor on screen. In Split it is the one beside
+  Arrange, Tab or Piano Roll.
+- **`split`** turns Split on, or off again back to the editor shown before.
+- A view change is not an undo step, there or here.
 
 ### Not in the vocabulary
 
