@@ -1,7 +1,8 @@
 import XCTest
 
 /// After a take, against DemoHost: keep it, delete it with one tap and undo,
-/// go again, and delete from the takes list.
+/// go again (the newer take plays, the earlier one waits in its lane), and
+/// delete from the takes list.
 final class TakeLoopUITests: SpakUITestCase {
     @MainActor
     override func setUp() async throws { launch() }
@@ -27,6 +28,20 @@ final class TakeLoopUITests: SpakUITestCase {
         tap("record")
         XCTAssertTrue(appears("take-card"))
         XCTAssertTrue(waitFor("take-detail", "from bar 25"))
+    }
+
+    @MainActor
+    func testGoingAgainShowsWhichTakePlays() {
+        recordOneTake()
+        tap("card-go-again")
+        XCTAssertTrue(waitFor("readout", "Recording", timeout: 12))
+        sleep(2)                                // longer than the first take, so it covers it
+        tap("record")
+        XCTAssertTrue(appears("take-card"))
+        tap("keep")
+        XCTAssertTrue(gone("take-card"))
+        XCTAssertTrue(waitFor("take-info-Vocals take 1", "not playing"), "the earlier take waits in its lane")
+        XCTAssertFalse(element("take-info-Vocals take 2").label.contains("not playing"), "the newest plays")
     }
 
     @MainActor

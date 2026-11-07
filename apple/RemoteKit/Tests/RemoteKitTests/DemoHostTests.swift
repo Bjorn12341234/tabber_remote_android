@@ -95,6 +95,33 @@ struct DemoHostTests {
         #expect(again["record"]?["recording"]?.boolValue == true)
     }
 
+    @Test func aPassOverAnEarlierOnePlaysInsteadOfIt() async throws {
+        let host = DemoHost()
+        let session = session(host)
+        let start = try await connected(session)
+        let track = start.tracks[0].id
+        _ = try await session.perform("tracks.arm", ["track_id": .string(track), "armed": true])
+        _ = try await session.perform("markers.go", ["marker_id": "demo-chorus"])
+        _ = try await session.perform("transport.set_count_in", ["bars": 0])
+        _ = try await session.perform("transport.record", ["armed_track_ids": [.string(track)]])
+        try await Task.sleep(for: .milliseconds(30))
+        let firstStop = try await session.perform("transport.stop")
+        let first = try #require(firstStop["take"]?["id"]?.stringValue)
+        _ = try await session.perform("takes.go_again", ["take_id": .string(first)])
+        try await Task.sleep(for: .milliseconds(150))              // longer, so it covers the first
+        let secondStop = try await session.perform("transport.stop")
+        let second = try #require(secondStop["take"]?["id"]?.stringValue)
+        let lanes = try await eventually(session) { $0.takes.count == 2 }
+        #expect(lanes.takes.map(\.id) == [second, first], "newest first")
+        #expect(lanes.takes.map(\.active) == [true, false], "the newer pass plays, the earlier one waits")
+        let discarded = try await session.perform("takes.discard", ["take_id": .string(second)])
+        #expect(discarded["takes"]?.arrayValue?.first?["active"]?.boolValue == true, "the earlier take plays again")
+        let step = try #require(discarded["undo"]?["undo"]?["id"]?.stringValue)
+        _ = try await session.perform("edit.undo", ["expect": .string(step)])
+        let back = try await eventually(session) { $0.takes.count == 2 }
+        #expect(back.takes.map(\.active) == [true, false])
+    }
+
     @Test func aResendAfterADropRecordsOnce() async throws {
         let host = DemoHost()
         let session = session(host)

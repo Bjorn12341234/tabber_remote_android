@@ -324,7 +324,7 @@ public actor DemoHost {
             return ["marker": try JSONCoding.value(marker), "markers": try JSONCoding.value(song.markers)]
         case "takes.list":
             let id = p["track_id"]?.stringValue ?? ""
-            return ["takes": try JSONCoding.value(song.takes.filter { $0.trackID == id })]
+            return ["takes": try JSONCoding.value(heard(song.takes.filter { $0.trackID == id }))]
         case "takes.discard":
             let id = p["take_id"]?.stringValue ?? ""
             guard let take = song.takes.first(where: { $0.id == id }) else {
@@ -351,7 +351,7 @@ public actor DemoHost {
             edit("Rate take") { song in
                 for i in song.takes.indices where song.takes[i].id == id { song.takes[i].rating = rating }
             }
-            return ["take": try JSONCoding.value(song.takes.first { $0.id == id }!)]
+            return ["take": try JSONCoding.value(heard(song.takes.filter { $0.id == id })[0])]
         case "edit.undo", "edit.redo":
             let redo = method == "edit.redo"
             let expect = p["expect"]?.stringValue ?? ""
@@ -578,7 +578,28 @@ public actor DemoHost {
                            armedTrackIDs: armed)
     }
 
-    private func recentTakes() -> [Take] { Array(song.takes.reversed().prefix(20)) }
+    private func recentTakes() -> [Take] { heard(Array(song.takes.reversed().prefix(20))) }
+
+    /// Which takes play, as Tabber Studio's take lanes decide (TR33): a pass
+    /// recorded over an earlier one on its track plays where they overlap, so
+    /// an earlier take plays only if some of it is outside every newer one.
+    /// Discarding the newer take lets the earlier one play again.
+    private func heard(_ takes: [Take]) -> [Take] {
+        takes.map { take in
+            var take = take
+            var left = [(take.start.seconds, take.start.seconds + take.lengthSeconds)]
+            let newer = song.takes.drop { $0.id != take.id }.dropFirst().filter { $0.trackID == take.trackID }
+            for later in newer {
+                let (lo, hi) = (later.start.seconds, later.start.seconds + later.lengthSeconds)
+                left = left.flatMap { span -> [(Double, Double)] in
+                    guard span.1 > lo, span.0 < hi else { return [span] }
+                    return [(span.0, lo), (hi, span.1)].filter { $0.1 - $0.0 > 0.0005 }
+                }
+            }
+            take.active = !left.isEmpty
+            return take
+        }
+    }
 
     private func startRecording(track: String, atBeat beat: Double) throws {
         let leadBeats = Double(countIn * 4)

@@ -172,13 +172,14 @@ struct TakesSection: View {
                         VStack(alignment: .leading, spacing: 3) {
                             Text(take.name)
                                 .font(.body.weight(.semibold))
-                                .foregroundStyle(Studio.text1)
-                            Text("\(Format.length(take.lengthSeconds)) from bar \(take.start.bar)")
+                                .foregroundStyle(take.active ? Studio.text1 : Studio.text2)
+                            Text(detail(take))
                                 .font(.subheadline)
                                 .foregroundStyle(Studio.text2)
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .accessibilityElement(children: .combine)
+                        .accessibilityIdentifier("take-info-\(take.name)")
                         Button("Delete") { model.delete(take) }
                             .buttonStyle(.studioDestructive)
                             .opacity(model.pending.contains("delete-\(take.id)") ? 0.5 : 1)
@@ -194,6 +195,13 @@ struct TakesSection: View {
                 }
             }
         }
+    }
+
+    /// A take that a newer one covers waits in its lane in Tabber Studio, as
+    /// the computer's take lanes show it; the list says it doesn't play.
+    private func detail(_ take: Take) -> String {
+        let place = "\(Format.length(take.lengthSeconds)) from bar \(take.start.bar)"
+        return take.active ? place : "\(place), not playing"
     }
 
     private func color(_ take: Take) -> Color {
