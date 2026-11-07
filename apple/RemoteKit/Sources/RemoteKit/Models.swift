@@ -269,3 +269,29 @@ public enum LinkState: Sendable, Hashable {
     case reconnecting
     case failed(String)
 }
+
+/// Why the phone cannot work with its computer, in a form the app turns into
+/// a fix-it card (plan: TR6). nil while connected, and while a reconnect is
+/// still young.
+public enum Trouble: Sendable, Hashable {
+    /// Nothing answered at any of the computer's addresses for a while.
+    case unreachable
+    /// iOS keeps Tabber Spak off the local network (Settings › Tabber Spak).
+    case localNetworkDenied
+    /// The computer speaks only older protocol versions than this phone.
+    case updateStudio(hostVersions: [String])
+    /// The computer speaks only newer protocol versions than this phone.
+    case updateSpak(hostVersions: [String])
+    /// The computer no longer knows this phone (removed in Settings › Remote).
+    case forgotten
+    /// A different computer answers at the remembered address.
+    case otherComputer
+
+    /// Which side must update, from the versions the computer speaks (spec 7).
+    public static func versions(_ hostVersions: [String], phone: [String] = RemoteClient.protocolVersions) -> Trouble {
+        func major(_ version: String) -> Int { Int(version.split(separator: ".").first ?? "") ?? 0 }
+        let hostNewest = hostVersions.map(major).max() ?? 0
+        let phoneNewest = phone.map(major).max() ?? 0
+        return hostNewest > phoneNewest ? .updateSpak(hostVersions: hostVersions) : .updateStudio(hostVersions: hostVersions)
+    }
+}

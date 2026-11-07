@@ -20,6 +20,8 @@ public actor RemoteClient {
     public nonisolated let incoming: AsyncStream<Incoming>
     public private(set) var hello: HelloResult?
     public private(set) var isClosed = false
+    /// Why the line ended, when the transport could tell (a denied local network, a wrong key).
+    private var failure: TransportFailure?
 
     public init(transport: any RemoteTransport) {
         self.transport = transport
@@ -44,7 +46,14 @@ public actor RemoteClient {
     private func readLoop() async {
         while true {
             let text: String?
-            do { text = try await transport.receive() } catch { text = nil }
+            do {
+                text = try await transport.receive()
+            } catch let reason as TransportFailure {
+                failure = reason
+                text = nil
+            } catch {
+                text = nil
+            }
             guard let text else { break }
             handle(text)
         }
@@ -55,7 +64,8 @@ public actor RemoteClient {
         guard !isClosed else { return }
         isClosed = true
         let code = await transport.closeCode()
-        for (_, continuation) in pending { continuation.resume(throwing: TransportFailure.closed(code)) }
+        let reason = failure ?? TransportFailure.closed(code)
+        for (_, continuation) in pending { continuation.resume(throwing: reason) }
         pending.removeAll()
         beater?.cancel()
         incomingContinuation.yield(.closed(code))
@@ -83,7 +93,10 @@ public actor RemoteClient {
 
     /// Call a verb. Throws `RemoteError` for a refusal, `TransportFailure` when the line drops.
     public func call(_ method: String, _ params: JSONValue = [:], timeout: Duration = .seconds(15)) async throws -> JSONValue {
-        guard !isClosed else { throw TransportFailure.closed(await transport.closeCode()) }
+        if isClosed {
+            if let failure { throw failure }
+            throw TransportFailure.closed(await transport.closeCode())
+        }
         nextID += 1
         let id = nextID
         let request: JSONValue = ["jsonrpc": "2.0", "id": .number(Double(id)), "method": .string(method), "params": params]
@@ -104,14 +117,17 @@ public actor RemoteClient {
         pending.removeValue(forKey: id)?.resume(throwing: error)
     }
 
-    public func call<T: Decodable>(_ method: String, _ params: JSONValue = [:], as type: T.Type) async throws -> T {
-        try JSONCoding.decode(T.self, from: try await call(method, params))
+    public func call<T: Decodable>(_ method: String, _ params: JSONValue = [:], as type: T.Type,
+                                   timeout: Duration = .seconds(15)) async throws -> T {
+        try JSONCoding.decode(T.self, from: try await call(method, params, timeout: timeout))
     }
 
-    public func sayHello(app: AppInfo) async throws -> HelloResult {
+    /// The first request on a connection. Its timeout is also how long a dead
+    /// address may hold up a reconnect, so the session passes a short one.
+    public func sayHello(app: AppInfo, timeout: Duration = .seconds(15)) async throws -> HelloResult {
         let result = try await call("hello", ["app": try JSONCoding.value(app),
                                               "protocol_versions": .array(Self.protocolVersions.map { .string($0) })],
-                                    as: HelloResult.self)
+                                    as: HelloResult.self, timeout: timeout)
         hello = result
         return result
     }

@@ -3,21 +3,38 @@ import SwiftUI
 
 struct RootView: View {
     @Bindable var model: AppModel
+    @Environment(\.scenePhase) private var phase
 
     var body: some View {
         Group {
-            if !model.bar.hasSession && model.known == nil && !model.isDemo {
-                DebugView(model: model)            // pairing; TR6 replaces it with Welcome
+            if model.known == nil && !model.isDemo {
+                WelcomeView(model: model)
             } else {
                 TabView {
                     Tab("Session", systemImage: "record.circle") { SessionView(model: model) }
                     Tab("Takes", systemImage: "square.stack") { TakesView(model: model) }
                     Tab("Tracks", systemImage: "slider.vertical.3") { TracksView(model: model) }
-                    Tab("Computer", systemImage: "desktopcomputer") { DebugView(model: model) }
+                    Tab("Computer", systemImage: "desktopcomputer") { ComputerView(model: model) }
                 }
                 .tabViewBottomAccessory { TransportBar(model: model) }
                 .tabBarMinimizeBehavior(.never)          // the transport never moves (principle 5)
             }
+        }
+        .overlay {
+            if case .working(let name) = model.pairing { PairingOverlay(name: name) }
+        }
+        .sheet(isPresented: $model.scanning) { ScannerSheet(model: model) }
+        .alert("Pairing did not work", isPresented: pairingFailed) {
+            Button("Scan Again") {
+                model.clearPairing()
+                model.scanning = true
+            }
+            Button("OK", role: .cancel) { model.clearPairing() }
+        } message: {
+            if case .failed(let message) = model.pairing { Text(message) }
+        }
+        .onChange(of: phase) { _, now in
+            if now == .active { model.wake() }       // back within a second (TR6)
         }
         .tint(Color(red: 0.898, green: 0.282, blue: 0.302))
         .sensoryFeedback(trigger: model.feedback.count) { _, _ in
@@ -33,6 +50,13 @@ struct RootView: View {
         .onChange(of: model.bar.connected, initial: true) { _, connected in
             UIApplication.shared.isIdleTimerDisabled = connected && model.keepAwake
         }
+    }
+}
+
+extension RootView {
+    private var pairingFailed: Binding<Bool> {
+        Binding(get: { if case .failed = model.pairing { return true } else { return false } },
+                set: { shown in if !shown, case .failed = model.pairing { model.clearPairing() } })
     }
 }
 

@@ -14,6 +14,8 @@ public struct KnownHost: Codable, Sendable, Hashable, Identifiable {
 /// What the app shows: the computer's confirmed state (principle 3).
 public struct SessionState: Sendable, Hashable {
     public var link: LinkState = .idle
+    /// Why the computer cannot be used, once that is clear (TR6's fix-it cards).
+    public var trouble: Trouble?
     public var host: HostInfo?
     public var capabilities: Set<String> = []
     public var project = ProjectState(title: "", unsaved: false, hasFile: false)
@@ -71,6 +73,12 @@ public actor RemoteSession {
     private let app: AppInfo
     private var client: RemoteClient?
     private var supervisor: Task<Void, Never>?
+    /// The wait between reconnect attempts; `wake()` cuts it short.
+    private var nap: Task<Void, Never>?
+    /// How long reconnecting may fail before the app is told the computer is unreachable.
+    public static let patience: Duration = .seconds(4)
+    /// How long a dead address may hold up a reconnect (the hello's timeout).
+    public static let connectTimeout: Duration = .seconds(3)
     private var connectedWaiters: [CheckedContinuation<Void, Never>] = []
     public private(set) var state = SessionState()
     private let continuation: AsyncStream<SessionState>.Continuation
@@ -108,25 +116,61 @@ public actor RemoteSession {
 
     private func supervise() async {
         var attempt = 0
+        var failingSince: ContinuousClock.Instant?
         while !Task.isCancelled {
             setLink(attempt == 0 ? .connecting : .reconnecting)
             do {
                 try await connectOnce(attempt: attempt)
                 attempt = 0
+                failingSince = nil
                 await consume()
-            } catch let failure as RemoteError where ["unknown_device", "signature_invalid", "unsupported_version"].contains(failure.reason) {
-                setLink(.failed(failure.reason))
+            } catch let failure as RemoteError where ["unknown_device", "signature_invalid"].contains(failure.reason) {
+                fail(failure.reason, .forgotten)
+                return
+            } catch let failure as RemoteError where failure.reason == "unsupported_version" {
+                let versions = failure.data["host_versions"]?.arrayValue?.compactMap(\.stringValue) ?? []
+                fail(failure.reason, Trouble.versions(versions))
+                return
+            } catch TransportFailure.closed(.some(4002)) {
+                // No shared major version at all: this phone offers only 1.x, so the
+                // computer speaks only newer ones (spec 2).
+                fail("unsupported_version", .updateSpak(hostVersions: []))
                 return
             } catch TransportFailure.wrongKey {
-                setLink(.failed("wrong_key"))
+                fail("wrong_key", .otherComputer)
                 return
+            } catch TransportFailure.localNetworkDenied {
+                failingSince = failingSince ?? .now
+                state.trouble = .localNetworkDenied    // keep trying: it may be allowed in Settings
             } catch {
-                // fall through to a retry
+                failingSince = failingSince ?? .now
             }
             guard !Task.isCancelled else { return }
             attempt += 1
+            if let since = failingSince, ContinuousClock.now - since >= Self.patience, state.trouble == nil {
+                state.trouble = .unreachable
+            }
             setLink(.reconnecting)
-            try? await Task.sleep(for: .milliseconds(min(2000, 250 * (1 << min(attempt - 1, 3)))))
+            let delay = Duration.milliseconds(min(2000, 250 * (1 << min(attempt - 1, 3))))
+            let wait = Task { _ = try? await Task.sleep(for: delay) }
+            nap = wait
+            await wait.value
+            nap = nil
+        }
+    }
+
+    private func fail(_ reason: String, _ trouble: Trouble) {
+        state.trouble = trouble
+        setLink(.failed(reason))
+    }
+
+    /// The app is back on the screen (TR6: reconnected within a second). A
+    /// connection that went quiet while the app was away is dropped and made
+    /// again at once; a reconnect waiting out its backoff tries now.
+    public func wake() async {
+        nap?.cancel()
+        if case .connected = state.link, client != nil, silentFor() > 2.5 {
+            await client?.close()
         }
     }
 
@@ -134,7 +178,13 @@ public actor RemoteSession {
         let transport = try await connector(attempt)
         let client = RemoteClient(transport: transport)
         await client.start()
-        let hello = try await client.sayHello(app: app)
+        let hello: HelloResult
+        do {
+            hello = try await client.sayHello(app: app, timeout: Self.connectTimeout)
+        } catch {
+            await client.close()
+            throw error
+        }
         switch credentials {
         case .demo:
             let signer = SoftwareSigner()
@@ -148,6 +198,7 @@ public actor RemoteSession {
         state.host = hello.host
         state.capabilities = Set(hello.capabilities)
         apply(snapshot)
+        state.trouble = nil
         setLink(.connected(busy: false))
     }
 

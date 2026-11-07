@@ -1,9 +1,11 @@
 # Tabber Spak: plan
 
-Status: planning, 2026-11-06 and 07. No code exists yet, in this repository or
-in Tabber Studio. Sources: Tabber Studio `main` at `1ecc4a79` (0.3.16), read
-for this plan, and web research done the same days (links at the end). Tabber
-Studio changes often: re-verify every reference before coding.
+Status: planned 2026-11-06 and 07; building since 2026-11-07, when the owner
+asked for TR0 to TR9 in one session. What each sprint did, and what it still
+owes the owner, is in Records. Tabber Spak build 1 is in TestFlight. Sources:
+Tabber Studio `main` at `1ecc4a79` (0.3.16), read for this plan, and web
+research done the same days (links at the end). Tabber Studio changes often:
+re-verify every reference before coding.
 
 On 2026-11-07 the owner set a date: a demo at Pustervik on 24 November 2026.
 The schedule and the demo cut are in The Pustervik demo. The toolchain and
@@ -648,11 +650,15 @@ Checked on the owner's Mac Studio (M1 Max, macOS 26.6.2) on 2026-11-07.
   the Network framework's WebSocket client (`NetworkConnection` and
   `NWConnection` alike) aborts right after the TLS handshake with
   `ECONNABORTED`, before it sends its upgrade request (found in TR5's
-  interop test). A Bonjour result is resolved to an address first (TR6).
+  interop test). A Bonjour result is resolved to an address first: TR6 opens
+  a short TCP connection to it, IPv4 first, and reads the address it reached.
 - **A connection that cannot connect waits and retries.** `receive()` fails
   at once, but `send()` waits forever and `close()` never returns; only
   releasing the connection cancels it. RemoteKit times out every call and
   lets such connections go.
+- **A SwiftUI `Label`'s accessibility identifier lands on its icon and its
+  text,** and a UI test's first match is the icon. Put the identifier on the
+  `Text` (found in TR6).
 - **`swift test` holds a test's output until the process exits,** so a hung
   test shows nothing. Write to a file and kill the process to read it.
 - **Denial is silent in the background.** Get the permission in the
@@ -871,11 +877,11 @@ The demo part of a sprint passes the gate items for what it contains.
 - **Download Xcode 27.2** (`Xcode_27.2.xip`) from developer.apple.com, signed
   in with your Apple ID. The rest of the install and the historia check happen
   in a session.
-- **Reserve the app,** any time before TR5:
-  - register the identifier `studio.tabber.spak` at developer.apple.com
-  - create the App Store Connect app "Tabber Spak" with it, for Viga Works AB
-  - add an internal TestFlight group with automatic distribution, with
-    yourself in it
+- **Reserve the app:** done 2026-11-07. App Store Connect has "Tabber Spak"
+  (Apple ID 6831855493, bundle id and SKU `studio.tabber.spak`), and build 1
+  is uploaded. If there is no internal TestFlight group yet, add one with
+  automatic distribution, with yourself in it, then install build 1 from the
+  TestFlight app.
 - **Get a small travel router** with an Ethernet port.
 - **Decide how the room sees the phone** (The stage setup).
 
@@ -1002,7 +1008,8 @@ Each needs the owner's go-ahead:
    - the home-screen label "Tabber Spak"
    - Bonjour type `_tabber-remote._tcp`, registered with IANA
    - "Tabber Spak" looks free: an App Store search on 2026-11-07 found no app
-     by that name. Creating the App Store Connect record is what reserves it.
+     by that name. Creating the App Store Connect record is what reserves it:
+     **done 2026-11-07** (Apple ID 6831855493).
 3. **Devices.** Default: iPhone first, iOS 26 minimum, iPad in TR21.
 4. **Price.** Default: free. It sells Tabber Studio.
 5. **Version 1.0.** Default: M1 only.
@@ -1233,11 +1240,42 @@ what was measured, and what changed in the plan.
     Network framework traps now in Known traps.
   - **Owed to the owner:** the same connection from a real iPhone on the
     Wi-Fi, once a TestFlight build is installed.
-  - **TestFlight, waiting for the owner:** `apple/scripts/release-ios.sh`
-    archived and signed build 1, and the upload stopped at
-    `missingApp(bundleId: "studio.tabber.spak")`: App Store Connect has no app
-    record yet. Once the owner creates it (Apps, New App, iOS, "Tabber Spak",
-    bundle id `studio.tabber.spak`), the same script uploads build 1.
+  - **TestFlight:** `apple/scripts/release-ios.sh` archived and signed build
+    1, and the upload stopped at `missingApp(bundleId: "studio.tabber.spak")`:
+    App Store Connect had no app record yet. The owner created it the same
+    day (Apple ID 6831855493), and the script uploaded build 1 for internal
+    testing (tag `ios-b1`, Xcode 26.3).
+- **TR6 🟡 2026-11-07, this repository.** A fresh install opens on Welcome
+  (`apple/TabberSpak/Welcome.swift`). Get Started explains the Local Network
+  prompt before iOS shows it, then lists the computers Bonjour finds
+  (`Discovery` in RemoteKit, with iOS 26's `NetworkBrowser`) above Scan the
+  Code (VisionKit's `DataScannerViewController`, QR only; without a camera,
+  the link can be pasted). Pairing shows its progress, and a failure says why
+  in words. The Computer tab replaces TR5's debug screen: the computer, its
+  state and address, Pair Again, Forget, and Keep the screen awake.
+  - **Reconnecting** (`RouteBook`, `RemoteSession.wake`): the remembered
+    addresses are tried in turn with a 3-second hello, then Bonjour finds the
+    computer by its host id. The address that worked is remembered first,
+    and when the port moved, the other addresses move with it. Back on the
+    screen, a connection quiet for 2.5 s is remade at once, and a reconnect
+    waiting out its backoff tries at once.
+  - **Fix-it cards** (`FixIt.swift`, from `SessionState.trouble`): Can't
+    reach your computer (after 4 s of failing, with four things to check),
+    Update Tabber Studio and Update Tabber Spak (from `unsupported_version`'s
+    `host_versions`, or close 4002), Allow Local Network (a denied browse or
+    connection), the computer no longer knows this iPhone, and a different
+    computer answers.
+  - **Gate, met in the Simulator and in RemoteKit:** 5 new UI tests (a fresh
+    install; the explainer, the scanner, and a pairing that fails with its
+    reason; the unreachable card and Pair Again; both Update cards), and all
+    12 UI tests pass. 7 new RemoteKit tests (the route book; the trouble for
+    each cause; wake reconnects within 0.5 s; a quiet connection is remade
+    within a second), and all 24 pass. The interop test against the real
+    host still passes.
+  - **Owed to the owner, on the iPhone:** fresh install to paired with one
+    scan; the Local Network prompt after the explainer; each card, by
+    recreating its cause (Tabber Studio closed, Wi-Fi off, Local Network
+    off); back on the screen within a second over Wi-Fi.
 - **TR7 🟡 2026-11-07, this repository.** The Session screen
   (`apple/TabberSpak/SessionView.swift`, `RootView.swift`): the connection
   badge, the song and its unsaved mark, the section at the playhead, bar and

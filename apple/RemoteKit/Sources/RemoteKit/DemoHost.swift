@@ -26,6 +26,8 @@ public actor DemoHost {
         var seq = 0
         var authed = false
         var challenge = Data()
+        /// Gone quiet without a close, as a suspended app's socket does.
+        var silent = false
         init(transport: MemoryTransport) { self.transport = transport }
     }
 
@@ -56,7 +58,12 @@ public actor DemoHost {
     public var dropBeforeNextAnswer = false
     public private(set) var recordingsStarted = 0
 
-    public init() {
+    /// The protocol versions this computer speaks: another major version
+    /// shows the app's Update cards (TR6).
+    public let speaks: [String]
+
+    public init(speaks: [String] = ["1.0"]) {
+        self.speaks = speaks
         song = Song(
             tracks: [Track(id: "demo-vocals", name: "Vocals", kind: .audio, armed: false, monitor: .auto, selected: true, color: "#E5484D"),
                      Track(id: "demo-guitar", name: "Guitar", kind: .audio, armed: false, monitor: .auto, selected: false, color: "#3E63DD"),
@@ -71,11 +78,19 @@ public actor DemoHost {
 
     public func setDropBeforeNextAnswer(_ value: Bool) { dropBeforeNextAnswer = value }
 
+    /// Tests: every open connection goes quiet without closing (no answers, no
+    /// heartbeats), as when the phone was away; new connections work.
+    public func goSilent() { for connection in connections.values { connection.silent = true } }
+
+    /// Connections made so far, open or not.
+    public private(set) var connectionsMade = 0
+
     /// A new connection; the phone uses the returned end.
     public func connect() -> MemoryTransport {
         let (phone, host) = MemoryTransport.pair()
         let connection = Connection(transport: host)
         connections[ObjectIdentifier(connection)] = connection
+        connectionsMade += 1
         Task { await self.serve(connection) }
         Task { await self.heartbeats(connection) }
         return phone
@@ -100,7 +115,7 @@ public actor DemoHost {
     private func now() -> Double { (ContinuousClock.now - epoch).seconds + 1000.0 }
 
     private func send(_ message: JSONValue, to connection: Connection) {
-        guard let text = try? JSONCoding.encode(message) else { return }
+        guard !connection.silent, let text = try? JSONCoding.encode(message) else { return }
         connection.transport.sendNow(text)
     }
 
@@ -128,6 +143,11 @@ public actor DemoHost {
         } else {
             send(answer, to: connection)
         }
+        if answer["error"]?["data"]?["reason"]?.stringValue == "unsupported_version" {
+            connection.transport.close(code: 4002)       // as a real host does (vector version_mismatch)
+            connections[ObjectIdentifier(connection)] = nil
+            return
+        }
         broadcastChanges(from: before)
     }
 
@@ -140,6 +160,11 @@ public actor DemoHost {
     private func run(_ method: String, _ p: JSONValue, _ connection: Connection) throws -> JSONValue {
         switch method {
         case "hello":
+            let offered = p["protocol_versions"]?.arrayValue?.compactMap(\.stringValue) ?? []
+            func major(_ v: String) -> Substring { v.split(separator: ".").first ?? "" }
+            guard offered.contains(where: { o in speaks.contains { major($0) == major(o) } }) else {
+                throw DemoErrors.make("unsupported_version", ["host_versions": .array(speaks.map { .string($0) })])
+            }
             connection.challenge = Data((0..<32).map { _ in UInt8.random(in: 0...255) })
             return ["host": ["id": .string(Self.hostID), "name": .string(Self.name), "app_version": "demo"],
                     "protocol_version": "1.0",
@@ -500,6 +525,7 @@ public enum DemoErrors {
         "invalid_params": (-32602, "The phone sent a request the computer could not use."),
         "internal_error": (-32603, "Something went wrong in Tabber Studio."),
         "unauthenticated": (1001, "Pair this phone with the computer first."),
+        "unsupported_version": (1010, "Update Tabber Studio or Tabber Spak so they can talk to each other."),
         "already_recording": (1021, "Tabber Studio is already recording."),
         "unknown_track": (1023, "That track is gone from the song."),
         "unknown_take": (1024, "That take is gone from the song."),

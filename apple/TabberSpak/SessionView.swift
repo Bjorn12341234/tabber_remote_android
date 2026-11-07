@@ -48,6 +48,15 @@ struct SessionView: View {
         }
         .opacity(model.isConnected ? 1 : 0.45)        // stale state is never shown as live
         .animation(.easeInOut(duration: 0.25), value: model.isConnected)
+        .safeAreaInset(edge: .top) {
+            if let trouble = state.trouble {             // what is wrong, and the fix (TR6)
+                FixItCard(model: model, trouble: trouble, computer: model.computerName)
+                    .padding(.horizontal, 12)
+                    .padding(.top, 4)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
+        }
+        .animation(.spring(duration: 0.35), value: state.trouble)
         .overlay { RecordingFrame(state: state) }
     }
 

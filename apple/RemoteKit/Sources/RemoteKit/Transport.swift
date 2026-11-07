@@ -16,6 +16,7 @@ public enum TransportFailure: Error, Sendable, Hashable {
     case wrongKey                // the computer's key does not match the pin
     case closed(Int?)
     case unreachable(String)
+    case localNetworkDenied      // iOS keeps the app off the local network (Settings › Tabber Spak)
 }
 
 /// Checks the computer's key against the pin (spec 2, Trust). With no pin
@@ -54,7 +55,7 @@ public final class NetworkTransport: RemoteTransport, @unchecked Sendable {
         pins = box
         // A WebSocket needs a wss:// URL endpoint: with a bare host and port the
         // Network framework aborts right after the TLS handshake (TR5 interop).
-        let url = URL(string: "wss://\(route)/") ?? URL(string: "wss://127.0.0.1:9474/")!
+        let url = Self.url(for: route)
         connection = NetworkConnection(to: .url(url)) {
             WebSocket {
                 TLS()
@@ -67,6 +68,13 @@ public final class NetworkTransport: RemoteTransport, @unchecked Sendable {
     }
 
     public var observedPin: String? { pins.observed }
+
+    /// `wss://host:port/`. An IPv6 zone (`fe80::1%en0`, from a Bonjour lookup)
+    /// is written `%25` in a URL, or the URL would not parse.
+    static func url(for route: Route) -> URL {
+        let host = route.host.contains(":") ? "[\(route.host.replacingOccurrences(of: "%", with: "%25"))]" : route.host
+        return URL(string: "wss://\(host):\(route.port)/") ?? URL(string: "wss://127.0.0.1:\(route.port)/")!
+    }
 
     public func send(_ text: String) async throws {
         try await connection.send(text)
@@ -87,6 +95,9 @@ public final class NetworkTransport: RemoteTransport, @unchecked Sendable {
         } catch {
             if pins.expected != nil, let seen = pins.observed, seen != pins.expected {
                 throw TransportFailure.wrongKey
+            }
+            if let path = connection.currentPath, path.status == .unsatisfied, path.unsatisfiedReason == .localNetworkDenied {
+                throw TransportFailure.localNetworkDenied
             }
             throw error
         }

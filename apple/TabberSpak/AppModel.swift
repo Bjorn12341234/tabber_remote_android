@@ -35,28 +35,75 @@ final class AppModel {
     private(set) var known: KnownHost?
     private var session: RemoteSession?
     private var listener: Task<Void, Never>?
+    /// The paired computer's addresses, and Bonjour when they all fail (TR6).
+    private var book: RouteBook?
+
+    /// Pairing from a scanned code: what the phone is doing, or why it stopped.
+    enum Pairing: Equatable { case idle, working(String), failed(String) }
+    private(set) var pairing: Pairing = .idle
+    /// The scanner sheet; the Computer tab and the fix-it cards open it too.
+    var scanning = false
+    /// The computer the scanner's hint names, when known.
+    var scanTarget: String?
+    /// Whether the explainer before the Local Network prompt was shown (plan: Find your Mac).
+    var explainedLocalNetwork: Bool = UserDefaults.standard.bool(forKey: "explainedLocalNetwork") {
+        didSet { UserDefaults.standard.set(explainedLocalNetwork, forKey: "explainedLocalNetwork") }
+    }
 
     static let app = AppInfo(version: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0",
                              build: Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "1")
 
     init() {
+        let arguments = ProcessInfo.processInfo.arguments
+        // UI tests: `-reset` is a fresh install; `-known-host <json>` a phone paired
+        // with that computer; `-demo-speaks 2.0` a demo computer of another version.
+        if arguments.contains("-reset") {
+            HostStore.clear()
+            explainedLocalNetwork = false
+        }
+        if let index = arguments.firstIndex(of: "-known-host"), index + 1 < arguments.count,
+           let host = try? JSONDecoder().decode(KnownHost.self, from: Data(arguments[index + 1].utf8)) {
+            HostStore.save(host)
+        }
         known = HostStore.load()
-        if ProcessInfo.processInfo.arguments.contains("-demo") {
+        if arguments.contains("-demo") {
             startDemo()
+        } else if let index = arguments.firstIndex(of: "-demo-speaks"), index + 1 < arguments.count {
+            startDemo(speaks: [arguments[index + 1]])
         } else if let known, let signer = try? DeviceKeyStore.loadOrCreate() {
-            start(.paired(known, signer), routes: known.routes)
+            start(known, signer)
         }
     }
 
-    func startDemo() {
+    private var demoSpeaks = ["1.0"]
+
+    func startDemo(speaks: [String] = ["1.0"]) {
         isDemo = true
-        let host = DemoHost()
+        demoSpeaks = speaks
+        book = nil
+        let host = DemoHost(speaks: speaks)
         attach(RemoteSession(credentials: .demo, app: Self.app) { _ in await host.connect() })
+    }
+
+    /// Start over after a stop (the Update cards' Try Again).
+    func retry() {
+        if isDemo {
+            startDemo(speaks: demoSpeaks)
+        } else if let known, let signer = try? DeviceKeyStore.loadOrCreate() {
+            start(known, signer)
+        }
+    }
+
+    /// Back on the screen: reconnect at once if the line went quiet (TR6, under a second).
+    func wake() {
+        guard let session else { return }
+        Task { await session.wake() }
     }
 
     /// Pair from the QR code's link (scanned, pasted, or `simctl openurl`).
     func pair(with link: PairingLink) async {
         problem = nil
+        pairing = .working(link.name)
         do {
             let signer = try DeviceKeyStore.loadOrCreate()
             var lastError: Error?
@@ -64,7 +111,7 @@ final class AppModel {
                 let client = RemoteClient(transport: NetworkTransport(route: route, pin: link.pin))
                 await client.start()
                 do {
-                    _ = try await client.sayHello(app: Self.app)
+                    _ = try await client.sayHello(app: Self.app, timeout: .seconds(4))
                     _ = try await client.pair(token: link.token, pin: link.pin, device: signer,
                                               name: DeviceName.current, model: DeviceName.model)
                     await client.close()
@@ -72,26 +119,52 @@ final class AppModel {
                     HostStore.save(host)
                     known = host
                     isDemo = false
-                    start(.paired(host, signer), routes: host.routes)
+                    pairing = .idle
+                    start(host, signer)
                     return
+                } catch let refusal as RemoteError {
+                    await client.close()
+                    lastError = refusal
+                    break                   // the computer answered: another address would say the same
                 } catch {
                     lastError = error
                     await client.close()
                 }
             }
-            problem = Self.explain(lastError)
+            pairing = .failed(Self.explainPairing(lastError, name: link.name))
         } catch {
-            problem = Self.explain(error)
+            pairing = .failed(Self.explainPairing(error, name: link.name))
         }
     }
 
-    private func start(_ credentials: RemoteSession.Credentials, routes: [Route]) {
-        attach(RemoteSession(credentials: credentials, app: Self.app) { attempt in
-            NetworkTransport(route: routes[attempt % max(1, routes.count)], pin: {
-                if case .paired(let host, _) = credentials { return host.pin }
-                return nil
-            }())
+    func clearPairing() { pairing = .idle }
+
+    /// A pairing that did not work, in words that say what to do (spec 10).
+    static func explainPairing(_ error: Error?, name: String) -> String {
+        switch error {
+        case let refusal as RemoteError: return refusal.message
+        case TransportFailure.wrongKey?: return "The computer that answered is not the one that showed this code. Scan the code again."
+        case TransportFailure.localNetworkDenied?: return "Tabber Spak may not use the local network. Turn on Local Network in Settings › Tabber Spak, then scan again."
+        case TransportFailure.closed(.some(4002))?: return "\(name) runs a newer Tabber Studio. Update Tabber Spak, then scan again."
+        default: return "Can't reach \(name). Check that this iPhone is on the same Wi-Fi as the computer and that Tabber Studio is open, then scan again."
+        }
+    }
+
+    private func start(_ host: KnownHost, _ signer: any DeviceSigner) {
+        let book = RouteBook(routes: host.routes, hostID: host.id)
+        self.book = book
+        let pin = host.pin
+        attach(RemoteSession(credentials: .paired(host, signer), app: Self.app) { attempt in
+            NetworkTransport(route: await book.route(for: attempt), pin: pin)
         })
+    }
+
+    /// The address that connected goes first; a computer that moved is found there next time.
+    private func remember(_ book: RouteBook) async {
+        guard let routes = await book.connected(), var host = known, self.book === book else { return }
+        host.routes = routes
+        known = host
+        HostStore.save(host)
     }
 
     private func attach(_ next: RemoteSession) {
@@ -100,8 +173,15 @@ final class AppModel {
         session = next
         listener = Task { [weak self] in
             await next.start()
+            var wasConnected = false
             for await update in next.updates {
                 guard let self else { return }
+                if case .connected = update.link {
+                    if !wasConnected, let book = self.book { await self.remember(book) }
+                    wasConnected = true
+                } else {
+                    wasConnected = false
+                }
                 self.state = update
                 var summary = TransportSummary()
                 if case .connected = update.link { summary.connected = true }
@@ -115,9 +195,22 @@ final class AppModel {
         }
     }
 
+    /// Back from the demo to the paired computer, if there is one.
+    func leaveDemo() {
+        isDemo = false
+        listener?.cancel()
+        if let old = session { Task { await old.stop() } }
+        session = nil
+        state = SessionState()
+        bar = TransportSummary()
+        if let known, let signer = try? DeviceKeyStore.loadOrCreate() { start(known, signer) }
+    }
+
     func forget() {
         HostStore.clear()
         known = nil
+        isDemo = false
+        book = nil
         listener?.cancel()
         if let old = session { Task { await old.stop() } }
         session = nil
@@ -126,6 +219,9 @@ final class AppModel {
     }
 
     var isConnected: Bool { if case .connected = state.link { return true }; return false }
+
+    /// The computer's name for the screen: as it says, as remembered, or in general words.
+    var computerName: String { state.host?.name ?? known?.name ?? (isDemo ? DemoHost.name : "your computer") }
 
     /// Run a verb for a control: pending until the computer confirms, then a
     /// haptic; a refusal is shown in words (spec 10).

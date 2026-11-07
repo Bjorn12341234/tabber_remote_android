@@ -1,0 +1,69 @@
+import RemoteKit
+import SwiftUI
+
+/// The Computer tab: which computer this iPhone runs, how the line is, and
+/// pairing again or forgetting it (plan: The app, screen 7).
+struct ComputerView: View {
+    @Bindable var model: AppModel
+    @State private var confirmForget = false
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section("Computer") {
+                    LabeledContent("Computer", value: computerName)
+                        .accessibilityIdentifier("host-name")
+                    LabeledContent("State", value: linkLabel)
+                        .accessibilityIdentifier("link-state")
+                    if let route = model.known?.routes.first, !model.isDemo {
+                        LabeledContent("Address", value: route.description)
+                            .font(.callout.monospaced())
+                    }
+                    if let trouble = model.state.trouble {
+                        FixItCard(model: model, trouble: trouble, computer: computerName)
+                            .listRowInsets(EdgeInsets())
+                    }
+                }
+                Section {
+                    Button("Pair Again…") {
+                        model.scanTarget = model.known?.name
+                        model.scanning = true
+                    }
+                    .accessibilityIdentifier("pair-again")
+                    if model.isDemo {
+                        Button("Leave the Demo") { model.leaveDemo() }
+                            .accessibilityIdentifier("leave-demo")
+                    } else if model.known != nil {
+                        Button("Forget This Computer", role: .destructive) { confirmForget = true }
+                            .accessibilityIdentifier("forget")
+                    }
+                }
+                Section("This iPhone") {
+                    Toggle("Keep the screen awake", isOn: $model.keepAwake)
+                }
+                Section {
+                    LabeledContent("Tabber Spak", value: "\(AppModel.app.version) (\(AppModel.app.build))")
+                    LabeledContent("Protocol", value: RemoteClient.protocolVersions.joined(separator: ", "))
+                }
+            }
+            .navigationTitle("Computer")
+            .confirmationDialog("Forget \(computerName)?", isPresented: $confirmForget, titleVisibility: .visible) {
+                Button("Forget", role: .destructive) { model.forget() }
+            } message: {
+                Text("To use it again, pair again with its code.")
+            }
+        }
+    }
+
+    private var computerName: String { model.computerName }
+
+    private var linkLabel: String {
+        switch model.state.link {
+        case .idle: "Not connected"
+        case .connecting: "Connecting"
+        case .connected(let busy): busy ? "Connected, Tabber Studio is busy" : "Connected"
+        case .reconnecting: "Reconnecting"
+        case .failed: "Stopped"
+        }
+    }
+}
