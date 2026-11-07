@@ -2081,6 +2081,40 @@ what was measured, and what changed in the plan.
     - 7: where the sound plays;
     - 8: the view row and the held Previous and Next.
 
+- **The view row again, and Studio's window, 2026-11-07: TestFlight build 9;
+  Studio 0.3.21 (3db92ee9, be256d42) installed.** The owner: "the buttons go
+  into each other. amateur UI. fix that and get it up on testflight. also
+  ... when I press arrange and piano roll or split view it does not change
+  in tabber studio when I choose it from mobile. fix it."
+  - **The row (63d7061):**
+    - Arrange, Tab and Piano Roll are one native segmented control;
+    - Split is its own button beside it, and goes under it when the phone
+      is too narrow;
+    - checked on the iPhone 13 Pro (390 pt) and SE (375 pt) simulators;
+    - every UI test passes.
+  - **Studio did switch each time.** Its log and the Control API showed the
+    new view. Its window was just not on the screen the owner looked at.
+    Now a view picked on the phone also brings Studio's window to the
+    front, and back from the Dock if minimized (`_bring_forward`;
+    `test_tr34_view.py` now has 4 tests).
+  - **Checked on the Mac Studio, against the installed 0.3.21:**
+    - a throwaway device, paired through the local Control API, picked each
+      view in turn;
+    - before each pick, Studio was either behind Finder or hidden;
+    - each time Studio came to the front with its window on screen;
+    - the device was then revoked, so only the owner's iPhone stays paired;
+    - a minimized window was not tried on the real app.
+  - **0.3.21 was built and checked as 0.3.18 was:**
+    - the certified engine abc7bd5e;
+    - signed, notarized and stapled;
+    - the frozen-app smoke test passes.
+  - **Installed** in place of 0.3.20, with 0.3.18 still beside it. The DMG
+    is at
+    /Volumes/Data/tabber_work/rel0321/download/Tabber-Studio-0.3.21-macOS-arm64.dmg.
+    0.3.20's DMG stays in rel0320.
+  - **Owed:** on a device against Studio 0.3.21: the view row, and Studio
+    coming to the front.
+
 ## Sources
 
 Collected 2026-11-06.
