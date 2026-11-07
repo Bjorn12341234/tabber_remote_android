@@ -1176,6 +1176,24 @@ what was measured, and what changed in the plan.
     for byte: their ids and host times belong to the vector's own song.
     The S1 test and the refusal tests run the same exchanges on a real song
     instead.
+- **TR3 🟡 2026-11-07, Tabber Studio `5f55b89f`.** `remote_host/feed.py`, on
+  the main thread and only while a phone is subscribed. Cheap topics are read
+  every 100 ms and sent on change; markers and takes when the undo stack
+  moves and every 2 s; position at most 10 a second while playing; meters at
+  most 20 a second for armed and selected tracks. A snapshot names the newest
+  seq at the moment it is sent, so older events can never overwrite it.
+  - **Gate, met:** `tests/remote/test_tr3_feed.py` over real TLS: every
+    event equals the Control API's read-back of its topic (click, arm,
+    marker, undo, record, stop, takes, undo of the take); seq has no gaps;
+    the rates hold; with nobody subscribed the feed stops and reads nothing.
+  - **Measured:** a feed tick costs 1.0 ms median, 2.5 ms p95 and 2.7 ms at
+    most on the main thread (28 ticks, a song with 8 markers, M1 Max).
+  - **Owed to the owner:** the 10-minute playback and recording stress test
+    with two phones, which needs real audio. `tools/remote_feed_stress.py
+    --minutes 10 --play` pairs two software phones with the running app,
+    reports their event rates and seq gaps and the engine's xrun and
+    deadline-miss change, and forgets the phones afterwards. The gate is
+    zero dropouts.
 
 ## Sources
 
