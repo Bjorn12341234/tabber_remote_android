@@ -21,7 +21,7 @@ struct WelcomeView: View {
                     .font(.largeTitle.bold())
                     .foregroundStyle(Studio.text1)
                     .padding(.top, 20)
-                Text("Record in Tabber Studio from across the room.")
+                Text("Play, record and mix in Tabber Studio from across the room. The sound plays on your computer.")
                     .font(.title3)
                     .foregroundStyle(Studio.text2)
                     .fixedSize(horizontal: false, vertical: true)

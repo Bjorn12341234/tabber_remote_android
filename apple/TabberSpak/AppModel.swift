@@ -304,6 +304,15 @@ final class AppModel {
 
     func clearProblem() { problem = nil }
 
+    /// Once: Tabber Spak is a remote, so Play is heard on the computer (the
+    /// owner, 2026-11-07: "no sound in the app when I press play").
+    private func tellWhereSoundPlays() {
+        let key = "toldWhereSoundPlays"
+        guard !isDemo, !UserDefaults.standard.bool(forKey: key) else { return }
+        UserDefaults.standard.set(true, forKey: key)
+        problem = "The sound plays on \(computerName), not on this iPhone."
+    }
+
     func stop() {
         act("stop", "transport.stop", feel: .stop) { [weak self] result in
             if let take = result["take"], take != .null, let decoded = try? JSONCoding.decode(Take.self, from: take) {
@@ -313,7 +322,11 @@ final class AppModel {
     }
 
     func playOrStop() {
-        if state.transport?.state == .playing { stop() } else { act("play", "transport.play") }
+        if state.transport?.state == .playing {
+            stop()
+        } else {
+            act("play", "transport.play") { [weak self] _ in self?.tellWhereSoundPlays() }
+        }
     }
 
     /// After a discard: Undo for five seconds, naming the step it undoes (spec 9).

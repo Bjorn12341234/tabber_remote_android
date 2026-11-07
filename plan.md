@@ -2005,6 +2005,37 @@ what was measured, and what changed in the plan.
     /Volumes/Data/tabber_work/rel0318/download/Tabber-Studio-0.3.18-macOS-arm64.dmg
     (plain layout). Publishing it is the owner's call.
 
+- **The owner's first use of chat and play, 2026-11-07 evening (build 5 or
+  6, Studio 0.3.18).** The owner: "I asked it to write some notes. didn't
+  work or something?" and "no sound in the app when I press play. is that
+  intentional?"
+  - **What the log showed:**
+    - "Add a track. A tab track." ran `tracks.create_midi`.
+    - The tab request ran only `tracks.list`, and nothing after it.
+    - The AI's answers were not logged, so what the phone said is not
+      known.
+  - **A replay with the real AI** (the same two requests, Studio's real
+    planner and the owner's DeepSeek key, headless, a few calls) wrote 40
+    notes: an 8-bar fingerpicked progression in E minor. But the phone
+    heard only the AI's last words ("Ignore that last stray action") and a
+    raw error line.
+  - **Fixed in Tabber Studio (aa3768da, 0.3.19):**
+    - the plan's words stay after Execute;
+    - each later round says what it does as it starts;
+    - the end names the steps that didn't work;
+    - the plan, each round and every answer go in the remote's log;
+    - the AI's own read-only lookups (`ai.get_command` and the like) are
+      open to a phone's turn.
+  - **Sound:** by design, the sound plays on the computer; play reached
+    Studio each time. Build 7 tells this once, the first time Play is
+    pressed on a real computer ("The sound plays on [computer], not on this
+    iPhone"), and the welcome screen says it. Listening on the phone, by
+    streaming Studio's sound to it, is a possible feature, offered to the
+    owner.
+  - **Found on the way:** Studio's development fallback reads a key from
+    `api_key.md` in the repository, which DeepSeek now refuses. The
+    installed app never reads that file; only a run from source does.
+
 ## Sources
 
 Collected 2026-11-06.
