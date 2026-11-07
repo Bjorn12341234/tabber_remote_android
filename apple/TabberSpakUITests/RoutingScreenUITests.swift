@@ -6,7 +6,7 @@ final class RoutingScreenUITests: SpakUITestCase {
     @MainActor
     override func setUp() async throws {
         launch(["-demo", "-screen", "mixer"])
-        app.segmentedControls.buttons["Routing"].tap()
+        app.segmentedControls["mixer-page"].buttons["Routing"].tap()
         XCTAssertTrue(appears("route-Vocals"))
     }
 

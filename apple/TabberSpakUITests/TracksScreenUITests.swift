@@ -60,14 +60,25 @@ final class TracksScreenUITests: SpakUITestCase {
 
     @MainActor
     func testTheComputersViewButtons() {
-        XCTAssertTrue(waitSelected("view-tab"), "the demo computer shows Tab")
-        tap("view-arrange")
-        XCTAssertTrue(waitSelected("view-arrange"))
+        let editors = app.segmentedControls["view-editor"]
+        XCTAssertTrue(editors.waitForExistence(timeout: 8))
+        XCTAssertTrue(editors.buttons["Tab"].isSelected, "the demo computer shows Tab")
+        editors.buttons["Arrange"].tap()
+        XCTAssertTrue(waitSelectedSegment(editors, "Arrange"))
         tap("view-split")
         XCTAssertTrue(waitSelected("view-split"), "Split is on")
-        XCTAssertTrue(waitSelected("view-tab"), "beside Arrange, the Tab")
+        XCTAssertTrue(waitSelectedSegment(editors, "Tab"), "beside Arrange, the Tab")
         tap("view-split")
         XCTAssertTrue(waitSelected("view-split", false))
-        XCTAssertTrue(waitSelected("view-arrange"), "Split off goes back to Arrange")
+        XCTAssertTrue(waitSelectedSegment(editors, "Arrange"), "Split off goes back to Arrange")
+        editors.buttons["Piano Roll"].tap()
+        XCTAssertTrue(waitSelectedSegment(editors, "Piano Roll"))
+    }
+
+    @MainActor
+    func waitSelectedSegment(_ control: XCUIElement, _ title: String) -> Bool {
+        let predicate = NSPredicate(format: "selected == true")
+        return XCTWaiter().wait(for: [XCTNSPredicateExpectation(predicate: predicate, object: control.buttons[title])],
+                                timeout: 8) == .completed
     }
 }

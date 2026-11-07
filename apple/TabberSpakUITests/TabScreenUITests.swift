@@ -36,7 +36,7 @@ final class TabScreenUITests: SpakUITestCase {
 
     @MainActor
     func testThePianoWritesThePitchOnItsLowestFret() {
-        app.segmentedControls.buttons["Piano"].tap()
+        app.segmentedControls["input"].buttons["Piano"].tap()
         XCTAssertTrue(appears("piano"))
         // The piano opens at the guitar's low octave, a key before C2: G2 is the sixth key shown.
         element("piano").coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: 5.5 * 38, dy: 150)).tap()

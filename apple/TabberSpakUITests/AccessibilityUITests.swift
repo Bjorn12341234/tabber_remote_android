@@ -17,9 +17,11 @@ final class AccessibilityUITests: XCTestCase {
         // inside a combined control (the Routing view passes with nothing
         // left out when its list fits on the screen, checked 7 Nov 2026).
         // The bottom of what reads: the take card when it shows, else the transport.
-        let card = element(app, "take-card")
-        let bottom = card.exists ? min(card.frame.minY, element(app, "play").frame.minY) : element(app, "play").frame.minY
-        let barTop = scrolls ? bottom - 16 : .infinity
+        var barTop = CGFloat.infinity
+        if scrolls {
+            let card = element(app, "take-card"), play = element(app, "play")
+            barTop = (card.exists ? min(card.frame.minY, play.frame.minY) : play.frame.minY) - 16
+        }
         try app.performAccessibilityAudit { issue in
             // The sheet's Done is iOS's own toolbar button, whose largest sizes iOS caps.
             if issue.auditType == .dynamicType, issue.element?.identifier == "done" { return true }
@@ -64,16 +66,16 @@ final class AccessibilityUITests: XCTestCase {
         app.tabBars.buttons["Tab"].tap()
         XCTAssertTrue(element(app, "fretboard").waitForExistence(timeout: 8))
         try audit(app, "Tab")
-        app.segmentedControls.buttons["Piano"].tap()
+        app.segmentedControls["input"].buttons["Piano"].tap()
         XCTAssertTrue(element(app, "piano").waitForExistence(timeout: 8))
         try audit(app, "Piano")
         app.tabBars.buttons["Mixer"].tap()
         XCTAssertTrue(element(app, "fader-Guitar").waitForExistence(timeout: 8))
         try audit(app, "Mixer")
-        app.segmentedControls.buttons["Routing"].tap()
+        app.segmentedControls["mixer-page"].buttons["Routing"].tap()
         XCTAssertTrue(element(app, "route-Vocals").waitForExistence(timeout: 8))
         try audit(app, "Routing", scrolls: true)
-        app.segmentedControls.buttons["Mixer"].tap()
+        app.segmentedControls["mixer-page"].buttons["Mixer"].tap()
         app.tabBars.buttons["Tuner"].tap()
         XCTAssertTrue(element(app, "tuner-dial").waitForExistence(timeout: 8))
         try audit(app, "Tuner")

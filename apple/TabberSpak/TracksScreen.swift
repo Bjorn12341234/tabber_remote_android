@@ -135,26 +135,49 @@ struct TrackCard: View {
 }
 
 /// What Tabber Studio shows on the computer, switched as its own view
-/// buttons do: Arrange, Tab or Piano Roll, and Split beside them.
+/// buttons do: Arrange, Tab or Piano Roll as one choice, and Split beside
+/// them. A native segmented control, as Mixer | Routing is, so the three fit
+/// at any width; at the largest text sizes Split goes on a line of its own.
 struct ViewButtons: View {
     @Bindable var model: AppModel
 
     var body: some View {
         let view = model.state.view
-        HStack(spacing: 4) {
-            ForEach([("arrange", "Arrange"), ("tab", "Tab"), ("piano_roll", "Piano Roll")], id: \.0) { editor, title in
-                ChoiceChip(title: title, spoken: "Show \(title) on the computer", chosen: view?.editor == editor) {
-                    model.showEditor(editor)
-                }
-                .accessibilityIdentifier("view-\(editor)")
-            }
-            ToggleChip(title: "Split", isOn: view?.split ?? false, spoken: "Split view on the computer",
-                       action: model.toggleSplit)
-                .frame(maxWidth: 80)
-                .accessibilityIdentifier("view-split")
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 8) { editors(view); split(view) }
+            VStack(alignment: .leading, spacing: 8) { editors(view); split(view) }
         }
-        .padding(3)
-        .studioWell(radius: Studio.radiusControl + 3)
+    }
+
+    private func editors(_ view: ViewState?) -> some View {
+        Picker("Computer view", selection: Binding(get: { view?.editor ?? "tab" },
+                                                    set: { model.showEditor($0) })) {
+            Text("Arrange").tag("arrange")
+            Text("Tab").tag("tab")
+            Text("Piano Roll").tag("piano_roll")
+        }
+        .pickerStyle(.segmented)
+        .frame(minWidth: 240)
+        .accessibilityLabel("What the computer shows")
+        .accessibilityIdentifier("view-editor")
+    }
+
+    private func split(_ view: ViewState?) -> some View {
+        Button { model.toggleSplit() } label: {
+            Text("Split")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle((view?.split ?? false) ? Studio.text1 : Studio.text2)
+                .padding(.horizontal, 14)
+                .frame(minHeight: 32)
+                .background((view?.split ?? false) ? Studio.bgOn : Studio.bg3,
+                            in: RoundedRectangle(cornerRadius: Studio.radiusControl, style: .continuous))
+                .fixedSize()
+                .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Split view on the computer")
+        .accessibilityAddTraits((view?.split ?? false) ? .isSelected : [])
+        .accessibilityIdentifier("view-split")
     }
 }
 
