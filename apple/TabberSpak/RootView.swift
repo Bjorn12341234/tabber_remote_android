@@ -25,7 +25,7 @@ struct RootView: View {
         }
         .sheet(isPresented: $model.scanning) { ScannerSheet(model: model) }
         .alert("Pairing did not work", isPresented: pairingFailed) {
-            Button("Scan Again") {
+            Button("Scan again") {
                 model.clearPairing()
                 model.scanning = true
             }

@@ -1,44 +1,51 @@
 import RemoteKit
 import SwiftUI
 
-/// The home screen: run the session from across the room (plan: The app).
+/// The home screen, read from across the room with an instrument in hand
+/// (plan: The app). Top to bottom by how far away it must read: where you
+/// are and whether it records (the lamp), what records (the tracks and their
+/// input), where to go (markers), and how the take starts (count-in, metro,
+/// loop). When the computer cannot be reached, the screen says why instead.
 struct SessionView: View {
     @Bindable var model: AppModel
-    /// The readout follows Dynamic Type, up to what fits across a phone.
-    @ScaledMetric(relativeTo: .largeTitle) private var posSize: CGFloat = 64
-    @ScaledMetric(relativeTo: .title3) private var readoutSize: CGFloat = 20
-    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         let state = model.state
         ScrollView {
-            VStack(spacing: 22) {
-                header(state)
-                playhead(state)
-                if let track = state.tracks.first(where: \.armed) {
-                    ArmedTrackRow(track: track, peak: state.meters[track.id] ?? [])
+            VStack(alignment: .leading, spacing: 20) {
+                StatusLine(link: state.link, computer: model.computerName, project: state.project)
+                if let trouble = state.trouble {
+                    FixItView(model: model, trouble: trouble, computer: model.computerName)
+                        .padding(.top, 12)
                 } else {
-                    TrackPicker(model: model)
-                }
-                markerChips(state)
-                toggles(state)
-                if let problem = model.problem {
-                    Label(problem, systemImage: "exclamationmark.triangle.fill")
-                        .font(.callout)
-                        .foregroundStyle(Studio.playhead)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .accessibilityIdentifier("problem")
+                    VStack(alignment: .leading, spacing: 20) {
+                        Text(section(state) ?? " ")
+                            .font(.system(.title, weight: .semibold))
+                            .foregroundStyle(Studio.text1)
+                            .accessibilityIdentifier("section")
+                        Lamp(state: state)
+                        TrackRow(model: model)
+                        MarkerRow(model: model, current: section(state))
+                        toggles(state)
+                        if let problem = model.problem {
+                            Text(problem)
+                                .font(.subheadline)
+                                .foregroundStyle(Studio.playhead)
+                                .accessibilityIdentifier("problem")
+                        }
+                    }
+                    .opacity(model.isConnected ? 1 : 0.45)        // stale state is never shown as live
+                    .animation(.easeInOut(duration: 0.25), value: model.isConnected)
                 }
             }
             .padding(.horizontal, 20)
             .padding(.vertical, 12)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .scrollBounceBehavior(.basedOnSize)
-        .background(Studio.bg1)
         .safeAreaInset(edge: .bottom) {
             Group {
                 if let take = model.lastTake, !state.record.recording {
-                    // The confirmed take, rating included (principle 3).
                     TakeCard(model: model, take: state.takes.first { $0.id == take.id } ?? take)
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                 } else if let offer = model.undoOffer {
@@ -51,160 +58,13 @@ struct SessionView: View {
             .animation(.spring(duration: 0.35), value: model.lastTake?.id)
             .animation(.spring(duration: 0.35), value: model.undoOffer)
         }
-        .opacity(model.isConnected ? 1 : 0.45)        // stale state is never shown as live
-        .animation(.easeInOut(duration: 0.25), value: model.isConnected)
-        .safeAreaInset(edge: .top) {
-            if let trouble = state.trouble {             // what is wrong, and the fix (TR6)
-                FixItCard(model: model, trouble: trouble, computer: model.computerName)
-                    .padding(.horizontal, 12)
-                    .padding(.top, 4)
-                    .transition(.move(edge: .top).combined(with: .opacity))
-            }
-        }
         .animation(.spring(duration: 0.35), value: state.trouble)
-        .overlay { RecordingFrame(state: state) }
         .background(Studio.bg1.ignoresSafeArea())
-    }
-
-    private func header(_ state: SessionState) -> some View {
-        // The computer and the song side by side; stacked at the largest text sizes.
-        let layout = typeSize >= .xxLarge ? AnyLayout(VStackLayout(alignment: .leading, spacing: 4))
-                                          : AnyLayout(HStackLayout(alignment: .firstTextBaseline))
-        return layout {
-            ConnectionBadge(link: state.link, name: state.host?.name ?? "Tabber Studio")
-            if typeSize < .xxLarge { Spacer() }
-            Text(state.project.title + (state.project.unsaved ? " *" : ""))
-                .font(.subheadline.weight(.medium))
-                .foregroundStyle(Studio.text2)
-                .fixedSize(horizontal: false, vertical: true)
-                .accessibilityLabel(state.project.unsaved ? "\(state.project.title), not saved" : state.project.title)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func section(_ state: SessionState) -> String? {
         guard let position = state.transport?.position else { return nil }
         return state.markers.last { ($0.bar, $0.beat) <= (position.bar, position.beat) }?.name
-    }
-
-    private func playhead(_ state: SessionState) -> some View {
-        VStack(spacing: 10) {
-            Text(section(state)?.uppercased() ?? " ")
-                .font(.headline.weight(.semibold))
-                .tracking(2)
-                .foregroundStyle(Studio.text2)
-                .accessibilityIdentifier("section")
-            if let transport = state.transport {
-                // Tabber Studio's readout: POS, TIME and BPM in a well, monospaced.
-                VStack(spacing: 8) {
-                    HStack(alignment: .firstTextBaseline, spacing: 10) {
-                        StudioLabel("Pos").accessibilityHidden(true)
-                        Text("\(transport.position.bar) : \(transport.position.beat)")
-                            .font(Studio.readout(min(posSize, 88)))
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.6)
-                            .foregroundStyle(Studio.text1)
-                            .contentTransition(.numericText())
-                            .accessibilityIdentifier("playhead")
-                            .accessibilityLabel("Bar \(transport.position.bar), beat \(transport.position.beat)")
-                    }
-                    // Side by side, or stacked at the largest text sizes: the same views either way.
-                    let row = typeSize >= .xxLarge ? AnyLayout(VStackLayout(spacing: 6)) : AnyLayout(HStackLayout(spacing: 22))
-                    row {
-                        timeReadout(transport)
-                        bpmReadout(transport)
-                    }
-                }
-                .padding(.vertical, 14)
-                .padding(.horizontal, 12)
-                .frame(maxWidth: .infinity)
-                .studioWell()
-            }
-        }
-        .frame(maxWidth: .infinity)
-    }
-
-    /// A label beside its value; at the largest text sizes, above it.
-    private var item: AnyLayout {
-        typeSize >= .xxLarge ? AnyLayout(VStackLayout(spacing: 2)) : AnyLayout(HStackLayout(alignment: .firstTextBaseline, spacing: 8))
-    }
-
-    private func timeReadout(_ transport: TransportState) -> some View {
-        item {
-            StudioLabel("Time").accessibilityHidden(true)
-            TimelineView(.animation(minimumInterval: 0.1, paused: transport.state != .playing)) { _ in
-                Text(Self.time(model.state.playheadSeconds))
-                    .font(Studio.readout(readoutSize))
-                    .foregroundStyle(Studio.text1)
-            }
-            .accessibilityHidden(true)
-        }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Time")
-        .accessibilityValue(Self.clock(model.state.playheadSeconds))
-    }
-
-    private func bpmReadout(_ transport: TransportState) -> some View {
-        item {
-            StudioLabel("Bpm").accessibilityHidden(true)
-            Text(Self.bpm(transport))
-                .font(Studio.readout(readoutSize))
-                .foregroundStyle(Studio.text1)
-                .accessibilityHidden(true)
-        }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Tempo")
-        .accessibilityValue("\(Self.bpm(transport)) beats per minute")
-    }
-
-    /// Tabber Studio's TIME: m:ss.mmm.
-    static func time(_ seconds: Double) -> String {
-        let millis = max(0, Int((seconds * 1000).rounded(.down)))
-        return String(format: "%d:%02d.%03d", millis / 60000, (millis / 1000) % 60, millis % 1000)
-    }
-
-    /// The song's tempo; at practice speed, the speed it plays at.
-    static func bpm(_ transport: TransportState) -> String {
-        let value = transport.tempoBPM * transport.tempoScale
-        return value.rounded() == value ? "\(Int(value))" : String(format: "%.1f", value)
-    }
-
-    static func clock(_ seconds: Double) -> String {
-        let total = max(0, Int(seconds))
-        return String(format: "%02d:%02d", total / 60, total % 60)
-    }
-
-    private func markerChips(_ state: SessionState) -> some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                Button(action: model.flag) {
-                    Label {
-                        Text("Flag").foregroundStyle(Studio.text1)
-                    } icon: {
-                        Image(systemName: "flag.fill").foregroundStyle(Studio.playhead)
-                    }
-                    .font(.callout.weight(.semibold))
-                    .padding(.horizontal, 14)
-                    .frame(minHeight: 44)
-                    .background(Studio.bg3, in: RoundedRectangle(cornerRadius: Studio.radiusControl, style: .continuous))
-                }
-                .buttonStyle(.plain)
-                .opacity(model.pending.contains("flag") ? 0.5 : 1)
-                .accessibilityLabel("Flag this moment")
-                .accessibilityIdentifier("flag")
-                ForEach(state.markers) { marker in
-                    MarkerChip(marker: marker, pending: model.pending.contains("marker-\(marker.id)"),
-                               looped: state.transport?.loop.enabled == true && state.transport?.loop.start?.bar == marker.bar) {
-                        model.act("marker-\(marker.id)", "markers.go", ["marker_id": .string(marker.id)])
-                    } loop: {
-                        model.act("marker-\(marker.id)", "markers.loop", ["marker_id": .string(marker.id)])
-                    }
-                }
-            }
-            .padding(.vertical, 2)
-        }
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel("Markers")
     }
 
     private func toggles(_ state: SessionState) -> some View {
@@ -228,137 +88,343 @@ struct SessionView: View {
         .padding(4)
         .studioWell()
     }
+
+    /// Tabber Studio's TIME: m:ss.mmm.
+    static func time(_ seconds: Double) -> String {
+        let millis = max(0, Int((seconds * 1000).rounded(.down)))
+        return String(format: "%d:%02d.%03d", millis / 60000, (millis / 1000) % 60, millis % 1000)
+    }
+
+    /// Tabber Studio's REC counter: m:ss.
+    static func rec(_ seconds: Double) -> String {
+        let total = max(0, Int(seconds))
+        return String(format: "%d:%02d", total / 60, total % 60)
+    }
+
+    /// A take's length in words: "42 seconds", "1:42".
+    static func length(_ seconds: Double) -> String {
+        let total = max(0, Int(seconds.rounded()))
+        return total < 60 ? "\(total) second\(total == 1 ? "" : "s")" : rec(seconds)
+    }
+
+    /// The song's tempo; at practice speed, the speed it plays at.
+    static func bpm(_ transport: TransportState) -> String {
+        let value = transport.tempoBPM * transport.tempoScale
+        return value.rounded() == value ? "\(Int(value))" : String(format: "%.1f", value)
+    }
+
+    static func clock(_ seconds: Double) -> String { rec(seconds) }
 }
 
-/// Connection status, always visible, driven by heartbeats (principle 3).
-struct ConnectionBadge: View {
+/// Which computer, whether it answers, and the song: the quietest line on the screen.
+struct StatusLine: View {
     let link: LinkState
-    let name: String
+    let computer: String
+    let project: ProjectState
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
-        HStack(spacing: 6) {
-            Circle().fill(color).frame(width: 9, height: 9)
-            Text(text).font(.subheadline.weight(.semibold)).foregroundStyle(Studio.text1)
-                .lineLimit(2)
-                .fixedSize(horizontal: false, vertical: true)
+        // Side by side; stacked at the largest text sizes. The same views either way.
+        let stacked = typeSize >= .xxLarge
+        let layout = stacked ? AnyLayout(VStackLayout(alignment: .leading, spacing: 2))
+                             : AnyLayout(HStackLayout(alignment: .firstTextBaseline))
+        layout {
+            connection
+            if !stacked { Spacer() }
+            song
         }
-        .accessibilityElement(children: .combine)
-        .accessibilityIdentifier("connection")
+    }
+
+    private var connection: some View {
+        Text(words)
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(color)
+            .fixedSize(horizontal: false, vertical: true)
+            .accessibilityIdentifier("connection")
+    }
+
+    private var song: some View {
+        Text(project.title + (project.unsaved ? " *" : ""))
+            .font(.subheadline)
+            .foregroundStyle(Studio.text2)
+            .fixedSize(horizontal: false, vertical: true)
+            .accessibilityLabel(project.unsaved ? "\(project.title), not saved" : project.title)
+    }
+
+    private var words: String {
+        switch link {
+        case .connected(let busy): busy ? "\(computer) is busy" : computer
+        case .connecting: "Connecting to \(computer)"
+        case .reconnecting: "Reconnecting to \(computer)"
+        case .failed, .idle: "Not connected"
+        }
     }
 
     private var color: Color {
         switch link {
-        case .connected(let busy): busy ? Studio.playhead : Studio.accent
+        case .connected(let busy): busy ? Studio.playhead : Studio.text1
         case .connecting, .reconnecting: Studio.playhead
-        case .failed: Studio.record
-        case .idle: Studio.text3
-        }
-    }
-
-    private var text: String {
-        switch link {
-        case .connected(let busy): busy ? "\(name) is busy" : name
-        case .connecting: "Connecting"
-        case .reconnecting: "Reconnecting"
-        case .failed: "Not connected"
-        case .idle: "Not connected"
+        case .failed, .idle: Studio.text3
         }
     }
 }
 
-/// The armed track and the input it records.
-struct ArmedTrackRow: View {
-    let track: Track
-    let peak: [Double]
+/// Tabber Studio's readout, and the session's recording light: at rest a dark
+/// well with POS, TIME and BPM; amber while counting in; red with REC and the
+/// take's length while recording, pulsing as Tabber Studio's record button does.
+struct Lamp: View {
+    let state: SessionState
+    @ScaledMetric(relativeTo: .largeTitle) private var big: CGFloat = 64
+    @ScaledMetric(relativeTo: .title3) private var small: CGFloat = 20
+    @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        HStack(spacing: 12) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(track.name).font(.headline).foregroundStyle(Studio.text1)
-                Text("ARMED").font(.caption2.weight(.bold)).tracking(0.8).foregroundStyle(Studio.record)
-            }
-            MeterBar(level: peak.max() ?? 0)
-                .frame(height: 10)
+        TimelineView(.animation(minimumInterval: 0.1, paused: !live)) { context in
+            let seconds = state.recordedSeconds
+            let phase = Self.phase(recording: state.record.recording, seconds: seconds)
+            content(phase: phase, seconds: seconds ?? 0)
+                .padding(.vertical, 18)
+                .padding(.horizontal, 16)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(fill(phase), in: RoundedRectangle(cornerRadius: Studio.radiusLamp, style: .continuous))
+                .opacity(phase == .recording && !reduceMotion ? Self.pulse(context.date) : 1)
+                .animation(.easeInOut(duration: 0.2), value: phase)
         }
-        .padding(14)
-        .padding(.leading, 4)
-        .studioCard(Studio.bg2)
-        .trackEdge(Color(hex: track.color))
-        .accessibilityElement(children: .combine)
-        .accessibilityIdentifier("armed-track")
+    }
+
+    enum Phase: Equatable { case rest, countIn, recording }
+
+    static func phase(recording: Bool, seconds: Double?) -> Phase {
+        guard recording else { return .rest }
+        return (seconds ?? 0) < 0 ? .countIn : .recording
+    }
+
+    /// Between 0.82 and 1 once a second.
+    static func pulse(_ date: Date) -> Double {
+        0.91 + 0.09 * cos(date.timeIntervalSinceReferenceDate * 2 * .pi)
+    }
+
+    private var live: Bool { state.record.recording || state.transport?.state == .playing }
+
+    private func fill(_ phase: Phase) -> Color {
+        switch phase {
+        case .rest: Studio.bg0
+        case .countIn: Studio.playhead
+        case .recording: Studio.record
+        }
+    }
+
+    @ViewBuilder private func content(phase: Phase, seconds: Double) -> some View {
+        switch phase {
+        case .rest: rest
+        case .countIn: countIn(seconds)
+        case .recording: recording(seconds)
+        }
+    }
+
+    private var position: (bar: Int, beat: Int) {
+        let p = state.transport?.position
+        return (p?.bar ?? 1, p?.beat ?? 1)
+    }
+
+    private var rest: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .firstTextBaseline, spacing: 10) {
+                ReadoutLabel("POS")
+                Text("\(position.bar) : \(position.beat)")
+                    .font(Studio.counter(min(big, 88)))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
+                    .foregroundStyle(Studio.text1)
+                    .contentTransition(.numericText())
+                    .accessibilityIdentifier("playhead")
+                    .accessibilityLabel("Bar \(position.bar), beat \(position.beat)")
+            }
+            let row = typeSize >= .xxLarge ? AnyLayout(VStackLayout(alignment: .leading, spacing: 6))
+                                           : AnyLayout(HStackLayout(spacing: 24))
+            row {
+                pair("TIME", SessionView.time(state.playheadSeconds), spoken: "Time", value: SessionView.clock(state.playheadSeconds))
+                if let transport = state.transport {
+                    pair("BPM", SessionView.bpm(transport), spoken: "Tempo", value: "\(SessionView.bpm(transport)) beats per minute")
+                }
+            }
+        }
+    }
+
+    private func pair(_ label: String, _ text: String, spoken: String, value: String) -> some View {
+        let layout = typeSize >= .xxLarge ? AnyLayout(VStackLayout(alignment: .leading, spacing: 2))
+                                          : AnyLayout(HStackLayout(alignment: .firstTextBaseline, spacing: 8))
+        return layout {
+            ReadoutLabel(label)
+            Text(text)
+                .font(Studio.counter(small))
+                .foregroundStyle(Studio.text1)
+                .accessibilityHidden(true)
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(spoken)
+        .accessibilityValue(value)
+    }
+
+    private func countIn(_ seconds: Double) -> some View {
+        let beat = state.transport.map { 60.0 / max(1, $0.tempoBPM * $0.tempoScale) } ?? 0.6
+        let beatsLeft = max(1, Int((-seconds / beat).rounded(.up)))
+        return VStack(alignment: .leading, spacing: 4) {
+            Text("Count-in")
+                .font(.title3.weight(.semibold))
+            Text("\(beatsLeft)")
+                .font(Studio.counter(min(big, 88), weight: .semibold))
+                .contentTransition(.numericText())
+        }
+        .foregroundStyle(Studio.bg0)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Counting in, \(beatsLeft) beat\(beatsLeft == 1 ? "" : "s") to go")
+        .accessibilityIdentifier("rec-lamp")
+    }
+
+    private func recording(_ seconds: Double) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(alignment: .firstTextBaseline, spacing: 12) {
+                ReadoutLabel("REC", color: .white)
+                Text(SessionView.rec(seconds))
+                    .font(Studio.counter(min(big, 88), weight: .semibold))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
+            }
+            Text("From bar \(state.record.started?.position.bar ?? position.bar)")
+                .font(.subheadline.weight(.medium))
+                .opacity(0.85)
+        }
+        .foregroundStyle(.white)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Recording, \(Int(seconds)) seconds")
+        .accessibilityIdentifier("rec-lamp")
     }
 }
 
-/// A peak meter in dB, in Tabber Studio's colours: teal, then amber, then red near 0 dB.
-struct MeterBar: View {
+/// The tracks, each with Tabber Studio's record-arm circle (hollow, or red
+/// when armed), and the armed track's input underneath.
+struct TrackRow: View {
+    @Bindable var model: AppModel
+
+    var body: some View {
+        let tracks = model.state.tracks
+        VStack(alignment: .leading, spacing: 12) {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(tracks) { track in
+                        Button {
+                            model.act("arm-\(track.id)", "tracks.arm", ["track_id": .string(track.id), "armed": .bool(!track.armed)])
+                        } label: {
+                            HStack(spacing: 8) {
+                                Text(track.armed ? "●" : "○")
+                                    .foregroundStyle(track.armed ? Studio.record : Studio.text2)
+                                Text(track.name)
+                                    .foregroundStyle(track.armed ? Studio.text1 : Studio.text2)
+                            }
+                        }
+                        .buttonStyle(.studio)
+                        .opacity(model.pending.contains("arm-\(track.id)") ? 0.5 : 1)
+                        .accessibilityLabel(track.armed ? "Disarm \(track.name)" : "Arm \(track.name)")
+                        .accessibilityIdentifier("arm-\(track.name)")
+                    }
+                }
+            }
+            .scrollClipDisabled()
+            if let armed = tracks.first(where: \.armed) {
+                LevelMeter(level: model.state.meters[armed.id]?.max() ?? 0)
+                    .frame(height: 6)
+                    .accessibilityElement()
+                    .accessibilityLabel("\(armed.name) armed, input level")
+                    .accessibilityIdentifier("armed-track")
+            } else {
+                Text("Tap a track to arm it for recording.")
+                    .font(.subheadline)
+                    .foregroundStyle(Studio.text3)
+            }
+        }
+    }
+}
+
+/// An input meter in Tabber Studio's colours: green, yellow from -12 dB, red from -3 dB.
+struct LevelMeter: View {
     let level: Double
 
-    var fraction: Double {
-        guard level > 0 else { return 0 }
-        let db = 20 * log10(level)
-        return min(1, max(0, (db + 60) / 60))
-    }
+    static func fraction(_ db: Double) -> Double { min(1, max(0, (db + 60) / 60)) }
+    var fraction: Double { level > 0 ? Self.fraction(20 * log10(level)) : 0 }
 
     var body: some View {
         GeometryReader { proxy in
+            let width = proxy.size.width
+            let yellow = Self.fraction(-12), red = Self.fraction(-3)
             ZStack(alignment: .leading) {
-                Capsule().fill(Studio.bg3)
-                Capsule()
-                    .fill(LinearGradient(colors: [Studio.accent, Studio.accent, Studio.playhead, Studio.record],
-                                         startPoint: .leading, endPoint: .trailing))
-                    .frame(width: proxy.size.width * fraction)
-                    .animation(.linear(duration: 0.08), value: fraction)
+                Rectangle().fill(Studio.bg0)
+                HStack(spacing: 0) {
+                    Rectangle().fill(Studio.meterLow).frame(width: width * yellow)
+                    Rectangle().fill(Studio.meterMid).frame(width: width * (red - yellow))
+                    Rectangle().fill(Studio.record)
+                }
+                .mask(alignment: .leading) {
+                    Rectangle().frame(width: width * fraction)
+                }
+                .animation(.linear(duration: 0.08), value: fraction)
             }
+            .clipShape(RoundedRectangle(cornerRadius: 2))
         }
         .accessibilityHidden(true)
     }
 }
 
-/// Pick the track to record when none is armed.
-struct TrackPicker: View {
+/// The song's markers: tap to go, hold to loop. The section the playhead is
+/// in is amber, Tabber Studio's playhead colour; a looped one is the
+/// selected choice, teal. The last button adds a marker at the shown bar.
+struct MarkerRow: View {
     @Bindable var model: AppModel
+    let current: String?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            StudioLabel("Arm a track to record")
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 8) {
-                    ForEach(model.state.tracks) { track in
-                        Button {
-                            model.act("arm-\(track.id)", "tracks.arm", ["track_id": .string(track.id), "armed": true])
-                        } label: {
-                            Label(track.name, systemImage: track.kind == .audio ? "waveform" : "pianokeys")
-                                .font(.callout.weight(.semibold))
-                                .foregroundStyle(Studio.text1)
-                                .padding(.horizontal, 16)
-                                .frame(minHeight: 44)
-                                .background(Studio.bg3, in: RoundedRectangle(cornerRadius: Studio.radiusControl, style: .continuous))
-                                .trackEdge(Color(hex: track.color), radius: Studio.radiusControl)
-                        }
-                        .buttonStyle(.plain)
-                        .opacity(model.pending.contains("arm-\(track.id)") ? 0.5 : 1)
-                        .accessibilityIdentifier("arm-\(track.name)")
+        let state = model.state
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                ForEach(state.markers) { marker in
+                    let looped = state.transport?.loop.enabled == true && state.transport?.loop.start?.bar == marker.bar
+                    MarkerButton(marker: marker, here: marker.name == current, looped: looped,
+                                 pending: model.pending.contains("marker-\(marker.id)")) {
+                        model.act("marker-\(marker.id)", "markers.go", ["marker_id": .string(marker.id)])
+                    } loop: {
+                        model.act("marker-\(marker.id)", "markers.loop", ["marker_id": .string(marker.id)])
                     }
                 }
+                Button(action: model.flag) {
+                    Label("Flag", systemImage: "plus")
+                }
+                .buttonStyle(.studio)
+                .opacity(model.pending.contains("flag") ? 0.5 : 1)
+                .accessibilityLabel("Add a marker at bar \(state.transport?.position.bar ?? 1)")
+                .accessibilityIdentifier("flag")
             }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .scrollClipDisabled()
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Markers")
     }
 }
 
-struct MarkerChip: View {
+struct MarkerButton: View {
     let marker: Marker
-    let pending: Bool
+    let here: Bool
     let looped: Bool
+    let pending: Bool
     let go: () -> Void
     let loop: () -> Void
 
     var body: some View {
         Text(marker.name)
-            .font(.callout.weight(.semibold))
-            .foregroundStyle(looped ? Studio.onAccent : Studio.text1)
-            .padding(.horizontal, 16)
-            .frame(minHeight: 44)
+            .font(.body.weight(.semibold))
+            .foregroundStyle(looped ? Studio.onAccent : here ? Studio.playhead : Studio.text1)
+            .padding(.horizontal, 18)
+            .frame(minHeight: 48)
             .background(looped ? Studio.accent : Studio.bg3,
                         in: RoundedRectangle(cornerRadius: Studio.radiusControl, style: .continuous))
             .opacity(pending ? 0.5 : 1)
@@ -367,6 +433,7 @@ struct MarkerChip: View {
             .onLongPressGesture(minimumDuration: 0.45, perform: loop)
             .accessibilityAddTraits(.isButton)
             .accessibilityLabel(looped ? "\(marker.name), looping" : marker.name)
+            .accessibilityValue(here ? "Playhead here" : "")
             .accessibilityHint("Goes to bar \(marker.bar). Touch and hold to loop it.")
             .accessibilityAction(named: "Loop \(marker.name)", loop)
             .accessibilityIdentifier("marker-\(marker.name)")
@@ -385,7 +452,7 @@ struct ToggleTile: View {
     var body: some View {
         Button(action: action) {
             Text(title)
-                .font(.callout.weight(.semibold))
+                .font(.body.weight(.semibold))
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
                 .foregroundStyle(on ? Studio.text1 : Studio.textWellOff)
@@ -399,35 +466,5 @@ struct ToggleTile: View {
         .accessibilityLabel(spoken)
         .accessibilityValue(on ? "On" : "Off")
         .accessibilityIdentifier(id)
-    }
-}
-
-/// The screen's frame glows red while the computer records: readable across the room.
-struct RecordingFrame: View {
-    let state: SessionState
-
-    var body: some View {
-        if state.record.recording {
-            TimelineView(.animation(minimumInterval: 0.25)) { _ in
-                let seconds = state.recordedSeconds ?? 0
-                ZStack(alignment: .top) {
-                    RoundedRectangle(cornerRadius: 44)
-                        .strokeBorder(Studio.record, lineWidth: 10)
-                        .shadow(color: Studio.record.opacity(0.6), radius: 18)    // a signal, not depth
-                        .ignoresSafeArea()
-                        .accessibilityHidden(true)
-                    Text(seconds < 0 ? "COUNT-IN \(Int((-seconds).rounded(.up)))" : "REC \(SessionView.clock(seconds))")
-                        .font(.system(.title, design: .rounded).weight(.heavy))
-                        .monospacedDigit()
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 18).padding(.vertical, 8)
-                        .background(Studio.record, in: .capsule)
-                        .padding(.top, 4)
-                        .accessibilityLabel(seconds < 0 ? "Counting in" : "Recording, \(Int(seconds)) seconds")
-                        .accessibilityIdentifier("recording-frame")
-                }
-            }
-            .allowsHitTesting(false)
-        }
     }
 }

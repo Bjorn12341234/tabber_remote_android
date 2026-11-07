@@ -48,7 +48,7 @@ final class TakeLoopUITests: XCTestCase {
         XCTAssertTrue(waitFor("record", "Record on Vocals"))
         tap("marker-Chorus")
         tap("record")
-        XCTAssertTrue(appears("recording-frame"))
+        XCTAssertTrue(appears("rec-lamp"))
         tap("record")
         XCTAssertTrue(appears("take-card"))
     }
@@ -60,7 +60,7 @@ final class TakeLoopUITests: XCTestCase {
         XCTAssertTrue(gone("take-card"))
 
         tap("record")
-        XCTAssertTrue(appears("recording-frame"))
+        XCTAssertTrue(appears("rec-lamp"))
         tap("record")
         XCTAssertTrue(appears("take-card"))
         element("discard").press(forDuration: 1.0)
@@ -77,17 +77,20 @@ final class TakeLoopUITests: XCTestCase {
         tap("record")
         XCTAssertTrue(appears("take-card"))
         tap("card-go-again")
-        XCTAssertTrue(appears("recording-frame"))
-        XCTAssertTrue(waitFor("section", "CHORUS"))
+        XCTAssertTrue(appears("rec-lamp"))
+        XCTAssertTrue(waitFor("section", "Chorus"))
     }
 
     @MainActor
     func testRateFlagAndTracks() {
         recordOneTake()
+        tap("keep")
+        app.tabBars.buttons["Takes"].tap()
         let stars = element("stars")
+        XCTAssertTrue(stars.waitForExistence(timeout: 8))
         stars.coordinate(withNormalizedOffset: CGVector(dx: 0.7, dy: 0.5)).tap()   // the fourth star
         XCTAssertTrue(waitFor("stars", "4 of 5"))
-        tap("keep")
+        app.tabBars.buttons["Session"].tap()
         tap("flag")
         app.tabBars.buttons["Tracks"].tap()
         tap("track-arm-Guitar")

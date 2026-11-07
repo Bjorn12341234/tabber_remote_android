@@ -48,7 +48,7 @@ final class SessionScreenUITests: XCTestCase {
     func testMarkersJumpAndLoop() {
         element("marker-Chorus").tap()
         XCTAssertTrue(waitFor("playhead", "Bar 25, beat 1"))
-        XCTAssertTrue(waitFor("section", "CHORUS"))
+        XCTAssertTrue(waitFor("section", "Chorus"))
         element("marker-Verse").press(forDuration: 0.8)
         XCTAssertTrue(waitFor("marker-Verse", "looping"))
         XCTAssertTrue(waitFor("loop", "On"))
@@ -79,15 +79,15 @@ final class SessionScreenUITests: XCTestCase {
         XCTAssertTrue(waitFor("record", "Record on Vocals"))
         element("marker-Chorus").tap()
         tap("record")
-        XCTAssertTrue(waitFor("recording-frame", "Recording"))
+        XCTAssertTrue(waitFor("rec-lamp", "Recording"))
         XCTAssertTrue(waitFor("record", "Stop recording"))
         tap("record")
-        XCTAssertTrue(gone("recording-frame"))
+        XCTAssertTrue(gone("rec-lamp"))
         tap("go-again")
-        XCTAssertTrue(waitFor("recording-frame", "Recording"))
-        XCTAssertTrue(waitFor("section", "CHORUS"))
+        XCTAssertTrue(waitFor("rec-lamp", "Recording"))
+        XCTAssertTrue(waitFor("section", "Chorus"))
         tap("record")
-        XCTAssertTrue(gone("recording-frame"))
+        XCTAssertTrue(gone("rec-lamp"))
     }
 
     @MainActor

@@ -20,23 +20,22 @@ struct ComputerView: View {
                             .font(.callout.monospaced())
                     }
                     if let trouble = model.state.trouble {
-                        FixItCard(model: model, trouble: trouble, computer: computerName)
-                            .listRowInsets(EdgeInsets())
-                            .listRowBackground(Color.clear)
+                        FixItView(model: model, trouble: trouble, computer: computerName)
+                            .padding(.vertical, 8)
                     }
                 }
                 .listRowBackground(Studio.bg1)
                 Section {
-                    Button("Pair Again…") {
+                    Button("Pair again") {
                         model.scanTarget = model.known?.name
                         model.scanning = true
                     }
                     .accessibilityIdentifier("pair-again")
                     if model.isDemo {
-                        Button("Leave the Demo") { model.leaveDemo() }
+                        Button("Leave the demo") { model.leaveDemo() }
                             .accessibilityIdentifier("leave-demo")
                     } else if model.known != nil {
-                        Button("Forget This Computer", role: .destructive) { confirmForget = true }
+                        Button("Forget this computer", role: .destructive) { confirmForget = true }
                             .accessibilityIdentifier("forget")
                     }
                 }

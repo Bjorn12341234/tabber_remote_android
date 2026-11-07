@@ -2,60 +2,73 @@ import RemoteKit
 import SwiftUI
 import VisionKit
 
-/// The first screen on a fresh install (plan: TR6): what the app is, then
-/// Find your computer and the QR code, or the demo.
+/// The first screen on a fresh install (plan: TR6): what Tabber Spak is for,
+/// the three steps that pair it, and the demo for trying it without a computer.
 struct WelcomeView: View {
     @Bindable var model: AppModel
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 18) {
-                Spacer()
+            VStack(alignment: .leading, spacing: 0) {
+                Spacer(minLength: 24)
                 Image("SpakMark")
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 132, height: 132)
-                    .clipShape(RoundedRectangle(cornerRadius: 30, style: .continuous))
+                    .frame(width: 64, height: 64)
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                     .accessibilityHidden(true)
                 Text("Tabber Spak")
                     .font(.largeTitle.bold())
                     .foregroundStyle(Studio.text1)
-                Text("Record, stop and go again from across the room. Your computer runs Tabber Studio; this iPhone is its remote.")
-                    .font(.body)
+                    .padding(.top, 20)
+                Text("Record in Tabber Studio from across the room.")
+                    .font(.title3)
                     .foregroundStyle(Studio.text2)
-                    .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
-                    .frame(maxWidth: 420)
-                Spacer()
+                    .padding(.top, 6)
+                VStack(alignment: .leading, spacing: 16) {
+                    step(1, "On your computer, open Tabber Studio's Settings › Remote and turn it on.")
+                    step(2, "Click Pair iPhone. A code appears.")
+                    step(3, "Scan the code with this iPhone.")
+                }
+                .padding(.top, 36)
+                Spacer(minLength: 24)
                 NavigationLink {
                     FindComputerView(model: model)
                 } label: {
-                    Text("Get Started").foregroundStyle(Studio.onAccent).fixedSize(horizontal: false, vertical: true)
+                    Text("Pair with Tabber Studio").frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.borderedProminent)
-                .buttonSizing(.flexible)
-                .controlSize(.large)
+                .buttonStyle(.studioPrimary)
                 .accessibilityIdentifier("get-started")
-                Button {
-                    model.startDemo()
-                } label: {
-                    Text("Try the Demo").fixedSize(horizontal: false, vertical: true)
-                }
-                .buttonStyle(.bordered)
-                .buttonSizing(.flexible)
-                .controlSize(.large)
-                .accessibilityIdentifier("demo")
+                Button("Try the demo") { model.startDemo() }
+                    .buttonStyle(.studioQuiet)
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 6)
+                    .accessibilityIdentifier("demo")
             }
             .padding(24)
-            .frame(maxWidth: 520)
+            .frame(maxWidth: 560, alignment: .leading)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Studio.bg0.ignoresSafeArea())
+            .background(Studio.bg1.ignoresSafeArea())
         }
+    }
+
+    private func step(_ number: Int, _ text: String) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 14) {
+            Text("\(number)")
+                .font(.system(.body, design: .monospaced))
+                .foregroundStyle(Studio.text3)
+            Text(text)
+                .font(.body)
+                .foregroundStyle(Studio.text1)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .accessibilityElement(children: .combine)
     }
 }
 
-/// Find your computer: an explainer before iOS asks for the local network,
-/// then the computers Bonjour finds (plan: Find your Mac).
+/// Before iOS asks for the local network, why; then the computers Bonjour
+/// finds, and the scanner (plan: Find your Mac).
 struct FindComputerView: View {
     @Bindable var model: AppModel
     @State private var found: [FoundComputer] = []
@@ -66,40 +79,33 @@ struct FindComputerView: View {
         Group {
             if model.explainedLocalNetwork { finder } else { explainer }
         }
-        .navigationTitle("Find Your Computer")
+        .navigationTitle("Pair")
         .navigationBarTitleDisplayMode(.inline)
     }
 
     private var explainer: some View {
-        VStack(spacing: 20) {
-            Spacer()
-            Image(systemName: "wifi")
-                .font(.system(size: 56, weight: .semibold))
-                .foregroundStyle(.tint)
-                .accessibilityHidden(true)
-            Text("Tabber Spak finds Tabber Studio on this Wi-Fi")
-                .font(.title2.bold())
+        VStack(alignment: .leading, spacing: 14) {
+            Spacer(minLength: 24)
+            Text("Tabber Spak looks for your computer on this Wi-Fi")
+                .font(.title2.weight(.semibold))
                 .foregroundStyle(Studio.text1)
-                .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
-            Text("Next, iPhone asks whether Tabber Spak may find devices on your local network. Tap Allow: that is how it reaches your computer. Nothing leaves your network.")
+            Text("iPhone asks first whether Tabber Spak may find devices on your local network. Tap Allow. Nothing leaves your network.")
+                .font(.body)
                 .foregroundStyle(Studio.text2)
-                .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
-            Spacer()
+            Spacer(minLength: 24)
             Button {
                 model.explainedLocalNetwork = true
             } label: {
-                Text("Continue").foregroundStyle(Studio.onAccent).fixedSize(horizontal: false, vertical: true)
+                Text("Continue").frame(maxWidth: .infinity)
             }
-            .buttonStyle(.borderedProminent)
-            .buttonSizing(.flexible)
-            .controlSize(.large)
+            .buttonStyle(.studioPrimary)
             .accessibilityIdentifier("continue")
         }
         .padding(24)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Studio.bg0.ignoresSafeArea())
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+        .background(Studio.bg1.ignoresSafeArea())
     }
 
     private var finder: some View {
@@ -110,22 +116,21 @@ struct FindComputerView: View {
                         model.scanTarget = computer.name
                         model.scanning = true
                     } label: {
-                        Label {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(computer.name).foregroundStyle(Studio.text1)
-                                Text("Tabber Studio: scan its code to pair").font(.caption).foregroundStyle(Studio.text2)
-                            }
-                        } icon: {
-                            Image(systemName: "desktopcomputer")
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(computer.name).font(.body.weight(.semibold)).foregroundStyle(Studio.text1)
+                            Text("Scan its pairing code").font(.subheadline).foregroundStyle(Studio.text2)
                         }
+                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                        .contentShape(.rect)
                     }
+                    .buttonStyle(.plain)
                     .accessibilityIdentifier("found-computer")
                     .listRowBackground(Studio.bg1)
                 }
                 if found.isEmpty && !denied {
                     HStack(spacing: 10) {
                         ProgressView()
-                        Text("Looking for Tabber Studio…").foregroundStyle(Studio.text2)
+                        Text("Looking for Tabber Studio").foregroundStyle(Studio.text2)
                     }
                     .accessibilityElement(children: .combine)
                     .accessibilityIdentifier("searching")
@@ -134,17 +139,17 @@ struct FindComputerView: View {
             } header: {
                 Text("On this Wi-Fi")
             } footer: {
-                Text("In Tabber Studio on your computer, open Settings › Remote, turn it on and click Pair iPhone.")
+                Text("Your computer shows here while Tabber Studio's remote is on.")
             }
             if denied {
                 Section {
-                    FixItCard(model: model, trouble: .localNetworkDenied, computer: "your computer")
-                        .listRowInsets(EdgeInsets())
+                    FixItView(model: model, trouble: .localNetworkDenied, computer: "your computer")
                         .listRowBackground(Color.clear)
+                        .listRowInsets(EdgeInsets(top: 8, leading: 4, bottom: 8, trailing: 4))
                 }
             } else if found.isEmpty && searchedLong {
                 Section {
-                    Text("No computer found yet. The code works without this list: it carries the computer's address. On a guest or venue Wi-Fi, use your own router.")
+                    Text("Nothing found yet. The code works without this list, because it carries the computer's address. On a guest or venue Wi-Fi, use your own router.")
                         .font(.subheadline)
                         .foregroundStyle(Studio.text2)
                         .accessibilityIdentifier("nothing-found")
@@ -158,13 +163,9 @@ struct FindComputerView: View {
                 model.scanTarget = found.count == 1 ? found[0].name : nil
                 model.scanning = true
             } label: {
-                Label("Scan the Code", systemImage: "qrcode.viewfinder")
-                    .font(.headline)
-                    .foregroundStyle(Studio.onAccent)
+                Text("Scan the code").frame(maxWidth: .infinity)
             }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
-            .buttonSizing(.flexible)
+            .buttonStyle(.studioPrimary)
             .padding(.horizontal, 20)
             .padding(.bottom, 8)
             .accessibilityIdentifier("scan")
@@ -213,15 +214,15 @@ struct ScannerSheet: View {
                     paste
                 }
                 if notACode {
-                    Label("That is not a Tabber Studio pairing code.", systemImage: "exclamationmark.triangle.fill")
+                    Text("That isn't a Tabber Studio pairing code.")
                         .foregroundStyle(Studio.playhead)
                         .accessibilityIdentifier("not-a-code")
                 }
             }
             .padding(20)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Studio.bg0.ignoresSafeArea())
-            .navigationTitle("Scan the Code")
+            .background(Studio.bg1.ignoresSafeArea())
+            .navigationTitle("Scan the code")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -236,21 +237,26 @@ struct ScannerSheet: View {
     }
 
     @ViewBuilder private var paste: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 14) {
             if DataScannerViewController.isSupported {
-                Text("Tabber Spak may not use the camera. Allow it in Settings › Tabber Spak, or paste the link instead.")
-                Button("Open Settings") { FixItCard.openSettings() }
+                Text("Tabber Spak can't use the camera. Allow it in Settings, or paste the link instead.")
+                    .foregroundStyle(Studio.text2)
+                Button("Open Settings") { FixItView.openSettings() }
+                    .buttonStyle(.studio)
             } else {
-                Text("This device cannot scan codes. Paste the link that Pair iPhone in Tabber Studio shows.")
+                Text("This device can't scan codes. Paste the link that Pair iPhone in Tabber Studio shows.")
+                    .foregroundStyle(Studio.text2)
             }
             TextField("tabber-remote://pair?…", text: $linkText, axis: .vertical)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
                 .font(.footnote.monospaced())
-                .textFieldStyle(.roundedBorder)
+                .foregroundStyle(Studio.text1)
+                .padding(12)
+                .studioWell()
                 .accessibilityIdentifier("pair-link-field")
-            Button { handle(linkText) } label: { Text("Pair").foregroundStyle(Studio.onAccent) }
-                .buttonStyle(.borderedProminent)
+            Button("Pair") { handle(linkText) }
+                .buttonStyle(.studio)
                 .disabled(linkText.isEmpty)
                 .accessibilityIdentifier("pair-link-button")
             Spacer()
@@ -319,7 +325,8 @@ struct PairingOverlay: View {
             Text("Pairing with \(name)…").font(.headline).foregroundStyle(Studio.text1)
         }
         .padding(28)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .background(Studio.bg2, in: RoundedRectangle(cornerRadius: Studio.radiusPanel, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: Studio.radiusPanel, style: .continuous).strokeBorder(Studio.edge, lineWidth: 1))
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier("pairing")
     }

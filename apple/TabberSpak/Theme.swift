@@ -1,80 +1,110 @@
 import SwiftUI
 
 /// Tabber Studio's design language on the phone (the owner, 2026-11-07: "spak
-/// should follow the design language of Tabber Studio"). The values are Tabber
-/// Studio's dark design tokens (`ui/design_tokens.py`, DARK_TOKENS): four
-/// surface levels where lighter means closer, three text levels, and one rare
-/// teal accent for selection and one-of-many choices. Depth comes from
-/// surface lightness, never from shadows. Record keeps its red, and the
-/// playhead its amber, as in Tabber Studio. Liquid Glass stays on the
-/// system's floating controls (tab bar, transport, sheets) only.
+/// should follow the design language of Tabber Studio"). Colours are Tabber
+/// Studio's own: its dark design tokens (`ui/design_tokens.py`), its record
+/// and meter colours (`ui/theme.py`). Surfaces get lighter as they come
+/// closer; there are no shadows, gradients or decorative edges. Teal marks
+/// the one selected choice, red means recording, amber marks where the
+/// playhead is. Words are sentence case; only the readout keeps Tabber
+/// Studio's own labels (POS, TIME, BPM). Numbers that count are monospaced,
+/// as in Tabber Studio's transport.
 enum Studio {
     // Surfaces, lighter = closer
-    static let bg0 = Color(red: 0x12 / 255, green: 0x12 / 255, blue: 0x19 / 255)    // app background, wells
-    static let bg1 = Color(red: 0x1D / 255, green: 0x1D / 255, blue: 0x2B / 255)    // panels, list rows
-    static let bg2 = Color(red: 0x26 / 255, green: 0x26 / 255, blue: 0x38 / 255)    // raised: cards
-    static let bg3 = Color(red: 0x30 / 255, green: 0x30 / 255, blue: 0x4A / 255)    // controls
+    static let bg0 = Color(red: 0x12 / 255, green: 0x12 / 255, blue: 0x19 / 255)    // the room: wells, the lamp at rest
+    static let bg1 = Color(red: 0x1D / 255, green: 0x1D / 255, blue: 0x2B / 255)    // the screen
+    static let bg2 = Color(red: 0x26 / 255, green: 0x26 / 255, blue: 0x38 / 255)    // the take card
+    static let bg3 = Color(red: 0x30 / 255, green: 0x30 / 255, blue: 0x4A / 255)    // buttons
     static let bgOn = Color(red: 0x33 / 255, green: 0x33 / 255, blue: 0x4D / 255)   // an ON toggle in a well
-    /// A panel's 1 px edge: white at 6 % over the panel.
-    static let edge = Color.white.opacity(0.06)
+    static let edge = Color.white.opacity(0.06)                                      // a panel's hairline
 
-    // Text
-    static let text1 = Color(red: 0xEC / 255, green: 0xEC / 255, blue: 0xF3 / 255)  // primary
-    static let text2 = Color(red: 0xB0 / 255, green: 0xB0 / 255, blue: 0xC4 / 255)  // secondary, button labels
-    static let text3 = Color(red: 0x85 / 255, green: 0x85 / 255, blue: 0xA0 / 255)  // muted labels, units
+    // Ink
+    static let text1 = Color(red: 0xEC / 255, green: 0xEC / 255, blue: 0xF3 / 255)
+    static let text2 = Color(red: 0xB0 / 255, green: 0xB0 / 255, blue: 0xC4 / 255)
+    static let text3 = Color(red: 0x85 / 255, green: 0x85 / 255, blue: 0xA0 / 255)
+    static let textWellOff = Color(red: 0x9A / 255, green: 0x9A / 255, blue: 0xB2 / 255)
 
-    // Accent and signals
-    static let accent = Color(red: 0x00 / 255, green: 0xD4 / 255, blue: 0xAA / 255) // selection, the ON state
+    // Signals
+    static let accent = Color(red: 0x00 / 255, green: 0xD4 / 255, blue: 0xAA / 255)   // the one selected choice
     static let onAccent = Color(red: 0x0D / 255, green: 0x1F / 255, blue: 0x1A / 255)
-    static let record = Color(red: 0xE5 / 255, green: 0x48 / 255, blue: 0x4D / 255)
-    static let playhead = Color(red: 0xFF / 255, green: 0xB0 / 255, blue: 0x20 / 255)
+    static let record = Color(red: 0xFF / 255, green: 0x4D / 255, blue: 0x6A / 255)   // Tabber Studio's record arm
+    static let playhead = Color(red: 0xFF / 255, green: 0xB0 / 255, blue: 0x20 / 255) // where the playhead is
+    static let meterLow = Color(red: 0x4C / 255, green: 0xAF / 255, blue: 0x7D / 255) // Tabber Studio's meters
+    static let meterMid = Color(red: 0xFF / 255, green: 0xC1 / 255, blue: 0x07 / 255)
 
-    static let textWellOff = Color(red: 0x9A / 255, green: 0x9A / 255, blue: 0xB2 / 255)  // OFF toggles in a well
-
-    // Shape: Tabber Studio's corners (panel 6, well 7, button 5 px), a little larger for fingers.
-    static let radiusCard: CGFloat = 10
+    // Shape: Tabber Studio's small corners, grown a little for fingers; the lamp is the largest thing.
+    static let radiusLamp: CGFloat = 12
+    static let radiusPanel: CGFloat = 12
     static let radiusControl: CGFloat = 7
 
-    /// Tabber Studio's readouts (POS, TIME, BPM) are monospaced.
-    static func readout(_ size: CGFloat, weight: Font.Weight = .medium) -> Font {
+    /// Counters (position, time, tempo, lengths) are monospaced, as in Tabber Studio's transport.
+    static func counter(_ size: CGFloat, weight: Font.Weight = .medium) -> Font {
         .system(size: size, weight: weight, design: .monospaced)
     }
 }
 
-/// A small uppercase label, as Tabber Studio names its readouts and panels (POS, TIME, TRACKS).
-struct StudioLabel: View {
+/// Tabber Studio's readout labels, POS, TIME and BPM: the only small capitals in the app.
+struct ReadoutLabel: View {
     let text: String
+    let color: Color
     @ScaledMetric(relativeTo: .subheadline) private var size: CGFloat = 11
-    init(_ text: String) { self.text = text }
+    init(_ text: String, color: Color = Studio.text3) { self.text = text; self.color = color }
 
     var body: some View {
-        Text(text.uppercased())
+        Text(text)
             .font(.system(size: size, weight: .semibold))
-            .tracking(0.8)
-            .foregroundStyle(Studio.text3)
-            .accessibilityLabel(text)                  // read as words, not spelled out
+            .foregroundStyle(color)
+            .accessibilityHidden(true)
     }
 }
 
-extension View {
-    /// A raised card in Tabber Studio's language: a lighter surface and a hairline edge, no shadow.
-    func studioCard(_ fill: Color = Studio.bg2, radius: CGFloat = Studio.radiusCard) -> some View {
-        background(fill, in: RoundedRectangle(cornerRadius: radius, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: radius, style: .continuous).strokeBorder(Studio.edge, lineWidth: 1))
+/// The app's buttons, as Tabber Studio's: flat fills, small corners, plain words.
+struct StudioButtonStyle: ButtonStyle {
+    enum Kind { case normal, primary, quiet }
+    var kind: Kind = .normal
+    @Environment(\.isEnabled) private var enabled
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.body.weight(.semibold))
+            .multilineTextAlignment(.center)
+            .fixedSize(horizontal: false, vertical: true)      // a long label wraps instead of clipping
+            .foregroundStyle(foreground)
+            .padding(.horizontal, kind == .quiet ? 4 : 18)
+            .frame(minHeight: 48)
+            .background(background, in: RoundedRectangle(cornerRadius: Studio.radiusControl, style: .continuous))
+            .opacity(configuration.isPressed ? 0.7 : enabled ? 1 : 0.4)
+            .contentShape(.rect)
     }
 
-    /// A recessed well: the darkest surface with a hairline edge (readouts, toggle groups).
+    private var foreground: Color {
+        switch kind {
+        case .normal: Studio.text1
+        case .primary: Studio.onAccent
+        case .quiet: Studio.text2
+        }
+    }
+
+    private var background: Color {
+        switch kind {
+        case .normal: Studio.bg3
+        case .primary: Studio.accent
+        case .quiet: .clear
+        }
+    }
+}
+
+extension ButtonStyle where Self == StudioButtonStyle {
+    static var studio: StudioButtonStyle { StudioButtonStyle() }
+    static var studioPrimary: StudioButtonStyle { StudioButtonStyle(kind: .primary) }
+    static var studioQuiet: StudioButtonStyle { StudioButtonStyle(kind: .quiet) }
+}
+
+extension View {
+    /// A recessed well: the darkest surface with a hairline (the toggles).
     func studioWell(radius: CGFloat = Studio.radiusControl) -> some View {
         background(Studio.bg0, in: RoundedRectangle(cornerRadius: radius, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: radius, style: .continuous).strokeBorder(Studio.edge, lineWidth: 1))
-    }
-
-    /// A track's colour as the leading edge of its row or card, as Tabber Studio's track headers have.
-    func trackEdge(_ color: Color?, radius: CGFloat = Studio.radiusCard) -> some View {
-        overlay(alignment: .leading) {
-            Rectangle().fill(color ?? Studio.text3).frame(width: 4).accessibilityHidden(true)
-        }
-        .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
     }
 
     /// A list on Tabber Studio's background, with rows on the panel surface.

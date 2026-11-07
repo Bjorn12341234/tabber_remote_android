@@ -2,46 +2,43 @@ import RemoteKit
 import SwiftUI
 import UIKit
 
-/// What to do when the phone cannot use its computer: the cause in plain words
-/// and the one action that fixes it (plan: TR6's fix-it cards, principle 3).
-struct FixItCard: View {
+/// When the phone cannot use its computer: what happened, what to check, and
+/// the action that fixes it (plan: TR6's fix-it cards, principle 3). It takes
+/// the place of the session, in the screen's own voice: no alert box, no icon.
+struct FixItView: View {
     @Bindable var model: AppModel
     let trouble: Trouble
     let computer: String
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Label {
-                Text(title).accessibilityIdentifier("fix-it-title")
-            } icon: {
-                Image(systemName: symbol).foregroundStyle(Studio.playhead).accessibilityHidden(true)
-            }
-            .font(.headline)
-            .foregroundStyle(Studio.text1)
+        VStack(alignment: .leading, spacing: 14) {
+            Text(title)
+                .font(.title2.weight(.semibold))
+                .foregroundStyle(Studio.text1)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityIdentifier("fix-it-title")
             Text(message)
-                .font(.subheadline)
+                .font(.body)
                 .foregroundStyle(Studio.text2)
                 .fixedSize(horizontal: false, vertical: true)
             if !checks.isEmpty {
-                VStack(alignment: .leading, spacing: 6) {
+                VStack(alignment: .leading, spacing: 14) {
                     ForEach(checks, id: \.self) { check in
-                        Label(check, systemImage: "checkmark.circle")
-                            .font(.subheadline)
+                        Text(check)
+                            .font(.body)
                             .foregroundStyle(Studio.text1)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                 }
+                .padding(.top, 2)
             }
-            ViewThatFits {
+            ViewThatFits(in: .horizontal) {
                 HStack(spacing: 10) { actions }
                 VStack(alignment: .leading, spacing: 10) { actions }
             }
-            .padding(.top, 2)
+            .padding(.top, 8)
         }
-        .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .studioCard(Studio.bg2, radius: 18)
-        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(Studio.playhead.opacity(0.5), lineWidth: 1))
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("fix-it")
     }
@@ -49,7 +46,7 @@ struct FixItCard: View {
     private var title: String {
         switch trouble {
         case .unreachable: "Can't reach \(computer)"
-        case .localNetworkDenied: "Allow Local Network"
+        case .localNetworkDenied: "Tabber Spak can't use the local network"
         case .updateStudio: "Update Tabber Studio"
         case .updateSpak: "Update Tabber Spak"
         case .forgotten: "\(computer) no longer knows this iPhone"
@@ -57,27 +54,18 @@ struct FixItCard: View {
         }
     }
 
-    private var symbol: String {
-        switch trouble {
-        case .unreachable: "wifi.exclamationmark"
-        case .localNetworkDenied: "network.slash"
-        case .updateStudio, .updateSpak: "arrow.down.app"
-        case .forgotten, .otherComputer: "qrcode.viewfinder"
-        }
-    }
-
     private var message: String {
         switch trouble {
         case .unreachable:
-            "Tabber Spak keeps trying. Check these:"
+            "Tabber Spak keeps trying. In the meantime, check that:"
         case .localNetworkDenied:
-            "Tabber Spak needs the local network to reach \(computer). Turn on Local Network in Settings › Tabber Spak."
+            "It needs the local network to reach \(computer). Turn on Local Network for Tabber Spak in Settings."
         case .updateStudio:
             "Tabber Studio on \(computer) is too old for this Tabber Spak. Update Tabber Studio on the computer, then try again."
         case .updateSpak:
             "Tabber Studio on \(computer) is newer than this Tabber Spak. Update Tabber Spak from the App Store or TestFlight."
         case .forgotten:
-            "This iPhone was removed in Tabber Studio's Settings › Remote. Pair again to use it."
+            "It was removed in Tabber Studio's Settings › Remote. Pair again to use it."
         case .otherComputer:
             "The computer at this address is not the one this iPhone paired with. Pair again with the right one."
         }
@@ -85,32 +73,32 @@ struct FixItCard: View {
 
     private var checks: [String] {
         guard trouble == .unreachable else { return [] }
-        return ["Tabber Studio is open on the computer, with Settings › Remote turned on. No Remote page there? Update Tabber Studio.",
+        return ["Tabber Studio is open, with Settings › Remote turned on. If Settings has no Remote page, update Tabber Studio.",
                 "This iPhone is on the same Wi-Fi as the computer.",
-                "It is not a guest or venue Wi-Fi: those keep devices apart. Bring your own router.",
-                "No VPN is on on this iPhone."]
+                "The Wi-Fi isn't a guest or venue network. Those keep devices apart, so bring your own router.",
+                "This iPhone has no VPN turned on."]
     }
 
     @ViewBuilder private var actions: some View {
         switch trouble {
         case .unreachable:
-            Button { model.wake() } label: { Text("Try Again").foregroundStyle(Studio.onAccent) }
-                .buttonStyle(.borderedProminent)
+            Button("Try again") { model.wake() }
+                .buttonStyle(.studio)
                 .accessibilityIdentifier("fix-it-retry")
-            Button("Pair Again") { model.scanning = true }
-                .buttonStyle(.bordered)
+            Button("Pair again") { model.scanning = true }
+                .buttonStyle(.studioQuiet)
                 .accessibilityIdentifier("fix-it-pair")
         case .localNetworkDenied:
-            Button { Self.openSettings() } label: { Text("Open Settings").foregroundStyle(Studio.onAccent) }
-                .buttonStyle(.borderedProminent)
+            Button("Open Settings") { Self.openSettings() }
+                .buttonStyle(.studio)
                 .accessibilityIdentifier("fix-it-settings")
         case .updateStudio, .updateSpak:
-            Button { model.retry() } label: { Text("Try Again").foregroundStyle(Studio.onAccent) }
-                .buttonStyle(.borderedProminent)
+            Button("Try again") { model.retry() }
+                .buttonStyle(.studio)
                 .accessibilityIdentifier("fix-it-retry")
         case .forgotten, .otherComputer:
-            Button { model.scanning = true } label: { Text("Pair Again").foregroundStyle(Studio.onAccent) }
-                .buttonStyle(.borderedProminent)
+            Button("Pair again") { model.scanning = true }
+                .buttonStyle(.studio)
                 .accessibilityIdentifier("fix-it-pair")
         }
     }

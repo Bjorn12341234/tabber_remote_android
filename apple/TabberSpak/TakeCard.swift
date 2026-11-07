@@ -1,73 +1,75 @@
 import RemoteKit
 import SwiftUI
 
-/// After every take: keep it (the default), discard it, or go again (plan: screen 2).
+/// After every take, the take's slate: what was recorded, and the two
+/// decisions that matter with an instrument in hand, discard or go again.
+/// Keep is the default (recording again keeps the take too), so it is the
+/// quiet word in the corner.
 struct TakeCard: View {
     @Bindable var model: AppModel
     let take: Take
     @State private var holding = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: 16) {
             HStack(alignment: .firstTextBaseline) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(take.name).font(.headline).foregroundStyle(Studio.text1)
-                    Text("Bar \(take.start.bar) · \(SessionView.clock(take.lengthSeconds))")
-                        .font(.subheadline).foregroundStyle(Studio.text2).monospacedDigit()
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(take.name)
+                        .font(.headline)
+                        .foregroundStyle(Studio.text1)
+                    Text("\(SessionView.length(take.lengthSeconds)) from bar \(take.start.bar)")
+                        .font(.subheadline)
+                        .foregroundStyle(Studio.text2)
                 }
                 Spacer()
-                Stars(rating: take.rating) { model.rate(take, $0) }
+                Button("Keep") { model.keep() }
+                    .buttonStyle(.studioQuiet)
+                    .accessibilityHint("Keeps the take and closes this.")
+                    .accessibilityIdentifier("keep")
             }
             HStack(spacing: 10) {
-                Button { model.keep() } label: {
-                    Text("Keep").font(.callout.weight(.semibold)).foregroundStyle(Studio.text1)
-                        .frame(maxWidth: .infinity, minHeight: 50)
-                        .background(Studio.bg3, in: RoundedRectangle(cornerRadius: Studio.radiusControl, style: .continuous))
-                }
-                .buttonStyle(.plain)
-                .accessibilityIdentifier("keep")
-
                 // The fill grows while held; in a background, so it never sizes the card.
                 Text("Hold to discard")
-                    .font(.callout.weight(.semibold))
+                    .font(.body.weight(.semibold))
                     .multilineTextAlignment(.center)
-                    .foregroundStyle(holding ? Color.white : Studio.record)
-                    .frame(maxWidth: .infinity, minHeight: 50)
+                    .foregroundStyle(holding ? Color.white : Studio.text1)
+                    .frame(maxWidth: .infinity, minHeight: 52)
                     .background(alignment: .leading) {
                         GeometryReader { proxy in
-                            Rectangle().fill(Studio.record.opacity(0.85))
+                            Rectangle().fill(Studio.record)
                                 .frame(width: holding ? proxy.size.width : 0)
                                 .animation(holding ? .linear(duration: 0.6) : .easeOut(duration: 0.15), value: holding)
                         }
                     }
                     .background(Studio.bg3)
                     .clipShape(.rect(cornerRadius: Studio.radiusControl))
-                .onLongPressGesture(minimumDuration: 0.6) {
-                    model.discard(take)
-                } onPressingChanged: { pressing in
-                    holding = pressing
-                }
-                .accessibilityAddTraits(.isButton)
-                .accessibilityLabel("Discard \(take.name)")
-                .accessibilityHint("Touch and hold. You can undo it for five seconds.")
-                .accessibilityAction { model.discard(take) }
-                .accessibilityIdentifier("discard")
+                    .onLongPressGesture(minimumDuration: 0.6) {
+                        model.discard(take)
+                    } onPressingChanged: { pressing in
+                        holding = pressing
+                    }
+                    .accessibilityAddTraits(.isButton)
+                    .accessibilityLabel("Discard \(take.name)")
+                    .accessibilityHint("Touch and hold. You can undo it for five seconds.")
+                    .accessibilityAction { model.discard(take) }
+                    .accessibilityIdentifier("discard")
 
                 Button { model.goAgain() } label: {
-                    Label("Go again", systemImage: "arrow.counterclockwise")
-                        .font(.callout.weight(.semibold))
-                        .foregroundStyle(Studio.onAccent)
-                        .frame(maxWidth: .infinity, minHeight: 50)
-                        .background(Studio.accent, in: RoundedRectangle(cornerRadius: Studio.radiusControl, style: .continuous))
+                    HStack(spacing: 8) {
+                        Text("●").foregroundStyle(Studio.record)       // it records: the record dot
+                        Text("Go again")
+                    }
+                    .frame(maxWidth: .infinity, minHeight: 52)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.studio)
+                .accessibilityLabel("Go again")
+                .accessibilityHint("Records again from bar \(take.start.bar).")
                 .accessibilityIdentifier("card-go-again")
             }
         }
         .padding(18)
-        .padding(.leading, 4)
-        .studioCard(Studio.bg2)
-        .trackEdge(Color(hex: model.state.tracks.first { $0.id == take.trackID }?.color))
+        .background(Studio.bg2, in: RoundedRectangle(cornerRadius: Studio.radiusPanel, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: Studio.radiusPanel, style: .continuous).strokeBorder(Studio.edge, lineWidth: 1))
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("take-card")
     }
@@ -80,15 +82,19 @@ struct UndoBanner: View {
 
     var body: some View {
         HStack {
-            Text(offer.text).font(.callout.weight(.medium)).foregroundStyle(Studio.text1)
+            Text(offer.text)
+                .font(.body)
+                .foregroundStyle(Studio.text1)
             Spacer()
             Button("Undo") { model.undoDiscard() }
-                .font(.callout.weight(.bold))
+                .buttonStyle(.studio)
                 .accessibilityIdentifier("undo-discard")
         }
-        .padding(16)
-        .background(Studio.bg2, in: .capsule)
-        .overlay(Capsule().strokeBorder(Studio.edge, lineWidth: 1))
+        .padding(.leading, 18)
+        .padding(.trailing, 8)
+        .padding(.vertical, 8)
+        .background(Studio.bg2, in: RoundedRectangle(cornerRadius: Studio.radiusPanel, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: Studio.radiusPanel, style: .continuous).strokeBorder(Studio.edge, lineWidth: 1))
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("undo-banner")
     }
@@ -136,13 +142,13 @@ struct TakesView: View {
                     HStack {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(take.name).font(.body.weight(.medium)).foregroundStyle(Studio.text1)
-                            Text("Bar \(take.start.bar) · \(SessionView.clock(take.lengthSeconds))")
-                                .font(.caption).foregroundStyle(Studio.text2).monospacedDigit()
+                            Text("\(SessionView.length(take.lengthSeconds)) from bar \(take.start.bar)")
+                                .font(.subheadline).foregroundStyle(Studio.text2)
                         }
                         Spacer()
                         Stars(rating: take.rating) { model.rate(take, $0) }
                     }
-                    .accessibilityElement(children: .combine)
+                    .accessibilityElement(children: .contain)     // the rating stays adjustable
                     .accessibilityIdentifier("take-\(take.name)")
                     .listRowBackground(Studio.bg1)
                 }
@@ -170,15 +176,16 @@ struct TracksView: View {
                                 .foregroundStyle(Color(hex: track.color) ?? Studio.text3)
                                 .frame(width: 28)
                             VStack(alignment: .leading, spacing: 2) {
-                                Text(track.name).font(.body.weight(track.selected ? .bold : .regular))
-                                    .foregroundStyle(Studio.text1)
+                                // The selected track's name in teal: Tabber Studio's selection.
+                                Text(track.name).font(.body.weight(.semibold))
+                                    .foregroundStyle(track.selected ? Studio.accent : Studio.text1)
                                 if track.kind == .midi {
-                                    Text("Monitor: \(track.monitor.rawValue)").font(.caption).foregroundStyle(Studio.text2)
+                                    Text("Monitor \(track.monitor.rawValue)").font(.subheadline).foregroundStyle(Studio.text2)
                                 }
                             }
                             Spacer()
                             if let peak = model.state.meters[track.id] {
-                                MeterBar(level: peak.max() ?? 0).frame(width: 60, height: 6)
+                                LevelMeter(level: peak.max() ?? 0).frame(width: 64, height: 4)
                             }
                         }
                         .frame(minHeight: 44)
@@ -215,7 +222,7 @@ struct TracksView: View {
                     Button {
                         model.act("arm-\(track.id)", "tracks.arm", ["track_id": .string(track.id), "armed": .bool(!track.armed)])
                     } label: {
-                        Image(systemName: track.armed ? "record.circle.fill" : "record.circle")
+                        Text(track.armed ? "●" : "○")                 // Tabber Studio's record arm
                             .font(.title2)
                             .foregroundStyle(track.armed ? Studio.record : Studio.text3)
                             .frame(minWidth: 44, minHeight: 44)
@@ -225,12 +232,7 @@ struct TracksView: View {
                     .accessibilityLabel(track.armed ? "Disarm \(track.name)" : "Arm \(track.name)")
                     .accessibilityIdentifier("track-arm-\(track.name)")
                 }
-                .listRowBackground(
-                    Studio.bg1
-                        .overlay(alignment: .leading) { Rectangle().fill(Color(hex: track.color) ?? Studio.text3).frame(width: 4) }
-                        .overlay {
-                            if track.selected { Rectangle().strokeBorder(Studio.accent, lineWidth: 1.5) }
-                        })
+                .listRowBackground(Studio.bg1)
             }
             .studioList()
             .navigationTitle("Tracks")

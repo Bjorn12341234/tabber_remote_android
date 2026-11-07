@@ -1399,14 +1399,32 @@ what was measured, and what changed in the plan.
   design language (`apple/TabberSpak/Theme.swift`), from its dark design
   tokens (`ui/design_tokens.py`) and the owner's screenshots of Arrange, Tab,
   the Mixer and Routing ("just so we are talking about the same app").
-  - **What carries over:** four surfaces where lighter is closer, depth
-    without shadows, teal only for the one selected choice, record red, the
-    playhead's amber, and Studio's small corners and small uppercase labels.
-    The Session screen's readout is Studio's: POS, TIME and BPM in a well,
-    monospaced, the position written `25 : 4`. Count-in, Metro and Loop are
-    text toggles in one well, ON a lighter fill, as in Studio's toolbar.
-    Stop and play are white, and record is a red dot. Each track carries its
-    colour as a leading edge, and the selected track a teal outline.
+  - **Redesigned the same day at the owner's word.** The first pass put
+    Studio's colours on a generic stack of cards with coloured edges ("lazy
+    design and screams AI made", "make good design"). The second starts from
+    the moment the app serves: between takes, with an instrument in hand.
+    - **One bold element:** the readout is the recording light. At rest it
+      is a dark well with POS, TIME and BPM, monospaced, the position
+      written `25 : 4` as Studio writes it. During the count-in it is amber
+      with the beats left; while recording it is red with Studio's
+      "REC 0:42", pulsing as Studio's record button does. The glowing screen
+      frame is gone.
+    - **Everything else is quiet,** left-aligned and in sentence case: the
+      section as plain large text; the tracks in one row with Studio's own
+      record-arm circles (hollow, red when armed) and the armed track's input
+      in Studio's meter colours; markers as text buttons, the one the
+      playhead is in amber (Studio's playhead colour), a looped one teal;
+      Count-in, Metro and Loop in a well, ON a lighter fill.
+    - **The take card is a slate:** the take, its length and its start;
+      Keep as a quiet word in the corner, since it is the default; and two
+      big buttons, Hold to discard and Go again with the record dot.
+    - **A computer that can't be reached** replaces the session with plain
+      instructions and two buttons; no alert box. Welcome is the three
+      numbered steps that pair the phone.
+    - **Gone:** coloured edges, gradients, glows, cards inside cards, capital
+      letters except Studio's POS, TIME and BPM, and strings joined with
+      dots. Record red is Studio's own `#ff4d6a`. Ratings stay only in the
+      Takes list until the owner decides whether to keep them.
   - **Dark only,** with a dark launch screen. Tabber Studio also has a light
     mode: whether the phone needs one is the owner's call.
   - **Gate, met in the Simulator:** Xcode's accessibility audit passes on
