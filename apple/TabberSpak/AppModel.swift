@@ -420,6 +420,37 @@ final class AppModel {
         }
     }
 
+    // The computer's view (view/1): Studio's own Arrange, Tab, Piano Roll and Split.
+
+    var viewAvailable: Bool { state.capabilities.contains("view/1") }
+
+    func showEditor(_ editor: String) {
+        act("view-\(editor)", "view.set", ["editor": .string(editor)])
+    }
+
+    func toggleSplit() {
+        act("view-split", "view.set", ["split": .bool(!(state.view?.split ?? false))])
+    }
+
+    /// One step of a held Previous or Next (the owner: "pressing and holding
+    /// previous and next in tab ... should fast forward"): the next beat
+    /// written, or once held a while the next bar, adding none. False at the
+    /// song's first or last beat, which ends the hold.
+    func fastStep(by: Int, bars: Bool) async -> Bool {
+        guard let session, let tab = state.tab,
+              let target = bars ? tab.barStep(by) : tab.neighbour(by) else { return false }
+        do {
+            _ = try await session.perform("tab.set_cursor", ["bar": .number(Double(target.bar)),
+                                                              "beat": .number(Double(target.beat)),
+                                                              "string": .number(Double(target.string))],
+                                          patience: .seconds(2))
+            return true
+        } catch {
+            problem = Self.explain(error)
+            return false
+        }
+    }
+
     // Chat (chat/1): words to the computer's chat, a plan back, Execute to run it.
 
     var chatAvailable: Bool { state.capabilities.contains("chat/1") }

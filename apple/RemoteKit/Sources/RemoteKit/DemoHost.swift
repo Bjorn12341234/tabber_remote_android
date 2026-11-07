@@ -71,6 +71,9 @@ public actor DemoHost {
     private var chatCounter = 0
     private var chatRequest = ""
     private var chatAction: (planID: String, track: String, solo: Bool)?
+    /// What the demo computer shows (view/1), and the editor Split goes back to.
+    private var view = ViewState(editor: "tab", split: false)
+    private var preSplit = "tab"
     /// The Tab view's cursor on each tab track, and the duration a new note gets.
     private var tabCursors: [String: TabCursor] = [:]
     private var tabDuration = NoteValue(value: 4)
@@ -84,7 +87,7 @@ public actor DemoHost {
     /// shows the app's Update cards (TR6).
     public let speaks: [String]
 
-    public init(speaks: [String] = ["1.3"]) {
+    public init(speaks: [String] = ["1.4"]) {
         self.speaks = speaks
         // Tabber Studio's own track colours (core/models.py TRACK_COLORS), in its strip order.
         song = Song(
@@ -202,10 +205,10 @@ public actor DemoHost {
             }
             connection.challenge = Data((0..<32).map { _ in UInt8.random(in: 0...255) })
             return ["host": ["id": .string(Self.hostID), "name": .string(Self.name), "app_version": "demo"],
-                    "protocol_version": "1.3",
+                    "protocol_version": "1.4",
                     "capabilities": ["transport/1", "record/1", "tempo_scale/1", "tracks/1", "tracks.monitor/1",
                                      "markers/1", "takes/1", "takes.discard/1", "takes.go_again/1", "undo/1",
-                                     "save/1", "meters/1", "mixer/1", "tab/1", "routing/1", "chat/1"],
+                                     "save/1", "meters/1", "mixer/1", "tab/1", "routing/1", "chat/1", "view/1"],
                     "limits": ["max_frame_bytes": 65536, "requests_per_second": 20, "burst": 40,
                                "heartbeat_ms": 2000, "heartbeat_misses": 3, "connections_per_device": 2],
                     "challenge": .string(Base64URL.encode(connection.challenge))]
@@ -412,6 +415,22 @@ public actor DemoHost {
                 }
             }
             return ["mixer": try JSONCoding.value(mixerState()), "undo": try JSONCoding.value(undoState())]
+        case "view.state":
+            return ["view": try JSONCoding.value(view)]
+        case "view.set":
+            if let editor = p["editor"]?.stringValue {
+                guard ViewState.editors.contains(editor) else { throw DemoErrors.make("invalid_params", ["field": "editor"]) }
+                view = ViewState(editor: editor, split: false)          // an editor button leaves Split, as in Studio
+            }
+            if let split = p["split"]?.boolValue, split != view.split {
+                if split {                                           // an editor beside Arrange
+                    preSplit = view.editor
+                    view = ViewState(editor: view.editor == "arrange" ? "tab" : view.editor, split: true)
+                } else {                                             // back to the editor before, as F8 does
+                    view = ViewState(editor: preSplit, split: false)
+                }
+            }
+            return ["view": try JSONCoding.value(view)]
         case "chat.state":
             return ["chat": try JSONCoding.value(chat)]
         case "chat.send", "chat.confirm", "chat.cancel", "chat.stop":
@@ -815,6 +834,7 @@ public actor DemoHost {
         data["tab"] = ["tab": tabValue()]
         data["routing"] = try? JSONCoding.value(routingState())
         data["chat"] = try? JSONCoding.value(chat)
+        data["view"] = try? JSONCoding.value(view)
         return data
     }
 
@@ -830,13 +850,14 @@ public actor DemoHost {
         case "tab": return ["tab": tabValue()]
         case "routing": return (try? JSONCoding.value(routingState())) ?? .null
         case "chat": return (try? JSONCoding.value(chat)) ?? .null
+        case "view": return (try? JSONCoding.value(view)) ?? .null
         default: return (try? JSONCoding.value(song.project)) ?? .null
         }
     }
 
     private func broadcastChanges(from before: [String: JSONValue]) {
         let after = topicData()
-        for topic in ["transport", "record", "tracks", "markers", "takes", "undo", "project", "mixer", "tab", "routing", "chat"]
+        for topic in ["transport", "record", "tracks", "markers", "takes", "undo", "project", "mixer", "tab", "routing", "chat", "view"]
         where before[topic] != after[topic] {
             emit(topic, full(topic))
         }

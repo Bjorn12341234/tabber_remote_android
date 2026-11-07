@@ -87,6 +87,28 @@ public struct TabState: Codable, Sendable, Hashable {
 
     public var strings: Int { tuning.count }
     public var cursorBar: TabBar? { bars.first { $0.bar == cursor.bar } }
+
+    /// The beat after (or before) the cursor among the beats written, adding
+    /// none: nil at the song's first or last beat. For a held Next or Previous.
+    public func neighbour(_ by: Int) -> TabCursor? {
+        guard let bar = cursorBar else { return nil }
+        if by > 0 {
+            if cursor.beat < bar.beats.count { return TabCursor(bar: cursor.bar, beat: cursor.beat + 1, string: cursor.string) }
+            guard cursor.bar < barCount else { return nil }
+            return TabCursor(bar: cursor.bar + 1, beat: 1, string: cursor.string)
+        }
+        if cursor.beat > 1 { return TabCursor(bar: cursor.bar, beat: cursor.beat - 1, string: cursor.string) }
+        guard cursor.bar > 1 else { return nil }
+        let previous = bars.first { $0.bar == cursor.bar - 1 }
+        return TabCursor(bar: cursor.bar - 1, beat: max(1, previous?.beats.count ?? 1), string: cursor.string)
+    }
+
+    /// The first beat of the next (or previous) bar: nil past the song's ends.
+    public func barStep(_ by: Int) -> TabCursor? {
+        let target = cursor.bar + (by > 0 ? 1 : -1)
+        guard (1...max(1, barCount)).contains(target) else { return nil }
+        return TabCursor(bar: target, beat: 1, string: cursor.string)
+    }
     public var cursorBeat: TabBeat? {
         guard let bar = cursorBar, bar.beats.indices.contains(cursor.beat - 1) else { return nil }
         return bar.beats[cursor.beat - 1]

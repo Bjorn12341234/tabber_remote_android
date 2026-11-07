@@ -53,4 +53,24 @@ final class TabScreenUITests: SpakUITestCase {
         XCTAssertTrue(appears("fretboard"))
         XCTAssertTrue(waitFor("bar-1", "string 4 fret 0"), "the bass's tab, on four strings")
     }
+
+    /// The bar the cursor is in, from the staff's bars.
+    @MainActor
+    func cursorBar() -> Int? {
+        let bars = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH 'bar-'"))
+        for bar in bars.allElementsBoundByIndex where "\(bar.label) \(bar.value as? String ?? "")".contains("cursor") {
+            return Int(bar.identifier.dropFirst(4))
+        }
+        return nil
+    }
+
+    @MainActor
+    func testHoldingNextFastForwardsAndPreviousGoesBack() {
+        XCTAssertTrue(waitFor("bar-1", "cursor"))
+        element("next").press(forDuration: 3.0)
+        let forward = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in (self.cursorBar() ?? 0) >= 4 }, object: nil)
+        XCTAssertEqual(XCTWaiter().wait(for: [forward], timeout: 5), .completed, "a held Next goes on by itself, then bar by bar")
+        element("previous").press(forDuration: 4.0)
+        XCTAssertTrue(waitFor("bar-1", "beat 1: string 6 fret 0, cursor", timeout: 8), "a held Previous goes back to the start")
+    }
 }

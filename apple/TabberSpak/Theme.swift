@@ -138,6 +138,55 @@ struct StudioButtonStyle: ButtonStyle {
     }
 }
 
+/// A Studio button that repeats while held: a tap is one step; held, it
+/// steps by itself, faster, then a whole bar at a time, until it is let go
+/// or `hold` says there is nowhere further to go.
+struct HoldButton<Label: View>: View {
+    var kind: StudioButtonStyle.Kind = .normal
+    let tap: () -> Void
+    /// One held step; `bars` once it has run a while. False ends the hold.
+    let hold: @MainActor (_ bars: Bool) async -> Bool
+    @ViewBuilder let label: () -> Label
+    @State private var task: Task<Void, Never>?
+    @State private var held = false
+
+    var body: some View {
+        label()
+            .font(.body.weight(.semibold))
+            .foregroundStyle(kind == .primary ? Studio.onAccent : Studio.text1)
+            .padding(.horizontal, 16)
+            .frame(minHeight: 44)
+            .background(kind == .primary ? Studio.accent : Studio.bg3,
+                        in: RoundedRectangle(cornerRadius: Studio.radiusControl, style: .continuous))
+            .opacity(task != nil ? 0.7 : 1)
+            .contentShape(.rect)
+            .gesture(DragGesture(minimumDistance: 0)
+                .onChanged { _ in
+                    guard task == nil else { return }
+                    held = false
+                    task = Task { @MainActor in
+                        try? await Task.sleep(for: .milliseconds(400))
+                        guard !Task.isCancelled else { return }
+                        held = true
+                        var steps = 0
+                        while !Task.isCancelled, await hold(steps >= 12) {
+                            steps += 1
+                            try? await Task.sleep(for: .milliseconds(steps < 6 ? 140 : 70))
+                        }
+                    }
+                }
+                .onEnded { _ in
+                    task?.cancel()
+                    task = nil
+                    if !held { tap() }
+                    held = false
+                })
+            .accessibilityElement(children: .combine)
+            .accessibilityAddTraits(.isButton)
+            .accessibilityAction { tap() }
+    }
+}
+
 extension ButtonStyle where Self == StudioButtonStyle {
     static var studio: StudioButtonStyle { StudioButtonStyle() }
     static var studioPrimary: StudioButtonStyle { StudioButtonStyle(kind: .primary) }

@@ -2036,6 +2036,32 @@ what was measured, and what changed in the plan.
     `api_key.md` in the repository, which DeepSeek now refuses. The
     installed app never reads that file; only a run from source does.
 
+- **TR34 ✅ 2026-11-07: the computer's view from the phone, and a held
+  Previous or Next (protocol 1.4, 7a97c5f; Studio 691cbd34, 0.3.20).** The
+  owner: "we need buttons for arrange view and piano roll and split view
+  too. and when pressing and holding previous and next in tab in the app it
+  should fast forward so you don't have to click so much."
+  - **`view/1`:** `view.state`, `view.set` (editor, split) and the `view`
+    topic. Studio runs its own view buttons' commands: `view.set_mode`
+    for Arrange, Tab and Piano Roll, and `view.set_split`, whose Off goes
+    back to the editor before, as F8 does. Not an undo step.
+  - **On the phone:** Studio's three editors and Split, as one row on the
+    Tracks screen, shown only when the computer lists `view/1`.
+  - **A held Previous or Next:**
+    - steps through the beats written by itself, faster, then a whole bar
+      at a time, until let go;
+    - it moves the cursor only (`tab.set_cursor`), so a hold never adds the
+      rest beats and bars that a single Next adds past the end, as the
+      arrow key does;
+    - it stops at the song's first and last beat;
+    - a tap is still one step.
+  - **Gate met:**
+    - Studio: `test_tr34_view.py` (3);
+    - RemoteKit 37: the demo's view, and the held step adding nothing;
+    - UI tests: the view buttons, and a held Next going on four bars or
+      more and a held Previous back to the start.
+  - **Owed:** on a device against Studio 0.3.20.
+
 ## Sources
 
 Collected 2026-11-06.

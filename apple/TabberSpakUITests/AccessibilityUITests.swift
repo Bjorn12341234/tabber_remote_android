@@ -16,7 +16,10 @@ final class AccessibilityUITests: XCTestCase {
         // under the bars, and contrast the audit cannot place, which is text
         // inside a combined control (the Routing view passes with nothing
         // left out when its list fits on the screen, checked 7 Nov 2026).
-        let barTop = scrolls ? element(app, "play").frame.minY - 16 : .infinity
+        // The bottom of what reads: the take card when it shows, else the transport.
+        let card = element(app, "take-card")
+        let bottom = card.exists ? min(card.frame.minY, element(app, "play").frame.minY) : element(app, "play").frame.minY
+        let barTop = scrolls ? bottom - 16 : .infinity
         try app.performAccessibilityAudit { issue in
             // The sheet's Done is iOS's own toolbar button, whose largest sizes iOS caps.
             if issue.auditType == .dynamicType, issue.element?.identifier == "done" { return true }
@@ -56,7 +59,7 @@ final class AccessibilityUITests: XCTestCase {
         XCTAssertEqual(XCTWaiter().wait(for: [recording], timeout: 12), .completed)
         element(app, "record").tap()
         XCTAssertTrue(element(app, "take-card").waitForExistence(timeout: 8))
-        try audit(app, "Take card")
+        try audit(app, "Take card", scrolls: true)        // the takes list runs on under the card
         element(app, "keep").tap()
         app.tabBars.buttons["Tab"].tap()
         XCTAssertTrue(element(app, "fretboard").waitForExistence(timeout: 8))

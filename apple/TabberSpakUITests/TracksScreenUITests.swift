@@ -57,4 +57,17 @@ final class TracksScreenUITests: SpakUITestCase {
         tap("stop")
         XCTAssertTrue(waitFor("readout", "Bar 1, beat 1"))
     }
+
+    @MainActor
+    func testTheComputersViewButtons() {
+        XCTAssertTrue(waitSelected("view-tab"), "the demo computer shows Tab")
+        tap("view-arrange")
+        XCTAssertTrue(waitSelected("view-arrange"))
+        tap("view-split")
+        XCTAssertTrue(waitSelected("view-split"), "Split is on")
+        XCTAssertTrue(waitSelected("view-tab"), "beside Arrange, the Tab")
+        tap("view-split")
+        XCTAssertTrue(waitSelected("view-split", false))
+        XCTAssertTrue(waitSelected("view-arrange"), "Split off goes back to Arrange")
+    }
 }

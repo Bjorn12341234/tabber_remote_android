@@ -196,6 +196,36 @@ struct DemoHostTests {
         #expect(refused.chat?.messages.last?.text.contains("settings, key and tools") == true)
     }
 
+    @Test func theViewButtonsSwitchWhatTheComputerShows() async throws {
+        let session = session(DemoHost())
+        _ = try await connected(session)
+        let start = try await eventually(session) { $0.view != nil }
+        #expect(start.view == ViewState(editor: "tab", split: false))
+        _ = try await session.perform("view.set", ["editor": "arrange"])
+        _ = try await session.perform("view.set", ["split": true])
+        let split = try await eventually(session) { $0.view?.split == true }
+        #expect(split.view == ViewState(editor: "tab", split: true), "Split shows an editor beside Arrange")
+        _ = try await session.perform("view.set", ["split": false])
+        let back = try await eventually(session) { $0.view?.split == false }
+        #expect(back.view?.editor == "arrange", "Split off goes back to the editor before")
+    }
+
+    @Test func aHeldStepWalksTheBeatsWrittenAndAddsNone() {
+        let beat = TabBeat(duration: NoteValue(value: 4), rest: true, notes: [])
+        let four = TimeSignature(beats: 4, unit: 4)
+        var tab = TabState(trackID: "t", revision: 1, tuning: [64, 59, 55, 50, 45, 40], drum: false,
+                           cursor: TabCursor(bar: 1, beat: 2, string: 1), duration: NoteValue(value: 4), barCount: 2,
+                           bars: [TabBar(bar: 1, timeSignature: four, beats: [beat, beat]),
+                                  TabBar(bar: 2, timeSignature: four, beats: [beat, beat, beat])])
+        #expect(tab.neighbour(1) == TabCursor(bar: 2, beat: 1, string: 1), "past a bar's last beat, the next bar")
+        #expect(tab.neighbour(-1) == TabCursor(bar: 1, beat: 1, string: 1))
+        tab.cursor = TabCursor(bar: 2, beat: 3, string: 1)
+        #expect(tab.neighbour(1) == nil, "the song's last beat: nothing is added")
+        #expect(tab.barStep(1) == nil && tab.barStep(-1) == TabCursor(bar: 1, beat: 1, string: 1))
+        tab.cursor = TabCursor(bar: 2, beat: 1, string: 1)
+        #expect(tab.neighbour(-1) == TabCursor(bar: 1, beat: 2, string: 1), "back into the bar before, at its last beat")
+    }
+
     @Test func aLoopIsNamedFromTheSourceBackToIt() {
         let routing = RoutingState(sources: [
             RoutingSource(stripID: "t", kind: "track", name: "Vocals", output: "bus-a"),

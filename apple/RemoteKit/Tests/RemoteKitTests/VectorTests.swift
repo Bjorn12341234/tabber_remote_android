@@ -153,6 +153,7 @@ struct ExchangeVectorTests {
                 case "tab": if value != .null { try roundTrip(TabState.self, value) }
                 case "routing": try roundTrip(RoutingState.self, value)
                 case "chat": try roundTrip(ChatState.self, value)
+                case "view": try roundTrip(ViewState.self, value)
                 default: Issue.record("unknown result field \(key) of \(method)")
                 }
             }
@@ -175,6 +176,7 @@ struct ExchangeVectorTests {
         case "tab": if data["tab"] != .null { try roundTrip(TabState.self, data["tab"]!) }
         case "routing": try roundTrip(RoutingState.self, data)
         case "chat": try roundTrip(ChatState.self, data)
+        case "view": try roundTrip(ViewState.self, data)
         default: Issue.record("unknown topic \(topic)")
         }
     }

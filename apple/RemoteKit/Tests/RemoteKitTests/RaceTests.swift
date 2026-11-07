@@ -34,7 +34,7 @@ struct RaceTests {
         let client = RemoteClient(transport: race)
         await client.start()
         let hello = try await client.sayHello(app: Self.app, timeout: .seconds(2))
-        #expect(hello.protocolVersion == "1.3")
+        #expect(hello.protocolVersion == RemoteClient.protocolVersions[0], "the demo answers")
         #expect(await winner.route == Self.tailscale, "the address that answered is remembered")
     }
 
@@ -45,7 +45,7 @@ struct RaceTests {
         let client = RemoteClient(transport: race)
         await client.start()
         let hello = try await client.sayHello(app: Self.app, timeout: .seconds(2))
-        #expect(hello.protocolVersion == "1.3")
+        #expect(hello.protocolVersion == RemoteClient.protocolVersions[0], "the demo answers")
     }
 
     @Test func whenEveryAddressFailsTheMostTellingFailureIsReported() async throws {

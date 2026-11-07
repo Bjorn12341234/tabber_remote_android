@@ -13,6 +13,9 @@ struct TracksScreen: View {
             Connected(model: model) {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {
+                        if model.viewAvailable {
+                            ViewButtons(model: model)
+                        }
                         RecordOptions(model: model)
                         if showHint {
                             Text("To record, tap ○ on a track, then ● below.")
@@ -128,6 +131,30 @@ struct TrackCard: View {
         var words = "\(track.name), \(track.armed ? "armed for recording" : subtitle)"
         if !audible { words += ", not heard" }
         return words
+    }
+}
+
+/// What Tabber Studio shows on the computer, switched as its own view
+/// buttons do: Arrange, Tab or Piano Roll, and Split beside them.
+struct ViewButtons: View {
+    @Bindable var model: AppModel
+
+    var body: some View {
+        let view = model.state.view
+        HStack(spacing: 4) {
+            ForEach([("arrange", "Arrange"), ("tab", "Tab"), ("piano_roll", "Piano Roll")], id: \.0) { editor, title in
+                ChoiceChip(title: title, spoken: "Show \(title) on the computer", chosen: view?.editor == editor) {
+                    model.showEditor(editor)
+                }
+                .accessibilityIdentifier("view-\(editor)")
+            }
+            ToggleChip(title: "Split", isOn: view?.split ?? false, spoken: "Split view on the computer",
+                       action: model.toggleSplit)
+                .frame(maxWidth: 80)
+                .accessibilityIdentifier("view-split")
+        }
+        .padding(3)
+        .studioWell(radius: Studio.radiusControl + 3)
     }
 }
 

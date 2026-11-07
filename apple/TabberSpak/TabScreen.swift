@@ -78,11 +78,12 @@ struct TabScreen: View {
                         .accessibilityIdentifier("delete-note")
                 }
                 HStack(spacing: 6) {
-                    Button { model.tab("tab.move", ["by": -1]) } label: {
+                    HoldButton(kind: .normal, tap: { model.tab("tab.move", ["by": -1]) },
+                               hold: { bars in await model.fastStep(by: -1, bars: bars) }) {
                         Image(systemName: "chevron.left").frame(width: 20)
                     }
-                    .buttonStyle(.studio)
                     .accessibilityLabel("Previous beat")
+                    .accessibilityHint("Hold to go back fast.")
                     .accessibilityIdentifier("previous")
                     Picker("Write with", selection: $input) {
                         Text("Fretboard").tag("Fretboard")
@@ -90,11 +91,12 @@ struct TabScreen: View {
                     }
                     .pickerStyle(.segmented)
                     .accessibilityIdentifier("input")
-                    Button { model.tab("tab.move", ["by": 1]) } label: {
+                    HoldButton(kind: .primary, tap: { model.tab("tab.move", ["by": 1]) },
+                               hold: { bars in await model.fastStep(by: 1, bars: bars) }) {
                         HStack(spacing: 6) { Text("Next"); Image(systemName: "chevron.right") }
                     }
-                    .buttonStyle(.studioPrimary)
                     .accessibilityLabel("Next beat")
+                    .accessibilityHint("Hold to go forward fast.")
                     .accessibilityIdentifier("next")
                 }
                 .padding(.top, 2)
