@@ -1033,6 +1033,12 @@ Each needs the owner's go-ahead:
     build with the remote that visitors can download.
 19. **Who builds the Tabber Studio side.** Decided (the owner, 2026-11-07): one
     builder works both repositories, in turns (One builder, in turns).
+20. **Recording over a kept take.** In Tabber Studio a linear recording is a
+    plain clip, so recording again over a kept take leaves both audible (TR1
+    record). Default for 1.0: unchanged, since the take loop discards before
+    it goes again. Open: should a new pass over an earlier one on the same
+    track build take lanes, as loop recording does? That changes Tabber
+    Studio's recording for every user, so it is the owner's call.
 
 ## Rules for every sprint
 
@@ -1107,6 +1113,35 @@ what was measured, and what changed in the plan.
   - **Crypto vectors are reproducible:** test keys derive from fixed strings
     and signatures use RFC 6979, so `tools/make_crypto_vectors.py` leaves
     `git diff` empty. Tools run from `.venv` (`tools/requirements.txt`).
+- **TR1 ✅ 2026-11-07, Tabber Studio `e6545ccf`.** Nine Control API verbs, each
+  on the path the mouse takes: `recording.arm_audio_track`, `takes.passes`,
+  `takes.discard`, `takes.go_again`, `takes.rate_pass`, `markers.list`,
+  `markers.go`, `markers.add`, `session.snapshot`; `project.undo` and
+  `project.redo` take `expect`.
+  - **Gate:** `tests/remote/test_tr1_remote_verbs.py`, 17 tests through the
+    shared dispatcher on a real MainWindow (the engine faked only where it
+    would open a device). Arming by verb leaves the arm button's state;
+    discard then Undo brings back the same clip with its WAV byte-identical;
+    go again records at the named pass's start with its count-in, even after
+    a discard; markers match `tabs.list_measures`; an Undo naming another
+    step is refused. 381 targeted tests and the startup and growth tripwires
+    pass on a clean checkout of the commit.
+  - **What a take is.** A linear recording is one `AudioClip`, not a Take;
+    only loop recording builds take lanes. `core/recorded_passes.py` logs each
+    pass the shared Stop path places, and the spec now says a take is a pass.
+    Discard reuses the UI's delete with ripple off and no group closure.
+  - **Stop.** `recording.stop` stops recording but not playback; the UI's Stop
+    button does both, so the remote's `transport.stop` maps to both.
+  - **Undo ids.** PySide keeps a Python command object for its lifetime, so
+    the id lives on it; a Qt macro takes its first child's id. A test proves
+    ids differ after an undo and a new edit at the same index.
+  - **Fixed in Tabber Studio in passing:** `SetSectionMarkerCommand` wrote
+    only the grid since U13c-4, so a Direction-dialog marker on the reference
+    track never reached the bar the score draws; a stale console test; a
+    metadata coverage report one method behind on `main`.
+  - **Open for the owner (decision 20):** recording again over a kept take
+    leaves both clips audible, because a linear pass is a plain clip. The take
+    loop is still right for the demo (record, discard, go again, keep).
 
 ## Sources
 

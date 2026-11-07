@@ -355,7 +355,7 @@ effect. Names marked TR1 are added to the Control API in sprint TR1.
 | Verb | Params | Result | Control API |
 |---|---|---|---|
 | `transport.play` | `key`, `from` (bar and beat, optional) | `transport` | `transport.play` |
-| `transport.stop` | `key` | `transport`, `record`, `take` (when a recording stopped, else null) | `recording.stop` while recording, else `transport.stop` |
+| `transport.stop` | `key` | `transport`, `record`, `take` (when a recording stopped, else null) | `recording.stop` while recording, then `transport.stop`, as the UI's Stop button does |
 | `transport.record` | `key`, `armed_track_ids`, `count_in_bars` (optional) | `transport`, `record` | `recording.set_count_in`, `recording.start` |
 | `transport.seek` | `key`, `to` | `transport` | `transport.seek` |
 | `transport.set_loop` | `key`, `enabled`, `start` and `end` (optional) | `transport` | `transport.set_loop` |
@@ -390,12 +390,17 @@ the user tapped, never "wherever the playhead is now".
 
 ### Takes
 
+A take is one recorded pass: what one recording placed on one track. In
+Tabber Studio a linear recording is one audio clip, and the take's id is the
+clip's id. Loop-record takes (Tabber Studio's take lanes) are not listed in
+1.0.
+
 | Verb | Params | Result | Control API |
 |---|---|---|---|
-| `takes.list` | `track_id` | `takes` (every take on the track, newest first) | `takes.list` |
+| `takes.list` | `track_id` | `takes` (every take on the track, newest first) | `takes.passes` (TR1) |
 | `takes.discard` | `key`, `take_id` | `takes`, `undo` | `takes.discard` (TR1) |
 | `takes.go_again` | `key`, `take_id` | `transport`, `record` | `takes.go_again` (TR1) |
-| `takes.rate` | `key`, `take_id`, `rating` (0 to 5, 0 unrated) | `take` | `takes.rate` |
+| `takes.rate` | `key`, `take_id`, `rating` (0 to 5, 0 unrated) | `take` | `takes.rate_pass` (TR1) |
 
 - **`takes.discard`** removes the take from its track as one undo step. Its
   audio file stays on disk, so Undo on either device brings it back. The
