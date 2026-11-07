@@ -27,6 +27,15 @@ final class PitchTap: @unchecked Sendable {
         lock.lock(); defer { lock.unlock() }
         return latest
     }
+
+    /// Listen to the microphone. The tap's block is made here, outside the
+    /// main actor: AVAudioEngine calls it on its audio thread, and under
+    /// Swift 6 a block made in main-actor code carries a main-actor check
+    /// that stopped the app on the first buffer (TestFlight build 3, the
+    /// owner's iPhone, 7 Nov 2026).
+    func install(on input: AVAudioInputNode, format: AVAudioFormat) {
+        input.installTap(onBus: 0, bufferSize: 1024, format: format) { [self] buffer, _ in feed(buffer) }
+    }
 }
 
 /// Tabber Tuner (plan: TR32): what the instrument plays against the chosen
@@ -101,9 +110,14 @@ final class TunerModel {
             let engine = AVAudioEngine()
             let input = engine.inputNode
             let format = input.outputFormat(forBus: 0)
+            // No microphone to listen to (another app holds it, or no input
+            // route): a tap on it would stop the app, so the tuner just waits.
+            guard format.sampleRate > 0, format.channelCount > 0 else {
+                try? session.setActive(false, options: .notifyOthersOnDeactivation)
+                return
+            }
             tap.prepare(sampleRate: format.sampleRate, blockSize: 1024)
-            let tap = self.tap
-            input.installTap(onBus: 0, bufferSize: 1024, format: format) { buffer, _ in tap.feed(buffer) }
+            tap.install(on: input, format: format)
             try engine.start()
             self.engine = engine
             listening = true
