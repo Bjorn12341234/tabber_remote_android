@@ -987,7 +987,7 @@ them raw.
 | TR26 | Mixer screen: strips for tracks and buses and the master, with fader, pan, mute, solo and meter in Tabber Studio's mixer colours; a tapped strip opens a long-throw fader for fine moves; faders adjustable with VoiceOver | this repo | UI tests against DemoHost; on a device, a fader move confirmed within the latency target |
 | TR27 | Routing verbs and the `routing` topic: each track's output (the master or a bus) and its sends (bus, level, pre or post); `routing.set_output`, `routing.set_send`, `routing.remove_send`; a cycle is refused in words (`buses.would_cycle`) | spec, Studio | Vectors; read-backs; a refused cycle leaves the routing unchanged |
 | TR28 | Routing screen: for each track its Output and its Sends, and for each bus what feeds it; a send's level as a slider. A list, not the Flow graph: it must work with one thumb | this repo | UI tests against DemoHost; on a device against Tabber Studio |
-| TR29 | Chat on the computer's side: `chat.send` (text in, the plan out, in the words the chat bubble shows), `chat.confirm`, `chat.cancel`, and the `chat` topic (messages, thinking, results). The planner runs off the main thread. Off by default: "Let paired phones use the chat" in Settings › Remote (decision 21) | spec, Studio | A typed request becomes a plan and nothing runs until Confirm; the confirmed plan is one undo step, and Undo on the phone takes it back; with the setting off, the chat verbs are refused; every chat action is logged like other remote actions |
+| TR29 | Chat on the computer's side: `chat.send` (text in, the plan out, in the words the chat bubble shows), `chat.confirm`, `chat.cancel`, and the `chat` topic (messages, thinking, results). The planner runs off the main thread. The same reach, flow and undo as the chat in Tabber Studio (decision 21) | spec, Studio | A typed request becomes the same plan the computer's chat makes, and nothing runs until Confirm; the confirmed plan is one undo step, and Undo on the phone takes it back; every chat action is logged like other remote actions |
 | TR30 | Chat screen: the conversation, the plan with Confirm and Cancel, and the keyboard's dictation for speaking a request | this repo | UI tests against DemoHost with a scripted planner; on a device against Tabber Studio |
 
 Order: the mixer first (done, TR25), then take lanes (TR33), routing and
@@ -1113,20 +1113,20 @@ Each needs the owner's go-ahead:
       changes Tabber Studio's recording for every user, so it gets its own
       sprint and its tests, done before the stage freeze on 19 November.
 
-21. **Chat on the phone.** The remote's vocabulary rules out raw Control API
-    methods, so a paired phone can only do what the remote's verbs allow.
-    The chat reaches the whole Control API through Tabber Studio's planner,
-    so with chat on, a paired phone can do anything the chat can. Decided
-    (the owner, 2026-11-07, "do what you recommend"):
-    - **Off by default:** off until the owner turns it on in Settings ›
-      Remote.
-    - **Shown and confirmed:** every plan is shown on the phone before it
-      runs, runs as one undo step, and is logged on the computer.
-    - **Limited from a phone:** the chat may only edit the open song and
-      drive playback, mixing and routing. A plan that touches files, app
-      settings, plug-in installs or the network is refused, in words, before
-      anything runs. That is the same line the remote's own vocabulary draws
-      (section 12 of the spec).
+21. **Chat on the phone.** The remote's own verbs rule out raw Control API
+    methods. The chat reaches the whole Control API through Tabber Studio's
+    planner. Decided (the owner, 2026-11-07): "the chat should be able to use
+    the control api just like in tabber studio". So the phone's chat is
+    Tabber Studio's chat:
+    - **Same reach:** the whole Control API, through the same planner.
+    - **Same flow:** the plan is shown on the phone, and Confirm runs it, as
+      the chat bubble's Confirm does.
+    - **Same undo:** the confirmed plan is one undo step, as a chat turn is
+      on the computer.
+    - **No separate setting:** it is there whenever the remote is on, since
+      pairing already decides which phones get in.
+    - **Logged:** every chat action is logged on the computer like the
+      remote's other actions.
 
 22. **Light mode.** Decided (the owner, 2026-11-07, "do what you
     recommend"): dark only for 1.x. The phone is a studio and stage tool,
