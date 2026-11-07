@@ -397,7 +397,7 @@
       "start": 70,
       "step": 5,
       "target": 90,
-      "speed": 75
+      "speed": 70
      }
     }
    }
@@ -416,10 +416,11 @@
       "start": 70,
       "step": 5,
       "target": 90,
-      "speed": 75
+      "speed": 70
      }
     }
-   }
+   },
+   "note": "A changed field starts the ramp again from start, as in Tabber Studio."
   },
   {
    "from": "host",

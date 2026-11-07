@@ -647,6 +647,8 @@ comes round the speed goes up by `step` until it reaches `target`.
 
 - **`speed`** is the speed now, in percent. The topic sends each step as the
   loop comes round.
+- **A changed field starts the ramp again** from `start`, as an edit in
+  Tabber Studio's fields does.
 - **Loop comes first,** as on the computer, where the trainer shows only
   while Loop is on. Turning it on with Loop off is refused with
   `needs_loop`, and Loop turned off turns the trainer off.
