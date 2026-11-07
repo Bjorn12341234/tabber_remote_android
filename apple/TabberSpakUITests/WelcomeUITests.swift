@@ -46,7 +46,7 @@ final class WelcomeUITests: XCTestCase {
         XCTAssertTrue(element("get-started").waitForExistence(timeout: 8))
         tap("demo")
         XCTAssertTrue(waitFor("connection", "Demo Studio"))
-        XCTAssertTrue(app.tabBars.buttons["Session"].exists)
+        XCTAssertTrue(app.tabBars.buttons["Tracks"].exists)
     }
 
     @MainActor

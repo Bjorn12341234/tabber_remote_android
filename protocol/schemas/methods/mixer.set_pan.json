@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tabber.studio/schemas/remote/1/methods/mixer.set_pan.json",
+  "title": "mixer.set_pan",
+  "x-capability": "mixer/1",
+  "x-changes": true,
+  "$defs": {
+    "params": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "$ref": "../common.json#/$defs/key"
+        },
+        "strip_id": {
+          "$ref": "../common.json#/$defs/id"
+        },
+        "pan": {
+          "type": "number",
+          "minimum": -1,
+          "maximum": 1
+        }
+      },
+      "required": [
+        "key",
+        "strip_id",
+        "pan"
+      ],
+      "additionalProperties": false
+    },
+    "result": {
+      "type": "object",
+      "properties": {
+        "strip": {
+          "$ref": "../common.json#/$defs/strip"
+        }
+      },
+      "required": [
+        "strip"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

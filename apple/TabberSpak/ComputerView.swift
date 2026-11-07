@@ -1,11 +1,13 @@
 import RemoteKit
 import SwiftUI
 
-/// The Computer tab: which computer this iPhone runs, how the line is, and
-/// pairing again or forgetting it (plan: The app, screen 7).
+/// The Computer sheet, from the computer's name at the top of every screen:
+/// which computer this iPhone runs, how the line is, and pairing again or
+/// forgetting it (plan: The app, screen 7).
 struct ComputerView: View {
     @Bindable var model: AppModel
     @State private var confirmForget = false
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         NavigationStack {
@@ -28,6 +30,7 @@ struct ComputerView: View {
                 Section {
                     Button("Pair again") {
                         model.scanTarget = model.known?.name
+                        model.showingComputer = false
                         model.scanning = true
                     }
                     .accessibilityIdentifier("pair-again")
@@ -52,6 +55,12 @@ struct ComputerView: View {
             }
             .studioList()
             .navigationTitle("Computer")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") { dismiss() }.accessibilityIdentifier("done")
+                }
+            }
             .confirmationDialog("Forget \(computerName)?", isPresented: $confirmForget, titleVisibility: .visible) {
                 Button("Forget", role: .destructive) { model.forget() }
             } message: {

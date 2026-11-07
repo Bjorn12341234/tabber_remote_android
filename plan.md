@@ -447,49 +447,44 @@ baseline, and the owner sets the limit.
 - **Ready at once:** the app opens straight into the last session, and the
   screen stays awake while a session is open (a setting).
 
-**The transport never moves.** Go again, Record and Play/Stop live in the tab
-bar's bottom accessory (`tabViewBottomAccessory`), in the same place on every
-screen.
+**The phone is Tabber Studio's own views** (TR31). Three tabs named for
+what they do, and Studio's transport (Stop, Play, Record, POS) in the tab
+bar's accessory, in the same place on every screen:
 
 ```
 +---------------------------------------+
-|  (o) Studio Mac           My Song  *  |   connection, project, unsaved
-|                                       |
-|                CHORUS                 |   section at the playhead
-|                37 . 2                 |   bar . beat, large
-|                01:42                  |   time, smaller
-|                                       |
-|  Vocals           armed  [======---]  |   armed track, input meter
-|                                       |
-|  (Intro) (Verse) (Chorus) (Solo) (>)  |   markers: tap to jump, hold to loop
-|                                       |
-|  Count-in 1 bar     Click     Loop    |   toggles
-|                                       |
-|  [ Go again ]  [  ( REC )  ]  [ Play ]|   transport, never moves
-|  Session     Tracks     Tab     Tone  |   tab bar
+|                       (o) Mac Studio  |   the computer: tap for its sheet
+|  My Song                              |   the song
+|  [ Loop ][ Count-in ][ Metro ]        |   Studio's transport toggles
+|  To record, tap O on a track, then *  |   only while nothing is armed
+|  [#] 1 Guitar          [S] [M] [O]    |   a card per track, as Studio's
+|        Acoustic Guitar (steel)        |   Tracks panel; tap to choose
+|  [#] 4 Vocals          [S] [M] [*]    |   armed: the input meter shows
+|        ====================--         |
+|  Takes                                |
+|  [#] Vocals take 3, 42 s   [Delete]   |   one tap, with Undo
+|  [ # ]  [ > ]  [ * ]      POS 25 : 1  |   transport, never moves
+|   Tracks      Tab      Mixer          |   tab bar
 +---------------------------------------+
 ```
 
 **Screens:**
 
-1. **Session (home):** as drawn above.
-2. **Take card:** appears after every take.
-   - **Keep** is the default. Recording again also keeps the take.
-   - **Discard** takes a press and hold, then offers Undo for 5 seconds. It
-     removes the take as one undo step; the audio file stays on disk, so Undo
-     on either device brings it back.
-   - **Go again** is one host verb. It stops if needed, returns to where the
-     take started, uses the same count-in and records.
-   - A takes list per track has ratings.
-   - Flag a moment: one tap drops a marker at the current bar.
-3. **Tracks:** name, type, arm, monitor, input meter, select.
-4. **Tab (M4):** a one-bar editor. Tap a string and a beat, enter the fret on
-   a big pad, pick the duration, then play or loop the bar.
-5. **Tone (M5):** the plug-in chain. Add, bypass, reorder, open a controls
-   page, or show the plug-in's own window on the computer.
-6. **Mic (M3):** record on the phone.
-7. **Settings:** computers, pairing, keep awake, haptics, a connection check,
-   help, about.
+1. **Tracks (home):** as drawn above. S hears a track alone, M silences
+   it; tracks left silent by a solo or mute dim.
+2. **Take card:** after every take: Keep (the default, quiet), Delete (one
+   tap, Undo for five seconds) and Go again, which stops if needed, returns
+   to where the take started, uses the same count-in and records.
+3. **Tab:** the chosen track's tab around the cursor, the note values, Dot,
+   Triplet, Rest and Delete, Previous and Next, and Studio's fretboard or
+   piano to write with. Undo at the top.
+4. **Mixer:** Studio's strips: pan, S and M, a fader on the host's scale
+   with its meter, the level; the buses and the master follow.
+5. **Go to:** the start and the markers, from the transport's position.
+6. **Computer:** the computer, the line, pairing again or forgetting it,
+   keep awake, versions.
+7. **Tuner (TR32), Tone (M5), Mic (M3), Routing and Chat (TR28, TR30):**
+   later tabs and sheets.
 
 ### The phone as a microphone
 
@@ -1452,6 +1447,90 @@ what was measured, and what changed in the plan.
     with VoiceOver; the App Store privacy label (Data Not Collected) and a
     privacy page on the website; light mode or not; Swedish (after the demo,
     decision 17).
+
+- **TR31 🟡 2026-11-07, this repository and Tabber Studio.** Tabber Studio's
+  own shape on the phone, after the owner tried the redesigned Session
+  screen: "cluttered... not obvious what to do... where do I choose a track?
+  where is the fretboard and keyboard if I want to write tab on a track?
+  where do I record on an audio track and where do I start the recording?
+  where do I listen to a track, or all tracks? where's the mixer?... a
+  person should know by themselves as soon as they see the app", and "it
+  needs to be clear what the app can do and how."
+  - **The app is now Studio's views, not an invented session screen.** Three
+    tabs, named for what they do, with Studio's transport (Stop, Play,
+    Record and POS) in the tab bar's accessory on every screen:
+    - **Tracks:** Studio's Tracks panel. A card per track with its colour,
+      number, name and instrument (or Audio), and Studio's S, M and record
+      ring. Tap a card to choose it (teal outline); S hears it alone, M
+      silences it, and the tracks a solo or mute leaves silent dim. Above
+      them Loop, Count-in and Metro; with nothing armed, one line says how to
+      record. Below them the takes, each with a one-tap Delete.
+    - **Tab:** the chosen track's tab around the cursor, drawn as Studio
+      draws it (strings 20 apart, fret numbers on the lines, the teal cursor
+      band and box); the note values 1 to 1/32, Dot, Triplet, Rest and
+      Delete; Previous, Fretboard or Piano, and Next. Studio's rosewood
+      fretboard (inlays at 3 to 24, the cursor string ringed, the beat's
+      notes as teal circles) and its 88-key piano. Undo and the track menu
+      sit in the bar at the top. An audio track offers the tab tracks.
+    - **Mixer:** Studio's channel strips: the name on the track's colour,
+      the pan knob with Studio's L64/C/R63, S and M, a fader on the host's
+      scale (0, -12, -24, -48) with a meter, and the level. Double-tap for 0
+      dB or the centre. The Reverb bus and the master follow.
+    - **The computer** is a chip at the top of every screen (a dot: teal
+      connected, amber reconnecting, red not); it opens the Computer sheet.
+      The position opens Go to: the start and the markers.
+  - **Taking things away:** the readout lamp, the marker row, ratings (the
+    owner: "rating takes, is that necessary? really?"), Flag, Hold to
+    discard (Delete is one tap, with Undo for five seconds: "should be
+    easier to delete takes"), the Session, Takes and Computer tabs.
+  - **Protocol 1.1 (additive), spec 7 to 10:** `mixer/1` (mixer.state,
+    set_volume, set_pan, set_mute, set_solo; the mixer and mixer_meters
+    topics) and `tab/1` (tab.state, set_cursor, move, put, put_pitch,
+    set_duration, rest, delete; the tab topic); tracks may carry
+    `instrument` and `tuning`; errors 1032 `unknown_strip` and 1033
+    `no_tab`. Neither is in the snapshot: they are read once and followed.
+    Volume is the fader's travel in the host's law, so the phone's fader
+    sits where the computer's does. 13 verb and 3 topic schemas, the
+    `mixer` and `tab` vectors; the validator covers 40 verbs, 12 topics and
+    31 errors. A 1.1 phone works with a 1.0 host (Studio compares majors)
+    and shows "Update Tabber Studio" for what the host does not list.
+  - **DemoHost** has both: Studio's undo rules (mute, solo and tab edits are
+    steps, volume and pan are not), its fader law and pan labels, and the
+    Tab view's editing (a tap writes or takes off, the value applies to an
+    empty beat, a piano key takes the lowest fret, Next fills the bar or adds
+    one). The demo song has Studio's track colours, a guitar and a bass in
+    tab, drums, and two audio tracks.
+  - **Gate, met in the Simulator** (on its own device, "Tabber Spak", since
+    another app shared the first one): 21 UI tests, among them the
+    accessibility audit on every screen and the take card, plus the
+    screenshot run; RemoteKit's 27 tests; the vector validator and its own
+    11 tests. The audit found counters that
+    ignored Dynamic Type, a take's line that could clip, and text drawn
+    inside combined elements; the fader's scale and the pan dial are drawn.
+    Found while testing: nothing presents from inside the tab bar's
+    accessory (a Menu or a dialog there never opens, and a dialog on the
+    root breaks the accessory), so Go to is a sheet; and the transport read
+    the whole session, redrawing with every meter, so it reads a small
+    summary and holds still while recording.
+  - **Studio's side:** Settings > Remote rebuilt from Settings' own cards
+    (e7dec22e: it was loose widgets with bare-text buttons, "such ugly
+    design"). A signed, notarized Tabber Studio with the remote is built in
+    the scratchpad and not installed: release locks for websockets,
+    cryptography and segno (69e4e3b5), every `remote_host` module in the
+    frozen app, a smoke test on the bundle's own Python. The owner tried the
+    TestFlight app against the installed 0.3.16, which predates the remote;
+    pairing worked once Studio ran from the repo.
+  - **Next:** TR25 and TR15 in Studio, so the real Studio offers `mixer/1`
+    and `tab/1`; then the tuner (TR32); then routing and chat.
+
+- **TR32, planned: Tabber Tuner.** The owner: "maybe viga tuner, the guitar
+  tuner could be implemented into tabber remote also? but as tabber tuner...
+  the code is already built". The iPhone Viga Tuner
+  (`viga_guitar_tuner/ios`) is native Swift with its own YIN pitch detector,
+  filters and AVAudioEngine capture, about 3,800 lines, no JUCE. A Tuner tab
+  in Studio's look that follows the chosen track's tuning (drop D, bass,
+  seven strings) and works without a computer. It needs the microphone
+  permission; nothing leaves the phone, so the privacy label stays.
 
 ## Sources
 

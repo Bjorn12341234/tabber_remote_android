@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tabber.studio/schemas/remote/1/methods/mixer.set_solo.json",
+  "title": "mixer.set_solo",
+  "x-capability": "mixer/1",
+  "x-changes": true,
+  "$defs": {
+    "params": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "$ref": "../common.json#/$defs/key"
+        },
+        "strip_id": {
+          "$ref": "../common.json#/$defs/id"
+        },
+        "soloed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "key",
+        "strip_id",
+        "soloed"
+      ],
+      "additionalProperties": false
+    },
+    "result": {
+      "type": "object",
+      "properties": {
+        "mixer": {
+          "$ref": "../common.json#/$defs/mixer"
+        },
+        "undo": {
+          "$ref": "../common.json#/$defs/undo"
+        }
+      },
+      "required": [
+        "mixer",
+        "undo"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

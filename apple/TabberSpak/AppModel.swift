@@ -18,6 +18,10 @@ final class AppModel {
         var armed: [String] = []
         var hasTake = false
         var hasSession = false
+        /// The readout's bar and beat, the moment the take's time started, and a running count-in.
+        var position: BarBeat?
+        var recordingSince: Date?
+        var countingIn = false
     }
     private(set) var problem: String?
     /// Controls whose command is on its way: they look pending until confirmed (principle 3).
@@ -41,8 +45,17 @@ final class AppModel {
     /// Pairing from a scanned code: what the phone is doing, or why it stopped.
     enum Pairing: Equatable { case idle, working(String), failed(String) }
     private(set) var pairing: Pairing = .idle
-    /// The scanner sheet; the Computer tab and the fix-it cards open it too.
+    /// The scanner sheet; the Computer sheet and the fix-it cards open it too.
     var scanning = false
+    /// The Computer sheet, opened from the computer's name at the top of each screen.
+    var showingComputer = false
+    /// Go to: the start or a marker, from the transport's position.
+    var choosingPlace = false
+    /// The screen on show; `-screen tab` opens another one (screenshots, tests).
+    enum Screen: String, Hashable { case tracks, tab, mixer }
+    var screen: Screen = ProcessInfo.processInfo.arguments.firstIndex(of: "-screen")
+        .flatMap { index in ProcessInfo.processInfo.arguments.dropFirst(index + 1).first }
+        .flatMap(Screen.init(rawValue:)) ?? .tracks
     /// The computer the scanner's hint names, when known.
     var scanTarget: String?
     /// Whether the explainer before the Local Network prompt was shown (plan: Find your Mac).
@@ -60,6 +73,9 @@ final class AppModel {
         if arguments.contains("-reset") {
             HostStore.clear()
             explainedLocalNetwork = false
+        }
+        if arguments.contains("-reset") || arguments.contains("-reset-input") {
+            UserDefaults.standard.removeObject(forKey: "tabInput")     // the Tab screen opens on the fretboard
         }
         if let index = arguments.firstIndex(of: "-known-host"), index + 1 < arguments.count,
            let host = try? JSONDecoder().decode(KnownHost.self, from: Data(arguments[index + 1].utf8)) {
@@ -82,9 +98,9 @@ final class AppModel {
         }
     }
 
-    private var demoSpeaks = ["1.0"]
+    private var demoSpeaks = ["1.1"]
 
-    func startDemo(speaks: [String] = ["1.0"]) {
+    func startDemo(speaks: [String] = ["1.1"]) {
         isDemo = true
         demoSpeaks = speaks
         book = nil
@@ -197,6 +213,21 @@ final class AppModel {
                 summary.armed = update.tracks.filter(\.armed).map(\.name)
                 summary.hasTake = !update.takes.isEmpty
                 summary.hasSession = update.transport != nil
+                // While recording the readout shows the take's time, so the bar
+                // and beat stay out of the summary: the transport holds still.
+                summary.position = update.record.recording ? nil : update.transport?.position.barBeat
+                if let seconds = update.recordedSeconds {
+                    if seconds >= 0 {
+                        let since = Date.now.addingTimeInterval(-seconds)
+                        if let kept = self.bar.recordingSince, abs(kept.timeIntervalSince(since)) < 0.5 {
+                            summary.recordingSince = kept       // steady, so the timer text never jumps
+                        } else {
+                            summary.recordingSince = since
+                        }
+                    } else {
+                        summary.countingIn = true
+                    }
+                }
                 if summary != self.bar { self.bar = summary }
             }
         }
@@ -262,10 +293,12 @@ final class AppModel {
         } else if !armedIDs.isEmpty {
             act("record", "transport.record", ["armed_track_ids": .array(armedIDs.map { .string($0) })], feel: .record)
         } else {
-            problem = "Arm a track first."
+            problem = "Arm a track first: tap ○ on the track you want to record on."
             feedback = (.failure, feedback.count + 1)
         }
     }
+
+    func clearProblem() { problem = nil }
 
     func stop() {
         act("stop", "transport.stop", feel: .stop) { [weak self] result in
@@ -290,12 +323,14 @@ final class AppModel {
 
     func keep() { lastTake = nil }
 
-    func discard(_ take: Take) {
-        act("discard", "takes.discard", ["take_id": .string(take.id)], feel: .discard) { [weak self] result in
+    /// Delete a take: one tap, then Undo for five seconds. Tabber Studio keeps
+    /// the audio file, so Undo there or here brings the take back (spec 9).
+    func delete(_ take: Take) {
+        act("delete-\(take.id)", "takes.discard", ["take_id": .string(take.id)], feel: .discard) { [weak self] result in
             guard let self else { return }
-            self.lastTake = nil
+            if self.lastTake?.id == take.id { self.lastTake = nil }
             if let step = result["undo"]?["undo"]?["id"]?.stringValue {
-                let offer = UndoOffer(stepID: step, text: "\(take.name) discarded", until: .now + 5)
+                let offer = UndoOffer(stepID: step, text: "\(take.name) deleted", until: .now + 5)
                 self.undoOffer = offer
                 Task { @MainActor [weak self] in
                     try? await Task.sleep(for: .seconds(5))
@@ -311,14 +346,127 @@ final class AppModel {
         act("undo", "edit.undo", ["expect": .string(offer.stepID)], feel: .goAgain)
     }
 
-    func rate(_ take: Take, _ rating: Int) {
-        act("rate-\(take.id)", "takes.rate", ["take_id": .string(take.id), "rating": .number(Double(rating))])
+    // Tracks (the Tracks screen: choose, arm, listen alone, mute)
+
+    var mixerAvailable: Bool { state.capabilities.contains("mixer/1") }
+    var tabAvailable: Bool { state.capabilities.contains("tab/1") }
+
+    func select(_ track: Track) {
+        guard !track.selected else { return }
+        act("select-\(track.id)", "tracks.select", ["track_id": .string(track.id)])
     }
 
-    /// Flag a moment: a marker at the bar the phone shows now (spec 9: never "wherever the playhead is").
-    func flag() {
-        guard let position = state.transport?.position else { return }
-        act("flag", "markers.add", ["at": ["bar": .number(Double(position.bar)), "beat": 1], "name": "Flag"])
+    func arm(_ track: Track) {
+        act("arm-\(track.id)", "tracks.arm", ["track_id": .string(track.id), "armed": .bool(!track.armed)])
+    }
+
+    func strip(_ id: String) -> Strip? { state.mixer?.strips.first { $0.id == id } }
+
+    func solo(_ id: String) {
+        act("solo-\(id)", "mixer.set_solo", ["strip_id": .string(id), "soloed": .bool(!(strip(id)?.soloed ?? false))])
+    }
+
+    func mute(_ id: String) {
+        act("mute-\(id)", "mixer.set_mute", ["strip_id": .string(id), "muted": .bool(!(strip(id)?.muted ?? false))])
+    }
+
+    /// Whether a strip is heard now: not muted, and soloed if anything is.
+    func audible(_ id: String) -> Bool {
+        guard let mixer = state.mixer, let strip = strip(id) else { return true }
+        let soloing = mixer.strips.contains { $0.soloed }
+        return !strip.muted && (!soloing || strip.soloed)
+    }
+
+    // Faders and pan: the newest value wins; at most one change in flight, so a
+    // drag stays inside the computer's rate limit (spec 6: 20 a second).
+    private var wanted: [String: (method: String, params: JSONValue)] = [:]
+    private var draining = false
+
+    func setVolume(_ id: String, _ volume: Double) {
+        send("volume-\(id)", "mixer.set_volume", ["strip_id": .string(id), "volume": .number((volume * 1000).rounded() / 1000)])
+    }
+
+    func setPan(_ id: String, _ pan: Double) {
+        send("pan-\(id)", "mixer.set_pan", ["strip_id": .string(id), "pan": .number((pan * 1000).rounded() / 1000)])
+    }
+
+    private func send(_ key: String, _ method: String, _ params: JSONValue) {
+        wanted[key] = (method, params)
+        guard !draining, let session else { return }
+        draining = true
+        Task {
+            while let key = wanted.keys.first, let next = wanted.removeValue(forKey: key) {
+                _ = try? await session.perform(next.method, next.params, patience: .seconds(2))
+                try? await Task.sleep(for: .milliseconds(60))
+            }
+            draining = false
+        }
+    }
+
+    /// The Mixer's meters, only while it is on screen (plan: TR25).
+    func watchMixerMeters(_ on: Bool) {
+        guard let session else { return }
+        Task { await session.watch("mixer_meters", on) }
+    }
+
+    // Tab (the Tab screen): edits go one after another, in the order tapped.
+    private var edits: [(method: String, params: JSONValue)] = []
+    private var editing = false
+
+    func tab(_ method: String, _ params: JSONValue = [:]) {
+        edits.append((method, params))
+        guard !editing, let session else { return }
+        editing = true
+        Task {
+            while !edits.isEmpty {
+                let next = edits.removeFirst()
+                do {
+                    _ = try await session.perform(next.method, next.params)
+                    problem = nil
+                } catch {
+                    problem = Self.explain(error)
+                    feedback = (.failure, feedback.count + 1)
+                    edits.removeAll()
+                }
+            }
+            editing = false
+        }
+    }
+
+    /// Undo the computer's newest step, naming it so nothing else is undone (spec 9).
+    func undo() {
+        guard let step = state.undo.undo else { return }
+        act("undo", "edit.undo", ["expect": .string(step.id)], feel: .goAgain)
+    }
+
+    // The transport's toggles and Go to
+
+    func toggleLoop() {
+        guard let transport = state.transport else { return }
+        act("loop", "transport.set_loop", ["enabled": .bool(!transport.loop.enabled)])
+    }
+
+    func toggleCountIn() {
+        guard let transport = state.transport else { return }
+        act("count-in", "transport.set_count_in", ["bars": .number(transport.countInBars > 0 ? 0 : 1)])
+    }
+
+    func toggleClick() {
+        guard let transport = state.transport else { return }
+        act("click", "transport.set_click", ["enabled": .bool(!transport.click)])
+    }
+
+    func go(to marker: Marker) {
+        act("goto", "markers.go", ["marker_id": .string(marker.id)])
+    }
+
+    func goToStart() {
+        act("goto", "transport.seek", ["to": ["bar": 1, "beat": 1]])
+    }
+
+    /// Stop, and when already stopped, back to the start, as a DAW's Stop does.
+    func stopButton() {
+        if state.record.recording || state.transport?.state == .playing { stop() } else { goToStart() }
     }
 
     func goAgain() {

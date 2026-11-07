@@ -148,6 +148,9 @@ struct ExchangeVectorTests {
                 case "undo": try roundTrip(UndoState.self, value)
                 case "project": try roundTrip(ProjectState.self, value)
                 case "topics": try roundTrip([String].self, value)
+                case "mixer": try roundTrip(MixerState.self, value)
+                case "strip": try roundTrip(Strip.self, value)
+                case "tab": if value != .null { try roundTrip(TabState.self, value) }
                 default: Issue.record("unknown result field \(key) of \(method)")
                 }
             }
@@ -165,6 +168,9 @@ struct ExchangeVectorTests {
         case "project": try roundTrip(ProjectState.self, data)
         case "position": try roundTrip(Position.self, data["position"]!)
         case "meters": try roundTrip([MeterLevel].self, data["levels"]!)
+        case "mixer": try roundTrip(MixerState.self, data)
+        case "mixer_meters": try roundTrip([StripLevel].self, data["levels"]!)
+        case "tab": if data["tab"] != .null { try roundTrip(TabState.self, data["tab"]!) }
         default: Issue.record("unknown topic \(topic)")
         }
     }

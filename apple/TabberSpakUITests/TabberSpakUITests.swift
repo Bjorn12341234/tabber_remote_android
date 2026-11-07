@@ -19,11 +19,13 @@ final class TabberSpakUITests: XCTestCase {
     }
 
     @MainActor
-    func testTheComputerTabShowsTheConnection() throws {
+    func testTheComputerSheetShowsTheConnection() throws {
         let app = XCUIApplication()
         app.launchArguments = ["-demo"]
         app.launch()
-        app.tabBars.buttons["Computer"].tap()
+        let chip = app.descendants(matching: .any).matching(identifier: "connection").firstMatch
+        XCTAssertTrue(waitFor(chip, toShow: "Demo Studio"))
+        chip.tap()
         XCTAssertTrue(waitFor(row(app, "host-name"), toShow: "Demo Studio"))
         XCTAssertTrue(waitFor(row(app, "link-state"), toShow: "Connected"))
     }

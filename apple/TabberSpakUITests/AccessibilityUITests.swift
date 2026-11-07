@@ -11,6 +11,8 @@ final class AccessibilityUITests: XCTestCase {
     @MainActor
     func audit(_ app: XCUIApplication, _ screen: String) throws {
         try app.performAccessibilityAudit { issue in
+            // The sheet's Done is iOS's own toolbar button, whose largest sizes iOS caps.
+            if issue.auditType == .dynamicType, issue.element?.identifier == "done" { return true }
             print("AUDIT \(screen): \(issue.auditType) \(issue.compactDescription) | \(issue.detailedDescription) on \(issue.element?.debugDescription.prefix(160) ?? "the screen")")
             return false
         }
@@ -32,17 +34,33 @@ final class AccessibilityUITests: XCTestCase {
     }
 
     @MainActor
-    func testTheSessionAndItsTabs() throws {
+    func testEveryScreen() throws {
         let app = XCUIApplication()
-        app.launchArguments = ["-demo"]
+        app.launchArguments = ["-demo", "-reset-input"]
         app.launch()
         let connection = element(app, "connection")
         let connected = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label CONTAINS 'Demo Studio'"), object: connection)
         XCTAssertEqual(XCTWaiter().wait(for: [connected], timeout: 8), .completed)
-        try audit(app, "Session")
-        for tab in ["Takes", "Tracks", "Computer"] {
-            app.tabBars.buttons[tab].tap()
-            try audit(app, tab)
-        }
+        try audit(app, "Tracks")
+        element(app, "arm-Vocals").tap()
+        element(app, "record").tap()
+        let recording = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label CONTAINS 'Recording'"), object: element(app, "readout"))
+        XCTAssertEqual(XCTWaiter().wait(for: [recording], timeout: 12), .completed)
+        element(app, "record").tap()
+        XCTAssertTrue(element(app, "take-card").waitForExistence(timeout: 8))
+        try audit(app, "Take card")
+        element(app, "keep").tap()
+        app.tabBars.buttons["Tab"].tap()
+        XCTAssertTrue(element(app, "fretboard").waitForExistence(timeout: 8))
+        try audit(app, "Tab")
+        app.segmentedControls.buttons["Piano"].tap()
+        XCTAssertTrue(element(app, "piano").waitForExistence(timeout: 8))
+        try audit(app, "Piano")
+        app.tabBars.buttons["Mixer"].tap()
+        XCTAssertTrue(element(app, "fader-Guitar").waitForExistence(timeout: 8))
+        try audit(app, "Mixer")
+        element(app, "connection").tap()
+        XCTAssertTrue(element(app, "done").waitForExistence(timeout: 8))
+        try audit(app, "Computer")
     }
 }

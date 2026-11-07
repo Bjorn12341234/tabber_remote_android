@@ -34,7 +34,10 @@ struct DemoHostTests {
 
     @Test func theSnapshotArrives() async throws {
         let state = try await connected(session(DemoHost()))
-        #expect(state.tracks.map(\.name) == ["Vocals", "Guitar", "Keys"])
+        #expect(state.tracks.map(\.name) == ["Guitar", "Bass", "Drums", "Lead guitar", "Vocals"])
+        #expect(state.capabilities.isSuperset(of: ["mixer/1", "tab/1"]))
+        #expect(state.mixer?.strips.map(\.name) == ["Guitar", "Bass", "Drums", "Lead guitar", "Vocals", "Reverb", "Master"])
+        #expect(state.tab?.trackID == "demo-guitar" && state.tab?.strings == 6)
         #expect(state.markers.map(\.name) == ["Intro", "Verse", "Chorus", "Solo"])
         #expect(state.capabilities.contains("takes.go_again/1"))
         #expect(state.transport?.state == .stopped)
@@ -113,7 +116,7 @@ struct DemoHostTests {
             Issue.record("recorded on a track that is not armed")
         } catch let failure as RemoteError {
             #expect(failure.reason == "stale_target")
-            #expect(failure.data["tracks"]?.arrayValue?.count == 3)
+            #expect(failure.data["tracks"]?.arrayValue?.count == 5)
         }
     }
 
@@ -134,5 +137,55 @@ struct DemoHostTests {
         }
         #expect(seqs == Array(1...8))
         await client.close()
+    }
+
+    @Test func soloAndMuteAreUndoStepsAndFadersAreNot() async throws {
+        let session = session(DemoHost())
+        _ = try await connected(session)
+        let lead = "demo-lead"
+        _ = try await session.perform("mixer.set_solo", ["strip_id": .string(lead), "soloed": true])
+        let soloed = try await eventually(session) { $0.mixer?.strips.first { $0.id == lead }?.soloed == true }
+        let step = try #require(soloed.undo.undo)
+        #expect(step.label == "Solo Lead guitar")
+        let moved = try await session.perform("mixer.set_volume", ["strip_id": .string(lead), "volume": 0.442])
+        #expect(moved["strip"]?["volume_db"]?.doubleValue == -12)
+        let after = try await eventually(session) { $0.mixer?.strips.first { $0.id == lead }?.volume == 0.442 }
+        #expect(after.undo.undo?.id == step.id)
+        _ = try await session.perform("edit.undo", ["expect": .string(step.id)])
+        let undone = try await eventually(session) { $0.mixer?.strips.first { $0.id == lead }?.soloed == false }
+        #expect(undone.mixer?.strips.first { $0.id == lead }?.volume == 0.442)
+    }
+
+    @Test func aFretboardTapWritesAtTheCursorAndUndoTakesItBack() async throws {
+        let session = session(DemoHost())
+        let start = try await connected(session)
+        #expect(start.tab?.barCount == 16)
+        _ = try await session.perform("tab.set_cursor", ["bar": 9, "beat": 1, "string": 1])
+        _ = try await session.perform("tab.set_duration", ["value": 8])
+        let put = try await session.perform("tab.put", ["string": 2, "fret": 3])
+        let one = try JSONCoding.decode(TabState.self, from: put["tab"]!)
+        #expect(one.cursorBeat?.notes == [TabNote(string: 2, fret: 3)])
+        #expect(one.cursorBeat?.duration == NoteValue(value: 8))
+        #expect(one.cursor.string == 2)
+        let key = try await session.perform("tab.put_pitch", ["pitch": 64])
+        let chord = try JSONCoding.decode(TabState.self, from: key["tab"]!)
+        #expect(chord.cursorBeat?.notes == [TabNote(string: 1, fret: 0), TabNote(string: 2, fret: 3)])
+        let again = try await session.perform("tab.put", ["string": 1, "fret": 0])
+        #expect(try JSONCoding.decode(TabState.self, from: again["tab"]!).cursorBeat?.notes == [TabNote(string: 2, fret: 3)])
+        let next = try await session.perform("tab.move", ["by": 1])
+        let moved = try JSONCoding.decode(TabState.self, from: next["tab"]!)
+        #expect(moved.cursor.bar == 9 && moved.cursor.beat == 2 && moved.cursorBeat?.rest == true)
+        let inserted = try #require(try await eventually(session) { $0.undo.undo?.label == "Insert beat" }.undo.undo)
+        _ = try await session.perform("edit.undo", ["expect": .string(inserted.id)])
+        let back = try await eventually(session) { $0.tab?.bars.first { $0.bar == 9 }?.beats.count == 1 }
+        #expect(back.tab?.bars.first { $0.bar == 9 }?.beats.first?.notes == [TabNote(string: 2, fret: 3)])
+    }
+
+    @Test func anAudioTrackHasNoTab() async throws {
+        let session = session(DemoHost())
+        _ = try await connected(session)
+        _ = try await session.perform("tracks.select", ["track_id": "demo-vocals"])
+        _ = try await eventually(session) { $0.tracks.first(where: \.selected)?.id == "demo-vocals" && $0.tab == nil }
+        await #expect(throws: RemoteError.self) { try await session.perform("tab.put", ["string": 1, "fret": 0]) }
     }
 }

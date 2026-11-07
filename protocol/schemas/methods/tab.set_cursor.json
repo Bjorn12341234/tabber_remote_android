@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tabber.studio/schemas/remote/1/methods/tab.set_cursor.json",
+  "title": "tab.set_cursor",
+  "x-capability": "tab/1",
+  "x-changes": true,
+  "$defs": {
+    "params": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "$ref": "../common.json#/$defs/key"
+        },
+        "bar": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "beat": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "string": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 12
+        }
+      },
+      "required": [
+        "key",
+        "bar",
+        "beat",
+        "string"
+      ],
+      "additionalProperties": false
+    },
+    "result": {
+      "type": "object",
+      "properties": {
+        "tab": {
+          "$ref": "../common.json#/$defs/tab_or_none"
+        },
+        "undo": {
+          "$ref": "../common.json#/$defs/undo"
+        }
+      },
+      "required": [
+        "tab",
+        "undo"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

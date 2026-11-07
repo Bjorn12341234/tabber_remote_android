@@ -282,6 +282,14 @@ Version 1.0 capabilities:
 | `meters/1` | the `meters` topic |
 | `pair.code/1` | 6-digit pairing (section 4.4) |
 
+Version 1.1 adds two capabilities. A 1.1 remote works with a 1.0 host and
+shows these screens only when the host lists them:
+
+| Capability | Gives |
+|---|---|
+| `mixer/1` | `mixer.state`, `mixer.set_volume`, `mixer.set_pan`, `mixer.set_mute`, `mixer.set_solo`, the `mixer` and `mixer_meters` topics, and `instrument` on tab and MIDI tracks |
+| `tab/1` | `tab.state`, `tab.set_cursor`, `tab.move`, `tab.put`, `tab.put_pitch`, `tab.set_duration`, `tab.rest`, `tab.delete`, the `tab` topic, and `tuning` on tab tracks |
+
 ## 8. Snapshot and events
 
 ### 8.1 The snapshot
@@ -300,6 +308,10 @@ object (`schemas/snapshot.json`):
 - `markers`: every marker, in song order
 - `takes`: the newest takes on any track, newest first, at most 20
 - `undo`: the next undo and redo steps
+
+The mixer and the tab are not in the snapshot. A remote that subscribes to
+`mixer` or `tab` reads them once with `mixer.state` and `tab.state`, then
+follows their topics; it reads them again after every new snapshot.
 
 ### 8.2 Events
 
@@ -326,6 +338,9 @@ object (`schemas/snapshot.json`):
 | `undo` | the snapshot's `undo` | on every change |
 | `project` | the snapshot's `project` | on every change |
 | `meters` | `{levels: [{track_id, peak}]}` | at most 20 a second, armed and selected tracks only, only while subscribed |
+| `mixer` | `{strips, scale}` (mixer/1) | on every change |
+| `mixer_meters` | `{levels: [{strip_id, peak}]}` (mixer/1) | at most 20 a second, every strip and the master, only while subscribed: a remote subscribes while its mixer is on screen |
+| `tab` | `{tab}`, the selected track's tab or null (tab/1) | on every change, the cursor's included |
 
 `position` and `meters` are sent only to remotes that subscribed to them, and
 the host does no meter work at all while nobody is subscribed (principle 7).
@@ -423,6 +438,66 @@ is a different one, the host refuses with `undo_mismatch` and the current
 gets `needs_save_location` (the computer chooses where files go, never the
 phone).
 
+### Mixer (mixer/1)
+
+A strip for every track, in strip order, then every bus, then the master,
+whose id is `master`. A track's strip has the track's id.
+
+| Verb | Params | Result | Control API |
+|---|---|---|---|
+| `mixer.state` | none | `mixer` | `mixer.get_all_strips`, `buses.list` |
+| `mixer.set_volume` | `key`, `strip_id`, `volume` (0 to 1) | `strip` | `mixer.set_volume`, `buses.set_gain`, `mixer.set_master_gain` |
+| `mixer.set_pan` | `key`, `strip_id`, `pan` (-1 to 1) | `strip` | `mixer.set_pan`, `buses.set_pan` |
+| `mixer.set_mute` | `key`, `strip_id`, `muted` | `mixer`, `undo` | `mixer.set_mute`, `buses.set_mute` |
+| `mixer.set_solo` | `key`, `strip_id`, `soloed` | `mixer`, `undo` | `mixer.set_solo`, `buses.set_solo` |
+
+- **`volume` is the fader's travel** in the host's own fader law, so the
+  phone's fader sits where the computer's does. `volume_db` says what it
+  means (null is silence), and `scale` gives the marks to draw beside the
+  fader.
+- **Mute and solo are undo steps,** as in Tabber Studio. Volume and pan are
+  not, there or here.
+- **A fader drag is many `mixer.set_volume` calls.** The remote sends the
+  newest value only, one at a time, within the rate limit.
+- The master has no mute or solo: those are refused with `unknown_strip`.
+
+### Tab (tab/1)
+
+The selected track's tab, edited as Tabber Studio's Tab view edits it. The
+remote chooses the track with `tracks.select`; the tab follows. `tab` is
+null while the selected track has none (an audio track, a drum or a
+plain MIDI track).
+
+| Verb | Params | Result | Control API |
+|---|---|---|---|
+| `tab.state` | none | `tab` | the Tab view's cursor and `tabs.get_measure` |
+| `tab.set_cursor` | `key`, `bar`, `beat`, `string` | `tab`, `undo` | the Tab view's cursor (TR15) |
+| `tab.move` | `key`, `by` (1 or -1) | `tab`, `undo` | the Tab view's arrow keys (TR15) |
+| `tab.put` | `key`, `string`, `fret` | `tab`, `undo` | the fretboard's tap (TR15) |
+| `tab.put_pitch` | `key`, `pitch` (a MIDI note) | `tab`, `undo` | the piano's key (TR15) |
+| `tab.set_duration` | `key`, `value` (1, 2, 4, 8, 16, 32), `dotted`, `triplet` | `tab`, `undo` | the note value toolbar (TR15) |
+| `tab.rest` | `key` | `tab`, `undo` | the R key (TR15) |
+| `tab.delete` | `key` | `tab`, `undo` | the Delete key (TR15) |
+
+- **Strings count from 1, the highest.** `tuning` lists the open strings as
+  MIDI notes, highest first. Beats are the rhythmic slots of a bar, from 1.
+- **`tab.put` is a fretboard tap:** it writes that fret on that string at
+  the cursor's beat, replacing another fret on the same string, or takes it
+  away when it is already there. The cursor stays, so more taps make a
+  chord. The chosen note value applies only to an empty beat.
+- **`tab.put_pitch` is a piano key:** the same, on the string that plays the
+  pitch at the lowest fret.
+- **`tab.move` forward** past the last beat fills the bar with a rest beat
+  of the chosen value, or goes to the next bar, adding one at the end.
+- **`tab.delete`** removes the note on the cursor's string; on an empty beat
+  it removes the beat.
+- **Every change to the song is one undo step,** undone with `edit.undo`.
+  `revision` counts the tab's changes.
+- **`bars` holds the cursor's bar and its neighbours,** one before and three
+  after, so an answer stays small whatever the song's length.
+- With no tab on the selected track, every verb but `tab.state` is refused
+  with `no_tab`.
+
 ### Not in the vocabulary
 
 A remote cannot reach Control API methods by name, file paths, scripts, app
@@ -467,6 +542,8 @@ state in `data`, as listed.
 | 1029 | `nothing_to_redo` | There is nothing to redo. | `undo` |
 | 1030 | `needs_save_location` | Save this song on the computer first, so it has a file. | |
 | 1031 | `not_supported` | This version of Tabber Studio cannot do that. Update Tabber Studio. | |
+| 1032 | `unknown_strip` | That strip is gone from the mixer. | `mixer` |
+| 1033 | `no_tab` | Choose a tab track to write on first. | `tracks` |
 | 1099 | `host_error` | Tabber Studio could not do that. | `detail` |
 
 `schemas/errors.json` holds this table; the validator checks every error in

@@ -26,6 +26,12 @@ public struct SessionState: Sendable, Hashable {
     public var takes: [Take] = []
     public var undo = UndoState(undo: nil, redo: nil)
     public var meters: [String: [Double]] = [:]
+    /// Every strip, bus and the master (mixer/1); nil when the computer has no mixer for phones.
+    public var mixer: MixerState?
+    /// Strip levels while the Mixer is on screen (the mixer_meters topic).
+    public var stripMeters: [String: [Double]] = [:]
+    /// The selected tab track's bars around the cursor (tab/1); nil when the selected track has no tab.
+    public var tab: TabState?
     public var seq = 0
     /// The host time of the newest message, and when it arrived here.
     public var hostTime = 0.0
@@ -65,8 +71,20 @@ public actor RemoteSession {
         case paired(KnownHost, any DeviceSigner)
     }
 
-    public static let reads: Set<String> = ["takes.list", "session.snapshot"]
+    public static let reads: Set<String> = ["takes.list", "session.snapshot", "mixer.state", "tab.state"]
     public static let topics = ["transport", "position", "record", "tracks", "markers", "takes", "undo", "project", "meters"]
+
+    /// The topics to follow on a computer with these capabilities: a 1.0 host
+    /// refuses a topic it does not know (spec 7).
+    public static func topics(for capabilities: Set<String>) -> [String] {
+        var topics = Self.topics
+        if capabilities.contains("mixer/1") { topics.append("mixer") }
+        if capabilities.contains("tab/1") { topics.append("tab") }
+        return topics
+    }
+
+    /// Topics a screen asked for while it shows (the Mixer's meters), kept across reconnects.
+    private var extraTopics: Set<String> = []
 
     private let credentials: Credentials
     private let connector: Connector
@@ -193,11 +211,14 @@ public actor RemoteSession {
         case .paired(let host, let signer):
             _ = try await client.authenticate(pin: host.pin, device: signer)
         }
-        let snapshot = try await client.subscribe(Self.topics)
+        let capabilities = Set(hello.capabilities)
+        let extra = capabilities.contains("mixer/1") ? extraTopics.sorted() : []
+        let snapshot = try await client.subscribe(Self.topics(for: capabilities) + extra)
         self.client = client
         state.host = hello.host
-        state.capabilities = Set(hello.capabilities)
+        state.capabilities = capabilities
         apply(snapshot)
+        await readExtras(client)
         state.trouble = nil
         setLink(.connected(busy: false))
     }
@@ -242,6 +263,36 @@ public actor RemoteSession {
     private func resnapshot() async {
         guard let client, let snapshot = try? await client.call("session.snapshot", [:], as: Snapshot.self) else { return }
         apply(snapshot)
+        await readExtras(client)
+    }
+
+    /// The mixer and the tab are not in the snapshot: they are read once, then
+    /// followed by their topics (spec 7: mixer/1, tab/1).
+    private func readExtras(_ client: RemoteClient) async {
+        if state.capabilities.contains("mixer/1"), let result = try? await client.call("mixer.state", [:]) {
+            applyResult(result)
+        } else if !state.capabilities.contains("mixer/1") {
+            state.mixer = nil
+        }
+        if state.capabilities.contains("tab/1"), let result = try? await client.call("tab.state", [:]) {
+            applyResult(result)
+        } else if !state.capabilities.contains("tab/1") {
+            state.tab = nil
+        }
+    }
+
+    /// Follow a topic while a screen shows it (the Mixer's meters), or stop.
+    public func watch(_ topic: String, _ on: Bool) async {
+        if on { extraTopics.insert(topic) } else { extraTopics.remove(topic) }
+        if !on, topic == "mixer_meters" { state.stripMeters = [:]; publish() }
+        guard let client, state.capabilities.contains("mixer/1") else { return }
+        if on {
+            if let snapshot = try? await client.call("session.subscribe", ["topics": [.string(topic)]], as: Snapshot.self) {
+                apply(snapshot)
+            }
+        } else {
+            _ = try? await client.call("session.unsubscribe", ["topics": [.string(topic)]])
+        }
     }
 
     private func apply(_ snapshot: Snapshot) {
@@ -283,6 +334,13 @@ public actor RemoteSession {
             if let levels = try? JSONCoding.decode([MeterLevel].self, from: data["levels"] ?? []) {
                 state.meters = Dictionary(levels.map { ($0.trackID, $0.peak) }, uniquingKeysWith: { _, b in b })
             }
+        case "mixer": if let v = try? JSONCoding.decode(MixerState.self, from: data) { state.mixer = v }
+        case "mixer_meters":
+            if let levels = try? JSONCoding.decode([StripLevel].self, from: data["levels"] ?? []) {
+                state.stripMeters = Dictionary(levels.map { ($0.stripID, $0.peak) }, uniquingKeysWith: { _, b in b })
+            }
+        case "tab":
+            if let value = data["tab"] { state.tab = value == .null ? nil : try? JSONCoding.decode(TabState.self, from: value) }
         default: break
         }
         publish()
@@ -299,6 +357,12 @@ public actor RemoteSession {
         if let v = result["markers"], let m = try? JSONCoding.decode([Marker].self, from: v) { state.markers = m }
         if let v = result["undo"], let u = try? JSONCoding.decode(UndoState.self, from: v) { state.undo = u }
         if let v = result["project"], let p = try? JSONCoding.decode(ProjectState.self, from: v) { state.project = p }
+        if let v = result["mixer"], let m = try? JSONCoding.decode(MixerState.self, from: v) { state.mixer = m }
+        if let v = result["strip"], let strip = try? JSONCoding.decode(Strip.self, from: v),
+           let index = state.mixer?.strips.firstIndex(where: { $0.id == strip.id }) {
+            state.mixer?.strips[index] = strip
+        }
+        if let v = result["tab"] { state.tab = v == .null ? nil : try? JSONCoding.decode(TabState.self, from: v) }
         publish()
     }
 

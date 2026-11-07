@@ -325,8 +325,8 @@ struct PairingOverlay: View {
             Text("Pairing with \(name)…").font(.headline).foregroundStyle(Studio.text1)
         }
         .padding(28)
-        .background(Studio.bg2, in: RoundedRectangle(cornerRadius: Studio.radiusPanel, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: Studio.radiusPanel, style: .continuous).strokeBorder(Studio.edge, lineWidth: 1))
+        .background(Studio.bg2, in: RoundedRectangle(cornerRadius: Studio.radiusCard, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: Studio.radiusCard, style: .continuous).strokeBorder(Studio.edge, lineWidth: 1))
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier("pairing")
     }

@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tabber.studio/schemas/remote/1/methods/tab.set_duration.json",
+  "title": "tab.set_duration",
+  "x-capability": "tab/1",
+  "x-changes": true,
+  "$defs": {
+    "params": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "$ref": "../common.json#/$defs/key"
+        },
+        "value": {
+          "enum": [
+            1,
+            2,
+            4,
+            8,
+            16,
+            32
+          ]
+        },
+        "dotted": {
+          "type": "boolean"
+        },
+        "triplet": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "key",
+        "value",
+        "dotted",
+        "triplet"
+      ],
+      "additionalProperties": false
+    },
+    "result": {
+      "type": "object",
+      "properties": {
+        "tab": {
+          "$ref": "../common.json#/$defs/tab_or_none"
+        },
+        "undo": {
+          "$ref": "../common.json#/$defs/undo"
+        }
+      },
+      "required": [
+        "tab",
+        "undo"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

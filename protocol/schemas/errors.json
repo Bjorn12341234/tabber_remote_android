@@ -30,6 +30,8 @@
     {"code": 1029, "reason": "nothing_to_redo", "message": "There is nothing to redo.", "data": ["undo"]},
     {"code": 1030, "reason": "needs_save_location", "message": "Save this song on the computer first, so it has a file.", "data": []},
     {"code": 1031, "reason": "not_supported", "message": "This version of Tabber Studio cannot do that. Update Tabber Studio.", "data": []},
+    {"code": 1032, "reason": "unknown_strip", "message": "That strip is gone from the mixer.", "data": ["mixer"]},
+    {"code": 1033, "reason": "no_tab", "message": "Choose a tab track to write on first.", "data": ["tracks"]},
     {"code": 1099, "reason": "host_error", "message": "Tabber Studio could not do that.", "data": ["detail"]}
   ],
   "data_schemas": {
@@ -42,6 +44,7 @@
     "tracks": {"$ref": "common.json#/$defs/tracks"},
     "markers": {"$ref": "common.json#/$defs/markers"},
     "takes": {"$ref": "common.json#/$defs/recent_takes"},
-    "undo": {"$ref": "common.json#/$defs/undo"}
+    "undo": {"$ref": "common.json#/$defs/undo"},
+    "mixer": {"$ref": "common.json#/$defs/mixer"}
   }
 }

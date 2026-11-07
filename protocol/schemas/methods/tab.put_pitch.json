@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tabber.studio/schemas/remote/1/methods/tab.put_pitch.json",
+  "title": "tab.put_pitch",
+  "x-capability": "tab/1",
+  "x-changes": true,
+  "$defs": {
+    "params": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "$ref": "../common.json#/$defs/key"
+        },
+        "pitch": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 127
+        }
+      },
+      "required": [
+        "key",
+        "pitch"
+      ],
+      "additionalProperties": false
+    },
+    "result": {
+      "type": "object",
+      "properties": {
+        "tab": {
+          "$ref": "../common.json#/$defs/tab_or_none"
+        },
+        "undo": {
+          "$ref": "../common.json#/$defs/undo"
+        }
+      },
+      "required": [
+        "tab",
+        "undo"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

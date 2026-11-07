@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tabber.studio/schemas/remote/1/methods/mixer.state.json",
+  "title": "mixer.state",
+  "x-capability": "mixer/1",
+  "x-changes": false,
+  "$defs": {
+    "params": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    },
+    "result": {
+      "type": "object",
+      "properties": {
+        "mixer": {
+          "$ref": "../common.json#/$defs/mixer"
+        }
+      },
+      "required": [
+        "mixer"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,3188 @@
+{
+ "name": "tab",
+ "description": "Writing tab: read it, move the cursor, choose a note value, a fretboard tap and a piano key on one beat, Next adds a rest beat, rest, delete, a fret past the neck, and an audio track with no tab (spec 7, tab/1).",
+ "start": "authenticated",
+ "host_state": {
+  "pairing": {
+   "open": false
+  },
+  "paired_devices": [
+   {
+    "device_id": "zsiNWgOpGPu3nnQsDLV1c5EUoLWC_GqaxM6F0p8aU88",
+    "name": "Björn's iPhone",
+    "key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAELmFLfdxxNIkeJNkXdNhfQVal4qrDnl_C1tq3bYJMIbARSFIBJiHBKBXg2n0qXdRgpN7x-2sEbrFmAaCll5zfdw"
+   }
+  ],
+  "capabilities": [
+   "transport/1",
+   "record/1",
+   "tempo_scale/1",
+   "tracks/1",
+   "tracks.monitor/1",
+   "markers/1",
+   "takes/1",
+   "takes.discard/1",
+   "takes.go_again/1",
+   "undo/1",
+   "save/1",
+   "meters/1",
+   "pair.code/1",
+   "mixer/1",
+   "tab/1"
+  ],
+  "snapshot": {
+   "seq": 10,
+   "t": 9000.0,
+   "project": {
+    "title": "My Song",
+    "unsaved": false,
+    "has_file": true
+   },
+   "transport": {
+    "state": "stopped",
+    "position": {
+     "bar": 1,
+     "beat": 1,
+     "seconds": 0.0
+    },
+    "tempo_bpm": 96.0,
+    "tempo_scale": 1.0,
+    "time_signature": {
+     "beats": 4,
+     "unit": 4
+    },
+    "loop": {
+     "enabled": false,
+     "start": null,
+     "end": null
+    },
+    "click": false,
+    "count_in_bars": 0,
+    "counting_in": false
+   },
+   "record": {
+    "recording": false,
+    "started": null,
+    "armed_track_ids": []
+   },
+   "tracks": [
+    {
+     "id": "trk-guitar",
+     "name": "Guitar",
+     "kind": "midi",
+     "armed": false,
+     "monitor": "auto",
+     "selected": true,
+     "color": "#50A0DC",
+     "instrument": "Acoustic Guitar (steel)",
+     "tuning": [
+      64,
+      59,
+      55,
+      50,
+      45,
+      40
+     ]
+    },
+    {
+     "id": "trk-vocals",
+     "name": "Vocals",
+     "kind": "audio",
+     "armed": false,
+     "monitor": "auto",
+     "selected": false,
+     "color": "#DC5050"
+    },
+    {
+     "id": "trk-keys",
+     "name": "Keys",
+     "kind": "midi",
+     "armed": false,
+     "monitor": "auto",
+     "selected": false,
+     "color": "#64BE64",
+     "instrument": "Electric Piano 1"
+    }
+   ],
+   "markers": [
+    {
+     "id": "mrk-intro",
+     "name": "Intro",
+     "bar": 1,
+     "beat": 1
+    },
+    {
+     "id": "mrk-verse",
+     "name": "Verse",
+     "bar": 9,
+     "beat": 1
+    },
+    {
+     "id": "mrk-chorus",
+     "name": "Chorus",
+     "bar": 25,
+     "beat": 1
+    },
+    {
+     "id": "mrk-solo",
+     "name": "Solo",
+     "bar": 41,
+     "beat": 1
+    }
+   ],
+   "takes": [],
+   "undo": {
+    "undo": null,
+    "redo": null
+   }
+  }
+ },
+ "steps": [
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "session.subscribe",
+    "params": {
+     "topics": [
+      "tab",
+      "tracks"
+     ]
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "result": {
+     "seq": 10,
+     "t": 9000.0,
+     "project": {
+      "title": "My Song",
+      "unsaved": false,
+      "has_file": true
+     },
+     "transport": {
+      "state": "stopped",
+      "position": {
+       "bar": 1,
+       "beat": 1,
+       "seconds": 0.0
+      },
+      "tempo_bpm": 96.0,
+      "tempo_scale": 1.0,
+      "time_signature": {
+       "beats": 4,
+       "unit": 4
+      },
+      "loop": {
+       "enabled": false,
+       "start": null,
+       "end": null
+      },
+      "click": false,
+      "count_in_bars": 0,
+      "counting_in": false
+     },
+     "record": {
+      "recording": false,
+      "started": null,
+      "armed_track_ids": []
+     },
+     "tracks": [
+      {
+       "id": "trk-guitar",
+       "name": "Guitar",
+       "kind": "midi",
+       "armed": false,
+       "monitor": "auto",
+       "selected": true,
+       "color": "#50A0DC",
+       "instrument": "Acoustic Guitar (steel)",
+       "tuning": [
+        64,
+        59,
+        55,
+        50,
+        45,
+        40
+       ]
+      },
+      {
+       "id": "trk-vocals",
+       "name": "Vocals",
+       "kind": "audio",
+       "armed": false,
+       "monitor": "auto",
+       "selected": false,
+       "color": "#DC5050"
+      },
+      {
+       "id": "trk-keys",
+       "name": "Keys",
+       "kind": "midi",
+       "armed": false,
+       "monitor": "auto",
+       "selected": false,
+       "color": "#64BE64",
+       "instrument": "Electric Piano 1"
+      }
+     ],
+     "markers": [
+      {
+       "id": "mrk-intro",
+       "name": "Intro",
+       "bar": 1,
+       "beat": 1
+      },
+      {
+       "id": "mrk-verse",
+       "name": "Verse",
+       "bar": 9,
+       "beat": 1
+      },
+      {
+       "id": "mrk-chorus",
+       "name": "Chorus",
+       "bar": 25,
+       "beat": 1
+      },
+      {
+       "id": "mrk-solo",
+       "name": "Solo",
+       "bar": 41,
+       "beat": 1
+      }
+     ],
+     "takes": [],
+     "undo": {
+      "undo": null,
+      "redo": null
+     }
+    }
+   }
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 2,
+    "method": "tab.state",
+    "params": {}
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 2,
+    "result": {
+     "tab": {
+      "track_id": "trk-guitar",
+      "revision": 7,
+      "tuning": [
+       64,
+       59,
+       55,
+       50,
+       45,
+       40
+      ],
+      "drum": false,
+      "cursor": {
+       "bar": 1,
+       "beat": 1,
+       "string": 1
+      },
+      "duration": {
+       "value": 4,
+       "dotted": false,
+       "triplet": false
+      },
+      "bar_count": 3,
+      "bars": [
+       {
+        "bar": 1,
+        "time_signature": {
+         "beats": 4,
+         "unit": 4
+        },
+        "beats": [
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": false,
+          "notes": [
+           {
+            "string": 6,
+            "fret": 0
+           }
+          ]
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": false,
+          "notes": [
+           {
+            "string": 4,
+            "fret": 2
+           }
+          ]
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": false,
+          "notes": [
+           {
+            "string": 3,
+            "fret": 0
+           }
+          ]
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": false,
+          "notes": [
+           {
+            "string": 2,
+            "fret": 0
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "bar": 2,
+        "time_signature": {
+         "beats": 4,
+         "unit": 4
+        },
+        "beats": [
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         }
+        ]
+       },
+       {
+        "bar": 3,
+        "time_signature": {
+         "beats": 4,
+         "unit": 4
+        },
+        "beats": [
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         }
+        ]
+       }
+      ]
+     }
+    }
+   }
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 3,
+    "method": "tab.set_cursor",
+    "params": {
+     "key": "0b6c3f1e-7a2d-4e59-9c84-000000000307",
+     "bar": 2,
+     "beat": 1,
+     "string": 1
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 3,
+    "result": {
+     "tab": {
+      "track_id": "trk-guitar",
+      "revision": 7,
+      "tuning": [
+       64,
+       59,
+       55,
+       50,
+       45,
+       40
+      ],
+      "drum": false,
+      "cursor": {
+       "bar": 2,
+       "beat": 1,
+       "string": 1
+      },
+      "duration": {
+       "value": 4,
+       "dotted": false,
+       "triplet": false
+      },
+      "bar_count": 3,
+      "bars": [
+       {
+        "bar": 1,
+        "time_signature": {
+         "beats": 4,
+         "unit": 4
+        },
+        "beats": [
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": false,
+          "notes": [
+           {
+            "string": 6,
+            "fret": 0
+           }
+          ]
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": false,
+          "notes": [
+           {
+            "string": 4,
+            "fret": 2
+           }
+          ]
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": false,
+          "notes": [
+           {
+            "string": 3,
+            "fret": 0
+           }
+          ]
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": false,
+          "notes": [
+           {
+            "string": 2,
+            "fret": 0
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "bar": 2,
+        "time_signature": {
+         "beats": 4,
+         "unit": 4
+        },
+        "beats": [
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         }
+        ]
+       },
+       {
+        "bar": 3,
+        "time_signature": {
+         "beats": 4,
+         "unit": 4
+        },
+        "beats": [
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         }
+        ]
+       }
+      ]
+     },
+     "undo": {
+      "undo": null,
+      "redo": null
+     }
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "method": "event",
+    "params": {
+     "topic": "tab",
+     "seq": 11,
+     "t": 9200.1,
+     "data": {
+      "tab": {
+       "track_id": "trk-guitar",
+       "revision": 7,
+       "tuning": [
+        64,
+        59,
+        55,
+        50,
+        45,
+        40
+       ],
+       "drum": false,
+       "cursor": {
+        "bar": 2,
+        "beat": 1,
+        "string": 1
+       },
+       "duration": {
+        "value": 4,
+        "dotted": false,
+        "triplet": false
+       },
+       "bar_count": 3,
+       "bars": [
+        {
+         "bar": 1,
+         "time_signature": {
+          "beats": 4,
+          "unit": 4
+         },
+         "beats": [
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": false,
+           "notes": [
+            {
+             "string": 6,
+             "fret": 0
+            }
+           ]
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": false,
+           "notes": [
+            {
+             "string": 4,
+             "fret": 2
+            }
+           ]
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": false,
+           "notes": [
+            {
+             "string": 3,
+             "fret": 0
+            }
+           ]
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": false,
+           "notes": [
+            {
+             "string": 2,
+             "fret": 0
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "bar": 2,
+         "time_signature": {
+          "beats": 4,
+          "unit": 4
+         },
+         "beats": [
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          }
+         ]
+        },
+        {
+         "bar": 3,
+         "time_signature": {
+          "beats": 4,
+          "unit": 4
+         },
+         "beats": [
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          }
+         ]
+        }
+       ]
+      }
+     }
+    }
+   }
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 4,
+    "method": "tab.set_duration",
+    "params": {
+     "key": "0b6c3f1e-7a2d-4e59-9c84-000000000308",
+     "value": 8,
+     "dotted": false,
+     "triplet": false
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 4,
+    "result": {
+     "tab": {
+      "track_id": "trk-guitar",
+      "revision": 8,
+      "tuning": [
+       64,
+       59,
+       55,
+       50,
+       45,
+       40
+      ],
+      "drum": false,
+      "cursor": {
+       "bar": 2,
+       "beat": 1,
+       "string": 1
+      },
+      "duration": {
+       "value": 8,
+       "dotted": false,
+       "triplet": false
+      },
+      "bar_count": 3,
+      "bars": [
+       {
+        "bar": 1,
+        "time_signature": {
+         "beats": 4,
+         "unit": 4
+        },
+        "beats": [
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": false,
+          "notes": [
+           {
+            "string": 6,
+            "fret": 0
+           }
+          ]
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": false,
+          "notes": [
+           {
+            "string": 4,
+            "fret": 2
+           }
+          ]
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": false,
+          "notes": [
+           {
+            "string": 3,
+            "fret": 0
+           }
+          ]
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": false,
+          "notes": [
+           {
+            "string": 2,
+            "fret": 0
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "bar": 2,
+        "time_signature": {
+         "beats": 4,
+         "unit": 4
+        },
+        "beats": [
+         {
+          "duration": {
+           "value": 8,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         }
+        ]
+       },
+       {
+        "bar": 3,
+        "time_signature": {
+         "beats": 4,
+         "unit": 4
+        },
+        "beats": [
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         }
+        ]
+       }
+      ]
+     },
+     "undo": {
+      "undo": {
+       "id": "u-51",
+       "label": "Set duration"
+      },
+      "redo": null
+     }
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "method": "event",
+    "params": {
+     "topic": "tab",
+     "seq": 12,
+     "t": 9200.2,
+     "data": {
+      "tab": {
+       "track_id": "trk-guitar",
+       "revision": 8,
+       "tuning": [
+        64,
+        59,
+        55,
+        50,
+        45,
+        40
+       ],
+       "drum": false,
+       "cursor": {
+        "bar": 2,
+        "beat": 1,
+        "string": 1
+       },
+       "duration": {
+        "value": 8,
+        "dotted": false,
+        "triplet": false
+       },
+       "bar_count": 3,
+       "bars": [
+        {
+         "bar": 1,
+         "time_signature": {
+          "beats": 4,
+          "unit": 4
+         },
+         "beats": [
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": false,
+           "notes": [
+            {
+             "string": 6,
+             "fret": 0
+            }
+           ]
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": false,
+           "notes": [
+            {
+             "string": 4,
+             "fret": 2
+            }
+           ]
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": false,
+           "notes": [
+            {
+             "string": 3,
+             "fret": 0
+            }
+           ]
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": false,
+           "notes": [
+            {
+             "string": 2,
+             "fret": 0
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "bar": 2,
+         "time_signature": {
+          "beats": 4,
+          "unit": 4
+         },
+         "beats": [
+          {
+           "duration": {
+            "value": 8,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          }
+         ]
+        },
+        {
+         "bar": 3,
+         "time_signature": {
+          "beats": 4,
+          "unit": 4
+         },
+         "beats": [
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          }
+         ]
+        }
+       ]
+      }
+     }
+    }
+   }
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 5,
+    "method": "tab.put",
+    "params": {
+     "key": "0b6c3f1e-7a2d-4e59-9c84-000000000309",
+     "string": 2,
+     "fret": 3
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 5,
+    "result": {
+     "tab": {
+      "track_id": "trk-guitar",
+      "revision": 9,
+      "tuning": [
+       64,
+       59,
+       55,
+       50,
+       45,
+       40
+      ],
+      "drum": false,
+      "cursor": {
+       "bar": 2,
+       "beat": 1,
+       "string": 2
+      },
+      "duration": {
+       "value": 8,
+       "dotted": false,
+       "triplet": false
+      },
+      "bar_count": 3,
+      "bars": [
+       {
+        "bar": 1,
+        "time_signature": {
+         "beats": 4,
+         "unit": 4
+        },
+        "beats": [
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": false,
+          "notes": [
+           {
+            "string": 6,
+            "fret": 0
+           }
+          ]
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": false,
+          "notes": [
+           {
+            "string": 4,
+            "fret": 2
+           }
+          ]
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": false,
+          "notes": [
+           {
+            "string": 3,
+            "fret": 0
+           }
+          ]
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": false,
+          "notes": [
+           {
+            "string": 2,
+            "fret": 0
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "bar": 2,
+        "time_signature": {
+         "beats": 4,
+         "unit": 4
+        },
+        "beats": [
+         {
+          "duration": {
+           "value": 8,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": false,
+          "notes": [
+           {
+            "string": 2,
+            "fret": 3
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "bar": 3,
+        "time_signature": {
+         "beats": 4,
+         "unit": 4
+        },
+        "beats": [
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         }
+        ]
+       }
+      ]
+     },
+     "undo": {
+      "undo": {
+       "id": "u-52",
+       "label": "Set note"
+      },
+      "redo": null
+     }
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "method": "event",
+    "params": {
+     "topic": "tab",
+     "seq": 13,
+     "t": 9200.3,
+     "data": {
+      "tab": {
+       "track_id": "trk-guitar",
+       "revision": 9,
+       "tuning": [
+        64,
+        59,
+        55,
+        50,
+        45,
+        40
+       ],
+       "drum": false,
+       "cursor": {
+        "bar": 2,
+        "beat": 1,
+        "string": 2
+       },
+       "duration": {
+        "value": 8,
+        "dotted": false,
+        "triplet": false
+       },
+       "bar_count": 3,
+       "bars": [
+        {
+         "bar": 1,
+         "time_signature": {
+          "beats": 4,
+          "unit": 4
+         },
+         "beats": [
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": false,
+           "notes": [
+            {
+             "string": 6,
+             "fret": 0
+            }
+           ]
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": false,
+           "notes": [
+            {
+             "string": 4,
+             "fret": 2
+            }
+           ]
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": false,
+           "notes": [
+            {
+             "string": 3,
+             "fret": 0
+            }
+           ]
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": false,
+           "notes": [
+            {
+             "string": 2,
+             "fret": 0
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "bar": 2,
+         "time_signature": {
+          "beats": 4,
+          "unit": 4
+         },
+         "beats": [
+          {
+           "duration": {
+            "value": 8,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": false,
+           "notes": [
+            {
+             "string": 2,
+             "fret": 3
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "bar": 3,
+         "time_signature": {
+          "beats": 4,
+          "unit": 4
+         },
+         "beats": [
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          }
+         ]
+        }
+       ]
+      }
+     }
+    }
+   }
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 6,
+    "method": "tab.put_pitch",
+    "params": {
+     "key": "0b6c3f1e-7a2d-4e59-9c84-00000000030a",
+     "pitch": 64
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 6,
+    "result": {
+     "tab": {
+      "track_id": "trk-guitar",
+      "revision": 10,
+      "tuning": [
+       64,
+       59,
+       55,
+       50,
+       45,
+       40
+      ],
+      "drum": false,
+      "cursor": {
+       "bar": 2,
+       "beat": 1,
+       "string": 1
+      },
+      "duration": {
+       "value": 8,
+       "dotted": false,
+       "triplet": false
+      },
+      "bar_count": 3,
+      "bars": [
+       {
+        "bar": 1,
+        "time_signature": {
+         "beats": 4,
+         "unit": 4
+        },
+        "beats": [
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": false,
+          "notes": [
+           {
+            "string": 6,
+            "fret": 0
+           }
+          ]
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": false,
+          "notes": [
+           {
+            "string": 4,
+            "fret": 2
+           }
+          ]
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": false,
+          "notes": [
+           {
+            "string": 3,
+            "fret": 0
+           }
+          ]
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": false,
+          "notes": [
+           {
+            "string": 2,
+            "fret": 0
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "bar": 2,
+        "time_signature": {
+         "beats": 4,
+         "unit": 4
+        },
+        "beats": [
+         {
+          "duration": {
+           "value": 8,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": false,
+          "notes": [
+           {
+            "string": 1,
+            "fret": 0
+           },
+           {
+            "string": 2,
+            "fret": 3
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "bar": 3,
+        "time_signature": {
+         "beats": 4,
+         "unit": 4
+        },
+        "beats": [
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         }
+        ]
+       }
+      ]
+     },
+     "undo": {
+      "undo": {
+       "id": "u-53",
+       "label": "Set note"
+      },
+      "redo": null
+     }
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "method": "event",
+    "params": {
+     "topic": "tab",
+     "seq": 14,
+     "t": 9200.4,
+     "data": {
+      "tab": {
+       "track_id": "trk-guitar",
+       "revision": 10,
+       "tuning": [
+        64,
+        59,
+        55,
+        50,
+        45,
+        40
+       ],
+       "drum": false,
+       "cursor": {
+        "bar": 2,
+        "beat": 1,
+        "string": 1
+       },
+       "duration": {
+        "value": 8,
+        "dotted": false,
+        "triplet": false
+       },
+       "bar_count": 3,
+       "bars": [
+        {
+         "bar": 1,
+         "time_signature": {
+          "beats": 4,
+          "unit": 4
+         },
+         "beats": [
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": false,
+           "notes": [
+            {
+             "string": 6,
+             "fret": 0
+            }
+           ]
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": false,
+           "notes": [
+            {
+             "string": 4,
+             "fret": 2
+            }
+           ]
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": false,
+           "notes": [
+            {
+             "string": 3,
+             "fret": 0
+            }
+           ]
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": false,
+           "notes": [
+            {
+             "string": 2,
+             "fret": 0
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "bar": 2,
+         "time_signature": {
+          "beats": 4,
+          "unit": 4
+         },
+         "beats": [
+          {
+           "duration": {
+            "value": 8,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": false,
+           "notes": [
+            {
+             "string": 1,
+             "fret": 0
+            },
+            {
+             "string": 2,
+             "fret": 3
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "bar": 3,
+         "time_signature": {
+          "beats": 4,
+          "unit": 4
+         },
+         "beats": [
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          }
+         ]
+        }
+       ]
+      }
+     }
+    }
+   }
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 7,
+    "method": "tab.move",
+    "params": {
+     "key": "0b6c3f1e-7a2d-4e59-9c84-00000000030b",
+     "by": 1
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 7,
+    "result": {
+     "tab": {
+      "track_id": "trk-guitar",
+      "revision": 11,
+      "tuning": [
+       64,
+       59,
+       55,
+       50,
+       45,
+       40
+      ],
+      "drum": false,
+      "cursor": {
+       "bar": 2,
+       "beat": 2,
+       "string": 1
+      },
+      "duration": {
+       "value": 8,
+       "dotted": false,
+       "triplet": false
+      },
+      "bar_count": 3,
+      "bars": [
+       {
+        "bar": 1,
+        "time_signature": {
+         "beats": 4,
+         "unit": 4
+        },
+        "beats": [
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": false,
+          "notes": [
+           {
+            "string": 6,
+            "fret": 0
+           }
+          ]
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": false,
+          "notes": [
+           {
+            "string": 4,
+            "fret": 2
+           }
+          ]
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": false,
+          "notes": [
+           {
+            "string": 3,
+            "fret": 0
+           }
+          ]
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": false,
+          "notes": [
+           {
+            "string": 2,
+            "fret": 0
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "bar": 2,
+        "time_signature": {
+         "beats": 4,
+         "unit": 4
+        },
+        "beats": [
+         {
+          "duration": {
+           "value": 8,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": false,
+          "notes": [
+           {
+            "string": 1,
+            "fret": 0
+           },
+           {
+            "string": 2,
+            "fret": 3
+           }
+          ]
+         },
+         {
+          "duration": {
+           "value": 8,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         }
+        ]
+       },
+       {
+        "bar": 3,
+        "time_signature": {
+         "beats": 4,
+         "unit": 4
+        },
+        "beats": [
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         }
+        ]
+       }
+      ]
+     },
+     "undo": {
+      "undo": {
+       "id": "u-54",
+       "label": "Insert beat"
+      },
+      "redo": null
+     }
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "method": "event",
+    "params": {
+     "topic": "tab",
+     "seq": 15,
+     "t": 9200.5,
+     "data": {
+      "tab": {
+       "track_id": "trk-guitar",
+       "revision": 11,
+       "tuning": [
+        64,
+        59,
+        55,
+        50,
+        45,
+        40
+       ],
+       "drum": false,
+       "cursor": {
+        "bar": 2,
+        "beat": 2,
+        "string": 1
+       },
+       "duration": {
+        "value": 8,
+        "dotted": false,
+        "triplet": false
+       },
+       "bar_count": 3,
+       "bars": [
+        {
+         "bar": 1,
+         "time_signature": {
+          "beats": 4,
+          "unit": 4
+         },
+         "beats": [
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": false,
+           "notes": [
+            {
+             "string": 6,
+             "fret": 0
+            }
+           ]
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": false,
+           "notes": [
+            {
+             "string": 4,
+             "fret": 2
+            }
+           ]
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": false,
+           "notes": [
+            {
+             "string": 3,
+             "fret": 0
+            }
+           ]
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": false,
+           "notes": [
+            {
+             "string": 2,
+             "fret": 0
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "bar": 2,
+         "time_signature": {
+          "beats": 4,
+          "unit": 4
+         },
+         "beats": [
+          {
+           "duration": {
+            "value": 8,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": false,
+           "notes": [
+            {
+             "string": 1,
+             "fret": 0
+            },
+            {
+             "string": 2,
+             "fret": 3
+            }
+           ]
+          },
+          {
+           "duration": {
+            "value": 8,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          }
+         ]
+        },
+        {
+         "bar": 3,
+         "time_signature": {
+          "beats": 4,
+          "unit": 4
+         },
+         "beats": [
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          }
+         ]
+        }
+       ]
+      }
+     }
+    }
+   }
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 8,
+    "method": "tab.put",
+    "params": {
+     "key": "0b6c3f1e-7a2d-4e59-9c84-00000000030c",
+     "string": 3,
+     "fret": 2
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 8,
+    "result": {
+     "tab": {
+      "track_id": "trk-guitar",
+      "revision": 12,
+      "tuning": [
+       64,
+       59,
+       55,
+       50,
+       45,
+       40
+      ],
+      "drum": false,
+      "cursor": {
+       "bar": 2,
+       "beat": 2,
+       "string": 3
+      },
+      "duration": {
+       "value": 8,
+       "dotted": false,
+       "triplet": false
+      },
+      "bar_count": 3,
+      "bars": [
+       {
+        "bar": 1,
+        "time_signature": {
+         "beats": 4,
+         "unit": 4
+        },
+        "beats": [
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": false,
+          "notes": [
+           {
+            "string": 6,
+            "fret": 0
+           }
+          ]
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": false,
+          "notes": [
+           {
+            "string": 4,
+            "fret": 2
+           }
+          ]
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": false,
+          "notes": [
+           {
+            "string": 3,
+            "fret": 0
+           }
+          ]
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": false,
+          "notes": [
+           {
+            "string": 2,
+            "fret": 0
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "bar": 2,
+        "time_signature": {
+         "beats": 4,
+         "unit": 4
+        },
+        "beats": [
+         {
+          "duration": {
+           "value": 8,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": false,
+          "notes": [
+           {
+            "string": 1,
+            "fret": 0
+           },
+           {
+            "string": 2,
+            "fret": 3
+           }
+          ]
+         },
+         {
+          "duration": {
+           "value": 8,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": false,
+          "notes": [
+           {
+            "string": 3,
+            "fret": 2
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "bar": 3,
+        "time_signature": {
+         "beats": 4,
+         "unit": 4
+        },
+        "beats": [
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         }
+        ]
+       }
+      ]
+     },
+     "undo": {
+      "undo": {
+       "id": "u-55",
+       "label": "Set note"
+      },
+      "redo": null
+     }
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "method": "event",
+    "params": {
+     "topic": "tab",
+     "seq": 16,
+     "t": 9200.6,
+     "data": {
+      "tab": {
+       "track_id": "trk-guitar",
+       "revision": 12,
+       "tuning": [
+        64,
+        59,
+        55,
+        50,
+        45,
+        40
+       ],
+       "drum": false,
+       "cursor": {
+        "bar": 2,
+        "beat": 2,
+        "string": 3
+       },
+       "duration": {
+        "value": 8,
+        "dotted": false,
+        "triplet": false
+       },
+       "bar_count": 3,
+       "bars": [
+        {
+         "bar": 1,
+         "time_signature": {
+          "beats": 4,
+          "unit": 4
+         },
+         "beats": [
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": false,
+           "notes": [
+            {
+             "string": 6,
+             "fret": 0
+            }
+           ]
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": false,
+           "notes": [
+            {
+             "string": 4,
+             "fret": 2
+            }
+           ]
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": false,
+           "notes": [
+            {
+             "string": 3,
+             "fret": 0
+            }
+           ]
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": false,
+           "notes": [
+            {
+             "string": 2,
+             "fret": 0
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "bar": 2,
+         "time_signature": {
+          "beats": 4,
+          "unit": 4
+         },
+         "beats": [
+          {
+           "duration": {
+            "value": 8,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": false,
+           "notes": [
+            {
+             "string": 1,
+             "fret": 0
+            },
+            {
+             "string": 2,
+             "fret": 3
+            }
+           ]
+          },
+          {
+           "duration": {
+            "value": 8,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": false,
+           "notes": [
+            {
+             "string": 3,
+             "fret": 2
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "bar": 3,
+         "time_signature": {
+          "beats": 4,
+          "unit": 4
+         },
+         "beats": [
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          }
+         ]
+        }
+       ]
+      }
+     }
+    }
+   }
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 9,
+    "method": "tab.rest",
+    "params": {
+     "key": "0b6c3f1e-7a2d-4e59-9c84-00000000030d"
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 9,
+    "result": {
+     "tab": {
+      "track_id": "trk-guitar",
+      "revision": 13,
+      "tuning": [
+       64,
+       59,
+       55,
+       50,
+       45,
+       40
+      ],
+      "drum": false,
+      "cursor": {
+       "bar": 2,
+       "beat": 2,
+       "string": 3
+      },
+      "duration": {
+       "value": 8,
+       "dotted": false,
+       "triplet": false
+      },
+      "bar_count": 3,
+      "bars": [
+       {
+        "bar": 1,
+        "time_signature": {
+         "beats": 4,
+         "unit": 4
+        },
+        "beats": [
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": false,
+          "notes": [
+           {
+            "string": 6,
+            "fret": 0
+           }
+          ]
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": false,
+          "notes": [
+           {
+            "string": 4,
+            "fret": 2
+           }
+          ]
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": false,
+          "notes": [
+           {
+            "string": 3,
+            "fret": 0
+           }
+          ]
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": false,
+          "notes": [
+           {
+            "string": 2,
+            "fret": 0
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "bar": 2,
+        "time_signature": {
+         "beats": 4,
+         "unit": 4
+        },
+        "beats": [
+         {
+          "duration": {
+           "value": 8,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": false,
+          "notes": [
+           {
+            "string": 1,
+            "fret": 0
+           },
+           {
+            "string": 2,
+            "fret": 3
+           }
+          ]
+         },
+         {
+          "duration": {
+           "value": 8,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         }
+        ]
+       },
+       {
+        "bar": 3,
+        "time_signature": {
+         "beats": 4,
+         "unit": 4
+        },
+        "beats": [
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         }
+        ]
+       }
+      ]
+     },
+     "undo": {
+      "undo": {
+       "id": "u-56",
+       "label": "Rest"
+      },
+      "redo": null
+     }
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "method": "event",
+    "params": {
+     "topic": "tab",
+     "seq": 17,
+     "t": 9200.7,
+     "data": {
+      "tab": {
+       "track_id": "trk-guitar",
+       "revision": 13,
+       "tuning": [
+        64,
+        59,
+        55,
+        50,
+        45,
+        40
+       ],
+       "drum": false,
+       "cursor": {
+        "bar": 2,
+        "beat": 2,
+        "string": 3
+       },
+       "duration": {
+        "value": 8,
+        "dotted": false,
+        "triplet": false
+       },
+       "bar_count": 3,
+       "bars": [
+        {
+         "bar": 1,
+         "time_signature": {
+          "beats": 4,
+          "unit": 4
+         },
+         "beats": [
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": false,
+           "notes": [
+            {
+             "string": 6,
+             "fret": 0
+            }
+           ]
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": false,
+           "notes": [
+            {
+             "string": 4,
+             "fret": 2
+            }
+           ]
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": false,
+           "notes": [
+            {
+             "string": 3,
+             "fret": 0
+            }
+           ]
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": false,
+           "notes": [
+            {
+             "string": 2,
+             "fret": 0
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "bar": 2,
+         "time_signature": {
+          "beats": 4,
+          "unit": 4
+         },
+         "beats": [
+          {
+           "duration": {
+            "value": 8,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": false,
+           "notes": [
+            {
+             "string": 1,
+             "fret": 0
+            },
+            {
+             "string": 2,
+             "fret": 3
+            }
+           ]
+          },
+          {
+           "duration": {
+            "value": 8,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          }
+         ]
+        },
+        {
+         "bar": 3,
+         "time_signature": {
+          "beats": 4,
+          "unit": 4
+         },
+         "beats": [
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          }
+         ]
+        }
+       ]
+      }
+     }
+    }
+   }
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 10,
+    "method": "tab.delete",
+    "params": {
+     "key": "0b6c3f1e-7a2d-4e59-9c84-00000000030e"
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 10,
+    "result": {
+     "tab": {
+      "track_id": "trk-guitar",
+      "revision": 14,
+      "tuning": [
+       64,
+       59,
+       55,
+       50,
+       45,
+       40
+      ],
+      "drum": false,
+      "cursor": {
+       "bar": 2,
+       "beat": 1,
+       "string": 3
+      },
+      "duration": {
+       "value": 8,
+       "dotted": false,
+       "triplet": false
+      },
+      "bar_count": 3,
+      "bars": [
+       {
+        "bar": 1,
+        "time_signature": {
+         "beats": 4,
+         "unit": 4
+        },
+        "beats": [
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": false,
+          "notes": [
+           {
+            "string": 6,
+            "fret": 0
+           }
+          ]
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": false,
+          "notes": [
+           {
+            "string": 4,
+            "fret": 2
+           }
+          ]
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": false,
+          "notes": [
+           {
+            "string": 3,
+            "fret": 0
+           }
+          ]
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": false,
+          "notes": [
+           {
+            "string": 2,
+            "fret": 0
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "bar": 2,
+        "time_signature": {
+         "beats": 4,
+         "unit": 4
+        },
+        "beats": [
+         {
+          "duration": {
+           "value": 8,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": false,
+          "notes": [
+           {
+            "string": 1,
+            "fret": 0
+           },
+           {
+            "string": 2,
+            "fret": 3
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "bar": 3,
+        "time_signature": {
+         "beats": 4,
+         "unit": 4
+        },
+        "beats": [
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         }
+        ]
+       }
+      ]
+     },
+     "undo": {
+      "undo": {
+       "id": "u-57",
+       "label": "Delete note"
+      },
+      "redo": null
+     }
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "method": "event",
+    "params": {
+     "topic": "tab",
+     "seq": 18,
+     "t": 9200.8,
+     "data": {
+      "tab": {
+       "track_id": "trk-guitar",
+       "revision": 14,
+       "tuning": [
+        64,
+        59,
+        55,
+        50,
+        45,
+        40
+       ],
+       "drum": false,
+       "cursor": {
+        "bar": 2,
+        "beat": 1,
+        "string": 3
+       },
+       "duration": {
+        "value": 8,
+        "dotted": false,
+        "triplet": false
+       },
+       "bar_count": 3,
+       "bars": [
+        {
+         "bar": 1,
+         "time_signature": {
+          "beats": 4,
+          "unit": 4
+         },
+         "beats": [
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": false,
+           "notes": [
+            {
+             "string": 6,
+             "fret": 0
+            }
+           ]
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": false,
+           "notes": [
+            {
+             "string": 4,
+             "fret": 2
+            }
+           ]
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": false,
+           "notes": [
+            {
+             "string": 3,
+             "fret": 0
+            }
+           ]
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": false,
+           "notes": [
+            {
+             "string": 2,
+             "fret": 0
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "bar": 2,
+         "time_signature": {
+          "beats": 4,
+          "unit": 4
+         },
+         "beats": [
+          {
+           "duration": {
+            "value": 8,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": false,
+           "notes": [
+            {
+             "string": 1,
+             "fret": 0
+            },
+            {
+             "string": 2,
+             "fret": 3
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "bar": 3,
+         "time_signature": {
+          "beats": 4,
+          "unit": 4
+         },
+         "beats": [
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          }
+         ]
+        }
+       ]
+      }
+     }
+    }
+   }
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 11,
+    "method": "tab.put",
+    "params": {
+     "key": "0b6c3f1e-7a2d-4e59-9c84-00000000030f",
+     "string": 2,
+     "fret": 40
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 11,
+    "error": {
+     "code": -32602,
+     "message": "The phone sent a request the computer could not use.",
+     "data": {
+      "reason": "invalid_params",
+      "field": "fret"
+     }
+    }
+   }
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 12,
+    "method": "tracks.select",
+    "params": {
+     "key": "0b6c3f1e-7a2d-4e59-9c84-000000000310",
+     "track_id": "trk-vocals"
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 12,
+    "result": {
+     "tracks": [
+      {
+       "id": "trk-guitar",
+       "name": "Guitar",
+       "kind": "midi",
+       "armed": false,
+       "monitor": "auto",
+       "selected": false,
+       "color": "#50A0DC",
+       "instrument": "Acoustic Guitar (steel)",
+       "tuning": [
+        64,
+        59,
+        55,
+        50,
+        45,
+        40
+       ]
+      },
+      {
+       "id": "trk-vocals",
+       "name": "Vocals",
+       "kind": "audio",
+       "armed": false,
+       "monitor": "auto",
+       "selected": true,
+       "color": "#DC5050"
+      },
+      {
+       "id": "trk-keys",
+       "name": "Keys",
+       "kind": "midi",
+       "armed": false,
+       "monitor": "auto",
+       "selected": false,
+       "color": "#64BE64",
+       "instrument": "Electric Piano 1"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "method": "event",
+    "params": {
+     "topic": "tracks",
+     "seq": 19,
+     "t": 9200.9,
+     "data": {
+      "tracks": [
+       {
+        "id": "trk-guitar",
+        "name": "Guitar",
+        "kind": "midi",
+        "armed": false,
+        "monitor": "auto",
+        "selected": false,
+        "color": "#50A0DC",
+        "instrument": "Acoustic Guitar (steel)",
+        "tuning": [
+         64,
+         59,
+         55,
+         50,
+         45,
+         40
+        ]
+       },
+       {
+        "id": "trk-vocals",
+        "name": "Vocals",
+        "kind": "audio",
+        "armed": false,
+        "monitor": "auto",
+        "selected": true,
+        "color": "#DC5050"
+       },
+       {
+        "id": "trk-keys",
+        "name": "Keys",
+        "kind": "midi",
+        "armed": false,
+        "monitor": "auto",
+        "selected": false,
+        "color": "#64BE64",
+        "instrument": "Electric Piano 1"
+       }
+      ]
+     }
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "method": "event",
+    "params": {
+     "topic": "tab",
+     "seq": 20,
+     "t": 9201.0,
+     "data": {
+      "tab": null
+     }
+    }
+   }
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 13,
+    "method": "tab.put",
+    "params": {
+     "key": "0b6c3f1e-7a2d-4e59-9c84-000000000311",
+     "string": 1,
+     "fret": 0
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 13,
+    "error": {
+     "code": 1033,
+     "message": "Choose a tab track to write on first.",
+     "data": {
+      "reason": "no_tab",
+      "tracks": [
+       {
+        "id": "trk-guitar",
+        "name": "Guitar",
+        "kind": "midi",
+        "armed": false,
+        "monitor": "auto",
+        "selected": false,
+        "color": "#50A0DC",
+        "instrument": "Acoustic Guitar (steel)",
+        "tuning": [
+         64,
+         59,
+         55,
+         50,
+         45,
+         40
+        ]
+       },
+       {
+        "id": "trk-vocals",
+        "name": "Vocals",
+        "kind": "audio",
+        "armed": false,
+        "monitor": "auto",
+        "selected": true,
+        "color": "#DC5050"
+       },
+       {
+        "id": "trk-keys",
+        "name": "Keys",
+        "kind": "midi",
+        "armed": false,
+        "monitor": "auto",
+        "selected": false,
+        "color": "#64BE64",
+        "instrument": "Electric Piano 1"
+       }
+      ]
+     }
+    }
+   }
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 14,
+    "method": "tab.state",
+    "params": {}
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 14,
+    "result": {
+     "tab": null
+    }
+   }
+  }
+ ]
+}

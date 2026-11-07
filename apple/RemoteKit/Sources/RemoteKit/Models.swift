@@ -99,18 +99,28 @@ public struct Track: Codable, Sendable, Hashable, Identifiable {
     public var monitor: MonitorMode
     public var selected: Bool
     public var color: String?
+    /// The instrument a tab or MIDI track plays ("Acoustic Guitar (steel)"); hosts with tab/1 send it.
+    public var instrument: String?
+    /// A tab track's open strings as MIDI notes, highest first; nil when it has no tab (tab/1).
+    public var tuning: [Int]?
 
     public init(id: String, name: String, kind: TrackKind, armed: Bool, monitor: MonitorMode,
-                selected: Bool, color: String?) {
+                selected: Bool, color: String?, instrument: String? = nil, tuning: [Int]? = nil) {
         self.id = id; self.name = name; self.kind = kind; self.armed = armed
         self.monitor = monitor; self.selected = selected; self.color = color
+        self.instrument = instrument; self.tuning = tuning
     }
     public func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
         try c.encode(id, forKey: .id); try c.encode(name, forKey: .name); try c.encode(kind, forKey: .kind)
         try c.encode(armed, forKey: .armed); try c.encode(monitor, forKey: .monitor)
         try c.encode(selected, forKey: .selected); try c.encode(color, forKey: .color)
+        try c.encodeIfPresent(instrument, forKey: .instrument)       // absent from 1.0 hosts, and kept absent
+        try c.encodeIfPresent(tuning, forKey: .tuning)
     }
+
+    /// A track the phone can write tab on.
+    public var hasTab: Bool { tuning != nil }
 }
 
 public struct Marker: Codable, Sendable, Hashable, Identifiable {

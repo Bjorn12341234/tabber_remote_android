@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tabber.studio/schemas/remote/1/topics/tab.json",
+  "title": "Event data for the tab topic",
+  "type": "object",
+  "properties": {
+    "tab": {
+      "$ref": "../common.json#/$defs/tab_or_none"
+    }
+  },
+  "required": [
+    "tab"
+  ],
+  "additionalProperties": false
+}

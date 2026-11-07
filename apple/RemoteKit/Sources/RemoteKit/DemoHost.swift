@@ -18,6 +18,10 @@ public actor DemoHost {
         var markers: [Marker]
         var takes: [Take]
         var project: ProjectState
+        /// Undo steps in Tabber Studio: mute, solo and tab notes. Volume and pan are not.
+        var muted: Set<String> = []
+        var soloed: Set<String> = []
+        var tabs: [String: DemoTab] = [:]
     }
 
     final class Connection {
@@ -53,6 +57,13 @@ public actor DemoHost {
     private var ticker: Task<Void, Never>?
     private var lastSent: [String: JSONValue] = [:]
     private let epoch = ContinuousClock.now
+    /// Fader travel and pan for every strip: direct writes, as in Tabber Studio.
+    private var faders: [String: (volume: Double, pan: Double)] = [:]
+    private let buses: [(id: String, name: String)] = [("demo-bus-reverb", "Reverb")]
+    /// The Tab view's cursor on each tab track, and the duration a new note gets.
+    private var tabCursors: [String: TabCursor] = [:]
+    private var tabDuration = NoteValue(value: 4)
+    private var tabRevision = 1
 
     /// Tests: drop the connection after doing the next request, before answering.
     public var dropBeforeNextAnswer = false
@@ -62,18 +73,29 @@ public actor DemoHost {
     /// shows the app's Update cards (TR6).
     public let speaks: [String]
 
-    public init(speaks: [String] = ["1.0"]) {
+    public init(speaks: [String] = ["1.1"]) {
         self.speaks = speaks
+        // Tabber Studio's own track colours (core/models.py TRACK_COLORS), in its strip order.
         song = Song(
-            tracks: [Track(id: "demo-vocals", name: "Vocals", kind: .audio, armed: false, monitor: .auto, selected: true, color: "#E5484D"),
-                     Track(id: "demo-guitar", name: "Guitar", kind: .audio, armed: false, monitor: .auto, selected: false, color: "#3E63DD"),
-                     Track(id: "demo-keys", name: "Keys", kind: .midi, armed: false, monitor: .auto, selected: false, color: "#30A46C")],
+            tracks: [Track(id: "demo-guitar", name: "Guitar", kind: .midi, armed: false, monitor: .auto, selected: true,
+                           color: "#50A0DC", instrument: "Acoustic Guitar (steel)", tuning: DemoTab.standard),
+                     Track(id: "demo-bass", name: "Bass", kind: .midi, armed: false, monitor: .auto, selected: false,
+                           color: "#64BE64", instrument: "Electric Bass (finger)", tuning: DemoTab.bass),
+                     Track(id: "demo-drums", name: "Drums", kind: .midi, armed: false, monitor: .auto, selected: false,
+                           color: "#DCAA3C", instrument: "Standard Kit"),
+                     Track(id: "demo-lead", name: "Lead guitar", kind: .audio, armed: false, monitor: .auto, selected: false,
+                           color: "#AA64D2"),
+                     Track(id: "demo-vocals", name: "Vocals", kind: .audio, armed: false, monitor: .auto, selected: false,
+                           color: "#DC5050")],
             markers: [Marker(id: "demo-intro", name: "Intro", bar: 1, beat: 1),
                       Marker(id: "demo-verse", name: "Verse", bar: 9, beat: 1),
                       Marker(id: "demo-chorus", name: "Chorus", bar: 25, beat: 1),
                       Marker(id: "demo-solo", name: "Solo", bar: 41, beat: 1)],
             takes: [],
-            project: ProjectState(title: "Demo Song", unsaved: false, hasFile: true))
+            project: ProjectState(title: "Demo Song", unsaved: false, hasFile: true),
+            tabs: ["demo-guitar": DemoTab.demoGuitar(), "demo-bass": DemoTab.demoBass()])
+        faders = ["demo-guitar": (0.7, -0.3), "demo-bass": (0.62, 0), "demo-drums": (0.66, 0),
+                  "demo-lead": (0.7, 0.32), "demo-vocals": (0.74, 0), "demo-bus-reverb": (0.52, 0), "master": (0.7, 0)]
     }
 
     public func setDropBeforeNextAnswer(_ value: Bool) { dropBeforeNextAnswer = value }
@@ -167,10 +189,10 @@ public actor DemoHost {
             }
             connection.challenge = Data((0..<32).map { _ in UInt8.random(in: 0...255) })
             return ["host": ["id": .string(Self.hostID), "name": .string(Self.name), "app_version": "demo"],
-                    "protocol_version": "1.0",
+                    "protocol_version": "1.1",
                     "capabilities": ["transport/1", "record/1", "tempo_scale/1", "tracks/1", "tracks.monitor/1",
                                      "markers/1", "takes/1", "takes.discard/1", "takes.go_again/1", "undo/1",
-                                     "save/1", "meters/1"],
+                                     "save/1", "meters/1", "mixer/1", "tab/1"],
                     "limits": ["max_frame_bytes": 65536, "requests_per_second": 20, "burst": 40,
                                "heartbeat_ms": 2000, "heartbeat_misses": 3, "connections_per_device": 2],
                     "challenge": .string(Base64URL.encode(connection.challenge))]
@@ -263,6 +285,7 @@ public actor DemoHost {
                 throw DemoErrors.make("unknown_track", ["tracks": try JSONCoding.value(song.tracks)])
             }
             song.tracks[index].armed = p["armed"]?.boolValue ?? false
+            if song.tracks[index].armed { startTicker() }        // an armed input shows its level at once
             return ["tracks": try JSONCoding.value(song.tracks)]
         case "tracks.select":
             let id = p["track_id"]?.stringValue ?? ""
@@ -341,13 +364,146 @@ public actor DemoHost {
             }
             song = redo ? undo[index].after : undo[index].before
             undoIndex = redo ? undoIndex + 1 : undoIndex - 1
+            tabRevision += 1
             return ["undo": try JSONCoding.value(undoState())]
         case "project.save":
             song.project.unsaved = false
             return ["project": try JSONCoding.value(song.project)]
+        case "mixer.state":
+            return ["mixer": try JSONCoding.value(mixerState())]
+        case "mixer.set_volume", "mixer.set_pan":
+            let id = p["strip_id"]?.stringValue ?? ""
+            guard var fader = faders[id] else {
+                throw DemoErrors.make("unknown_strip", ["mixer": try JSONCoding.value(mixerState())])
+            }
+            let field = method == "mixer.set_volume" ? "volume" : "pan"
+            guard let value = p[field]?.doubleValue else { throw DemoErrors.make("invalid_params", ["field": .string(field)]) }
+            if field == "volume" { fader.volume = max(0, min(1, value)) } else { fader.pan = max(-1, min(1, value)) }
+            faders[id] = fader
+            return ["strip": try JSONCoding.value(strip(id)!)]
+        case "mixer.set_mute", "mixer.set_solo":
+            let id = p["strip_id"]?.stringValue ?? ""
+            guard faders[id] != nil, id != "master" else {
+                throw DemoErrors.make("unknown_strip", ["mixer": try JSONCoding.value(mixerState())])
+            }
+            let mute = method == "mixer.set_mute"
+            let on = p[mute ? "muted" : "soloed"]?.boolValue ?? false
+            let name = strip(id)?.name ?? ""
+            if (mute ? song.muted : song.soloed).contains(id) != on {
+                edit("\(on ? "" : "Un")\(mute ? "mute" : "solo") \(name)".capitalizedFirst) { song in
+                    if mute {
+                        if on { song.muted.insert(id) } else { song.muted.remove(id) }
+                    } else {
+                        if on { song.soloed.insert(id) } else { song.soloed.remove(id) }
+                    }
+                }
+            }
+            return ["mixer": try JSONCoding.value(mixerState()), "undo": try JSONCoding.value(undoState())]
+        case "tab.state":
+            return ["tab": tabValue()]
+        case "tab.set_cursor", "tab.move", "tab.put", "tab.put_pitch", "tab.set_duration", "tab.rest", "tab.delete":
+            try tabVerb(method, p)
+            return ["tab": tabValue(), "undo": try JSONCoding.value(undoState())]
         default:
             throw DemoErrors.make("method_not_found")
         }
+    }
+
+    // MARK: the mixer and the tab
+
+    /// The fader law: 0 dB at 70 % of the travel, +2.1 dB at the top, as Tabber Studio's fader.
+    static func db(_ travel: Double) -> Double? {
+        guard travel > 0.001 else { return nil }
+        let db = travel >= 0.7 ? (travel - 0.7) / 0.3 * 2.1 : 60 * log10(travel / 0.7)
+        return (db * 10).rounded() / 10
+    }
+
+    static func panLabel(_ pan: Double) -> String {
+        let value = Int((64 + pan * (pan < 0 ? 64 : 63)).rounded())
+        return value == 64 ? "C" : value < 64 ? "L\(64 - value)" : "R\(value - 64)"
+    }
+
+    static let scale = [ScaleMark(db: 0, volume: 0.7), ScaleMark(db: -12, volume: 0.442),
+                        ScaleMark(db: -24, volume: 0.279), ScaleMark(db: -48, volume: 0.111)]
+
+    private func strip(_ id: String) -> Strip? {
+        guard let fader = faders[id] else { return nil }
+        let kind: String, name: String, color: String?
+        if id == "master" {
+            (kind, name, color) = ("master", "Master", nil)
+        } else if let bus = buses.first(where: { $0.id == id }) {
+            (kind, name, color) = ("bus", bus.name, nil)
+        } else if let track = song.tracks.first(where: { $0.id == id }) {
+            (kind, name, color) = ("track", track.name, track.color)
+        } else {
+            return nil
+        }
+        return Strip(id: id, kind: kind, name: name, color: color, volume: (fader.volume * 1000).rounded() / 1000,
+                     volumeDB: Self.db(fader.volume), pan: (fader.pan * 1000).rounded() / 1000,
+                     panLabel: Self.panLabel(fader.pan), muted: song.muted.contains(id), soloed: song.soloed.contains(id))
+    }
+
+    private func mixerState() -> MixerState {
+        let ids = song.tracks.map(\.id) + buses.map(\.id) + ["master"]
+        return MixerState(strips: ids.compactMap(strip), scale: Self.scale)
+    }
+
+    /// The selected track, when it has tab.
+    private func tabTrackID() -> String? {
+        guard let track = song.tracks.first(where: \.selected), song.tabs[track.id] != nil else { return nil }
+        return track.id
+    }
+
+    private func tabValue() -> JSONValue {
+        guard let id = tabTrackID(), let doc = song.tabs[id] else { return .null }
+        let cursor = doc.clamp(tabCursors[id] ?? TabCursor(bar: 1, beat: 1, string: 1))
+        let state = TabState(trackID: id, revision: tabRevision, tuning: doc.tuning, drum: false, cursor: cursor,
+                             duration: tabDuration, barCount: doc.bars.count, bars: doc.window(around: cursor))
+        return (try? JSONCoding.value(state)) ?? .null
+    }
+
+    private func tabVerb(_ method: String, _ p: JSONValue) throws {
+        guard let id = tabTrackID(), var doc = song.tabs[id] else {
+            throw DemoErrors.make("no_tab", ["tracks": try JSONCoding.value(song.tracks)])
+        }
+        var cursor = doc.clamp(tabCursors[id] ?? TabCursor(bar: 1, beat: 1, string: 1))
+        var label: String?
+        switch method {
+        case "tab.set_cursor":
+            cursor = doc.clamp(TabCursor(bar: p["bar"]?.intValue ?? cursor.bar, beat: p["beat"]?.intValue ?? cursor.beat,
+                                         string: p["string"]?.intValue ?? cursor.string))
+        case "tab.move":
+            let moved = doc.move(cursor, by: p["by"]?.intValue ?? 1, duration: tabDuration)
+            if moved.changed { label = moved.cursor.bar > cursor.bar ? "Insert bar" : "Insert beat" }
+            cursor = moved.cursor
+        case "tab.put":
+            guard let string = p["string"]?.intValue, let fret = p["fret"]?.intValue,
+                  (1...doc.tuning.count).contains(string), (0...DemoTab.maxFret).contains(fret) else {
+                throw DemoErrors.make("invalid_params", ["field": "fret"])
+            }
+            if doc.put(string: string, fret: fret, at: cursor, duration: tabDuration) { label = "Set note" }
+            cursor.string = string
+        case "tab.put_pitch":
+            guard let pitch = p["pitch"]?.intValue else { throw DemoErrors.make("invalid_params", ["field": "pitch"]) }
+            let put = doc.put(pitch: pitch, at: cursor, duration: tabDuration)
+            if put.changed { label = "Set note" }
+            cursor.string = put.string
+        case "tab.set_duration":
+            guard let value = p["value"]?.intValue, NoteValue.values.contains(value) else {
+                throw DemoErrors.make("invalid_params", ["field": "value"])
+            }
+            tabDuration = NoteValue(value: value, dotted: p["dotted"]?.boolValue ?? false, triplet: p["triplet"]?.boolValue ?? false)
+            if doc.setDuration(tabDuration, at: cursor) { label = "Set duration" }
+        case "tab.rest":
+            if doc.rest(at: cursor) { label = "Rest" }
+        default:
+            if doc.delete(at: cursor) { label = "Delete note" }
+        }
+        if let label {
+            edit(label) { $0.tabs[id] = doc }
+            tabRevision += 1
+        }
+        tabCursors[id] = doc.clamp(cursor)
     }
 
     // MARK: the session
@@ -450,6 +606,8 @@ public actor DemoHost {
         data["takes"] = try? JSONCoding.value(recentTakes())
         data["undo"] = try? JSONCoding.value(undoState())
         data["project"] = try? JSONCoding.value(song.project)
+        data["mixer"] = try? JSONCoding.value(mixerState())
+        data["tab"] = ["tab": tabValue()]
         return data
     }
 
@@ -461,13 +619,16 @@ public actor DemoHost {
         case "markers": return ["markers": (try? JSONCoding.value(song.markers)) ?? []]
         case "takes": return ["takes": (try? JSONCoding.value(recentTakes())) ?? []]
         case "undo": return (try? JSONCoding.value(undoState())) ?? .null
+        case "mixer": return (try? JSONCoding.value(mixerState())) ?? .null
+        case "tab": return ["tab": tabValue()]
         default: return (try? JSONCoding.value(song.project)) ?? .null
         }
     }
 
     private func broadcastChanges(from before: [String: JSONValue]) {
         let after = topicData()
-        for topic in ["transport", "record", "tracks", "markers", "takes", "undo", "project"] where before[topic] != after[topic] {
+        for topic in ["transport", "record", "tracks", "markers", "takes", "undo", "project", "mixer", "tab"]
+        where before[topic] != after[topic] {
             emit(topic, full(topic))
         }
     }
@@ -492,9 +653,16 @@ public actor DemoHost {
         }
     }
 
-    /// Position at 10 a second, meters at 20, while playing (spec 8.2).
+    /// Position at 10 a second, meters at 20, while playing or while an input is armed (spec 8.2).
     private func tickOnce(_ tick: Int) -> Bool {
-        guard playing else { ticker = nil; return false }
+        guard playing || song.tracks.contains(where: \.armed) else { ticker = nil; return false }
+        guard playing else {                       // stopped: only the armed inputs' levels
+            let level = 0.3 + 0.25 * abs(sin(Double(tick) / 2.5))
+            emit("meters", ["levels": .array(song.tracks.filter(\.armed).map {
+                ["track_id": .string($0.id), "peak": [.number((level * 1000).rounded() / 1000), .number((level * 900).rounded() / 1000)]]
+            })])
+            return true
+        }
         let before = lastSent["counting"]
         let counting: JSONValue = .bool(transport().countingIn)
         if before != counting { lastSent["counting"] = counting; emit("transport", full("transport")) }
@@ -507,6 +675,22 @@ public actor DemoHost {
             ["track_id": .string($0.id), "peak": [.number((level * 1000).rounded() / 1000), .number((level * 900).rounded() / 1000)]]
         }
         emit("meters", ["levels": .array(levels)])
+        let strips = mixerState().strips
+        let anySolo = !song.soloed.isEmpty
+        var master = 0.0
+        let stripLevels: [JSONValue] = strips.enumerated().map { index, strip in
+            var peak = 0.0
+            if !strip.isMaster {
+                let audible = !strip.muted && (!anySolo || strip.soloed || strip.isBus)
+                peak = audible ? (0.22 + 0.4 * abs(sin(Double(tick) / 3.0 + Double(index) * 1.7))) * min(1.3, strip.volume / 0.7) : 0
+                master = max(master, peak)
+            } else {
+                peak = master * min(1.3, strip.volume / 0.7)
+            }
+            let left = (min(1, peak) * 1000).rounded() / 1000
+            return ["strip_id": .string(strip.id), "peak": [.number(left), .number((left * 920).rounded() / 1000)]]
+        }
+        emit("mixer_meters", ["levels": .array(stripLevels)])
         return true
     }
 }
@@ -534,6 +718,8 @@ public enum DemoErrors {
         "undo_mismatch": (1027, "The computer's newest change is a different one. Undo it there, or try again."),
         "nothing_to_undo": (1028, "There is nothing to undo."),
         "nothing_to_redo": (1029, "There is nothing to redo."),
+        "unknown_strip": (1032, "That strip is gone from the mixer."),
+        "no_tab": (1033, "Choose a tab track to write on first."),
     ]
 
     static func make(_ reason: String, _ data: [String: JSONValue] = [:]) -> RemoteError {
@@ -542,4 +728,8 @@ public enum DemoErrors {
         fields["reason"] = .string(reason)
         return RemoteError(code: code, message: message, reason: reason, data: .object(fields))
     }
+}
+
+extension String {
+    var capitalizedFirst: String { prefix(1).uppercased() + dropFirst() }
 }
