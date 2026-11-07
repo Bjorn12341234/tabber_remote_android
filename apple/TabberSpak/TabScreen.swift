@@ -72,7 +72,7 @@ struct TabScreen: View {
                                                        "dotted": .bool(tab.duration.dotted), "triplet": .bool(!tab.duration.triplet)])
                     }
                     .accessibilityIdentifier("triplet")
-                    EditChip(title: "Rest", spoken: "Make this beat a rest") { model.tab("tab.rest") }
+                    EditChip(title: "Rest", spoken: "Rest, on or off for this beat") { model.tab("tab.rest") }
                         .accessibilityIdentifier("rest")
                     EditChip(title: "Delete", spoken: "Delete the note on this string") { model.tab("tab.delete") }
                         .accessibilityIdentifier("delete-note")

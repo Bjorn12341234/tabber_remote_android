@@ -1,6 +1,6 @@
 {
  "name": "tab",
- "description": "Writing tab: read it, move the cursor, choose a note value, a fretboard tap and a piano key on one beat, Next adds a rest beat, rest, delete, a fret past the neck, and an audio track with no tab (spec 7, tab/1).",
+ "description": "Writing tab as Tabber Studio's Tab view does, with its own undo labels: read it, move the cursor, choose a note value, a fretboard tap and a piano key on one beat, Next adds a rest beat, Delete takes the cursor string's note, R toggles the rest off again, a fret past the neck, and an audio track with no tab (spec 7, tab/1).",
  "start": "authenticated",
  "host_state": {
   "pairing": {
@@ -855,7 +855,7 @@
      "undo": {
       "undo": {
        "id": "u-51",
-       "label": "Set duration"
+       "label": "Set duration to EIGHTH"
       },
       "redo": null
      }
@@ -1157,7 +1157,7 @@
      "undo": {
       "undo": {
        "id": "u-52",
-       "label": "Set note"
+       "label": "Set fret 3 on string 2"
       },
       "redo": null
      }
@@ -1467,7 +1467,7 @@
      "undo": {
       "undo": {
        "id": "u-53",
-       "label": "Set note"
+       "label": "Set fret 0 on string 1"
       },
       "redo": null
      }
@@ -2128,7 +2128,7 @@
      "undo": {
       "undo": {
        "id": "u-55",
-       "label": "Set note"
+       "label": "Set fret 2 on string 3"
       },
       "redo": null
      }
@@ -2304,7 +2304,7 @@
    "message": {
     "jsonrpc": "2.0",
     "id": 9,
-    "method": "tab.rest",
+    "method": "tab.delete",
     "params": {
      "key": "0b6c3f1e-7a2d-4e59-9c84-00000000030d"
     }
@@ -2464,7 +2464,7 @@
      "undo": {
       "undo": {
        "id": "u-56",
-       "label": "Rest"
+       "label": "Delete note on string 3"
       },
       "redo": null
      }
@@ -2635,7 +2635,7 @@
    "message": {
     "jsonrpc": "2.0",
     "id": 10,
-    "method": "tab.delete",
+    "method": "tab.rest",
     "params": {
      "key": "0b6c3f1e-7a2d-4e59-9c84-00000000030e"
     }
@@ -2661,7 +2661,7 @@
       "drum": false,
       "cursor": {
        "bar": 2,
-       "beat": 1,
+       "beat": 2,
        "string": 3
       },
       "duration": {
@@ -2760,6 +2760,15 @@
             "fret": 3
            }
           ]
+         },
+         {
+          "duration": {
+           "value": 8,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": false,
+          "notes": []
          }
         ]
        },
@@ -2786,7 +2795,7 @@
      "undo": {
       "undo": {
        "id": "u-57",
-       "label": "Delete note"
+       "label": "Toggle rest"
       },
       "redo": null
      }
@@ -2817,7 +2826,7 @@
        "drum": false,
        "cursor": {
         "bar": 2,
-        "beat": 1,
+        "beat": 2,
         "string": 3
        },
        "duration": {
@@ -2916,6 +2925,15 @@
              "fret": 3
             }
            ]
+          },
+          {
+           "duration": {
+            "value": 8,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": false,
+           "notes": []
           }
          ]
         },

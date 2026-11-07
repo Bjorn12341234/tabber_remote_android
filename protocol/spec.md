@@ -472,35 +472,44 @@ remote chooses the track with `tracks.select`; the tab follows. `tab` is
 null while the selected track has none (an audio track, a drum or a
 plain MIDI track).
 
-| Verb | Params | Result | Control API |
+| Verb | Params | Result | In Tabber Studio |
 |---|---|---|---|
-| `tab.state` | none | `tab` | the Tab view's cursor and `tabs.get_measure` |
-| `tab.set_cursor` | `key`, `bar`, `beat`, `string` | `tab`, `undo` | the Tab view's cursor (TR15) |
-| `tab.move` | `key`, `by` (1 or -1) | `tab`, `undo` | the Tab view's arrow keys (TR15) |
-| `tab.put` | `key`, `string`, `fret` | `tab`, `undo` | the fretboard's tap (TR15) |
-| `tab.put_pitch` | `key`, `pitch` (a MIDI note) | `tab`, `undo` | the piano's key (TR15) |
-| `tab.set_duration` | `key`, `value` (1, 2, 4, 8, 16, 32), `dotted`, `triplet` | `tab`, `undo` | the note value toolbar (TR15) |
-| `tab.rest` | `key` | `tab`, `undo` | the R key (TR15) |
-| `tab.delete` | `key` | `tab`, `undo` | the Delete key (TR15) |
+| `tab.state` | none | `tab` | the main score scene's cursor and bars |
+| `tab.set_cursor` | `key`, `bar`, `beat`, `string` | `tab`, `undo` | a click on the tab |
+| `tab.move` | `key`, `by` (1 or -1) | `tab`, `undo` | the right and left arrow keys |
+| `tab.put` | `key`, `string`, `fret` | `tab`, `undo` | a fretboard tap |
+| `tab.put_pitch` | `key`, `pitch` (a MIDI note) | `tab`, `undo` | a piano key on guitar tab |
+| `tab.set_duration` | `key`, `value` (1, 2, 4, 8, 16, 32), `dotted`, `triplet` | `tab`, `undo` | the note value toolbar, Dot and Triplet |
+| `tab.rest` | `key` | `tab`, `undo` | the R key |
+| `tab.delete` | `key` | `tab`, `undo` | the Delete key |
 
 - **Strings count from 1, the highest.** `tuning` lists the open strings as
   MIDI notes, highest first. Beats are the rhythmic slots of a bar, from 1.
-- **`tab.put` is a fretboard tap:** it writes that fret on that string at
+- **Each verb is the Tab view's own action,** so each change is the same undo
+  step with Tabber Studio's own label ("Set fret 3 on string 2", "Toggle
+  rest", "Insert beat"), undone with `edit.undo`.
+- **`tab.put` is a fretboard tap.** It writes that fret on that string at
   the cursor's beat, replacing another fret on the same string, or takes it
-  away when it is already there. The cursor stays, so more taps make a
-  chord. The chosen note value applies only to an empty beat.
-- **`tab.put_pitch` is a piano key:** the same, on the string that plays the
-  pitch at the lowest fret.
+  off when it is already there. The cursor stays, so more taps make a chord,
+  and the chosen note value applies only to an empty beat. Tabber Studio
+  plays the beat, as its fretboard does.
+- **`tab.put_pitch` is a piano key on guitar tab.** It does the same, on the
+  string that plays the pitch at the lowest fret, with the capo counted.
+- **`tab.set_duration`** sets the beat's value and the value of new notes,
+  then Dot and Triplet for the beat. When more than one of them changes,
+  that is one undo step.
+- **`duration` in `tab`** is what the toolbar shows: the beat's own value
+  when it has notes, else the chosen one, with the beat's dot and triplet.
 - **`tab.move` forward** past the last beat fills the bar with a rest beat
   of the chosen value, or goes to the next bar, adding one at the end.
-- **`tab.delete`** removes the note on the cursor's string; on an empty beat
-  it removes the beat.
-- **Every change to the song is one undo step,** undone with `edit.undo`.
-  `revision` counts the tab's changes.
+- **`tab.rest`** turns a beat with notes into a rest, and a rest into an
+  empty beat. **`tab.delete`** takes the note on the cursor's string, and a
+  beat left with none is a rest.
 - **`bars` holds the cursor's bar and its neighbours,** one before and three
-  after, so an answer stays small whatever the song's length.
-- With no tab on the selected track, every verb but `tab.state` is refused
-  with `no_tab`.
+  after, so an answer stays small whatever the song's length. `revision`
+  changes whenever they do.
+- **No tab, no edits.** With no tab on the selected track (an audio, drum or
+  plain MIDI track), every verb but `tab.state` is refused with `no_tab`.
 
 ### Not in the vocabulary
 

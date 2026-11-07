@@ -423,6 +423,11 @@ public actor DemoHost {
         return value == 64 ? "C" : value < 64 ? "L\(64 - value)" : "R\(value - 64)"
     }
 
+    /// Tabber Studio's names for note values, as its undo labels say them.
+    static func durationName(_ value: Int) -> String {
+        [1: "WHOLE", 2: "HALF", 4: "QUARTER", 8: "EIGHTH", 16: "SIXTEENTH", 32: "THIRTY_SECOND"][value] ?? "QUARTER"
+    }
+
     static let scale = [ScaleMark(db: 0, volume: 0.7), ScaleMark(db: -12, volume: 0.442),
                         ScaleMark(db: -24, volume: 0.279), ScaleMark(db: -48, volume: 0.111)]
 
@@ -457,8 +462,13 @@ public actor DemoHost {
     private func tabValue() -> JSONValue {
         guard let id = tabTrackID(), let doc = song.tabs[id] else { return .null }
         let cursor = doc.clamp(tabCursors[id] ?? TabCursor(bar: 1, beat: 1, string: 1))
+        // As Studio's toolbar shows it: the beat's own value when it has notes,
+        // else the chosen one; Dot and Triplet are always the beat's.
+        let beat = doc.beat(at: cursor)
+        let shown = beat.map { $0.notes.isEmpty ? NoteValue(value: tabDuration.value, dotted: $0.duration.dotted,
+                                                            triplet: $0.duration.triplet) : $0.duration } ?? tabDuration
         let state = TabState(trackID: id, revision: tabRevision, tuning: doc.tuning, drum: false, cursor: cursor,
-                             duration: tabDuration, barCount: doc.bars.count, bars: doc.window(around: cursor))
+                             duration: shown, barCount: doc.bars.count, bars: doc.window(around: cursor))
         return (try? JSONCoding.value(state)) ?? .null
     }
 
@@ -474,30 +484,45 @@ public actor DemoHost {
                                          string: p["string"]?.intValue ?? cursor.string))
         case "tab.move":
             let moved = doc.move(cursor, by: p["by"]?.intValue ?? 1, duration: tabDuration)
-            if moved.changed { label = moved.cursor.bar > cursor.bar ? "Insert bar" : "Insert beat" }
+            if moved.changed { label = moved.cursor.bar > cursor.bar ? "Insert measure" : "Insert beat" }
             cursor = moved.cursor
         case "tab.put":
             guard let string = p["string"]?.intValue, let fret = p["fret"]?.intValue,
                   (1...doc.tuning.count).contains(string), (0...DemoTab.maxFret).contains(fret) else {
                 throw DemoErrors.make("invalid_params", ["field": "fret"])
             }
-            if doc.put(string: string, fret: fret, at: cursor, duration: tabDuration) { label = "Set note" }
+            let off = doc.note(on: string, at: cursor)?.fret == fret
+            if doc.put(string: string, fret: fret, at: cursor, duration: tabDuration) {
+                label = off ? "Delete note on string \(string)" : "Set fret \(fret) on string \(string)"   // Studio's own labels
+            }
             cursor.string = string
         case "tab.put_pitch":
             guard let pitch = p["pitch"]?.intValue else { throw DemoErrors.make("invalid_params", ["field": "pitch"]) }
+            let before = doc
             let put = doc.put(pitch: pitch, at: cursor, duration: tabDuration)
-            if put.changed { label = "Set note" }
+            if put.changed {
+                let written = doc.note(on: put.string, at: cursor)
+                label = written == nil || before.note(on: put.string, at: cursor) == written
+                    ? "Delete note on string \(put.string)" : "Set fret \(written!.fret) on string \(put.string)"
+            }
             cursor.string = put.string
         case "tab.set_duration":
             guard let value = p["value"]?.intValue, NoteValue.values.contains(value) else {
                 throw DemoErrors.make("invalid_params", ["field": "value"])
             }
-            tabDuration = NoteValue(value: value, dotted: p["dotted"]?.boolValue ?? false, triplet: p["triplet"]?.boolValue ?? false)
-            if doc.setDuration(tabDuration, at: cursor) { label = "Set duration" }
+            let wanted = NoteValue(value: value, dotted: p["dotted"]?.boolValue ?? false, triplet: p["triplet"]?.boolValue ?? false)
+            let old = doc.beat(at: cursor)?.duration
+            tabDuration = NoteValue(value: value)            // the value sticks; Dot and Triplet are the beat's
+            if doc.setDuration(wanted, at: cursor), let old {
+                let changes = [old.value != wanted.value, old.dotted != wanted.dotted, old.triplet != wanted.triplet].filter { $0 }.count
+                label = changes > 1 ? "Set note value"
+                    : old.value != wanted.value ? "Set duration to \(Self.durationName(wanted.value))"
+                    : old.dotted != wanted.dotted ? "Toggle dotted" : wanted.triplet ? "Set tuplet 3" : "Clear tuplet"
+            }
         case "tab.rest":
-            if doc.rest(at: cursor) { label = "Rest" }
+            if doc.rest(at: cursor) { label = "Toggle rest" }
         default:
-            if doc.delete(at: cursor) { label = "Delete note" }
+            if doc.delete(at: cursor) { label = "Delete note on string \(cursor.string)" }
         }
         if let label {
             edit(label) { $0.tabs[id] = doc }

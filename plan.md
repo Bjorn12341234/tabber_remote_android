@@ -1557,6 +1557,39 @@ what was measured, and what changed in the plan.
   - **Owed:** the feed's cost with the mixer open, measured on a real song
     (TR3's rule), and a fader drag on a device against Tabber Studio.
 
+- **TR15 ✅ 2026-11-07, Tabber Studio and this repository.** Writing tab from
+  the phone, `tab/1`, on the real Tabber Studio (`remote_host/tablature.py`).
+  - **Each verb is the Tab view's own action,** found by reading Studio:
+    - the main score scene's cursor and its projected bars;
+    - `MainWindow._on_fretboard_click` for a tap;
+    - the piano's guitar-tab rule (toggle, or the lowest fret with the capo
+      counted) for a key, since the piano path itself refuses while the Tab
+      view is hidden;
+    - the toolbar's `set_duration`, `toggle_dotted` and `set_tuplet`, with
+      value and dot as one step;
+    - `move_cursor`, `toggle_rest` and `delete_note`.
+  - **The same undo steps and labels as in Studio** ("Set fret 3 on string
+    2", "Delete note on string 3", "Toggle rest", "Insert beat"). A tap
+    plays the beat on the computer, as the fretboard does. A bar that cannot
+    be written is refused in Tabber Studio's words.
+  - **Track rows gain fields:** they now carry the instrument (General MIDI
+    names) and a tab track's tuning. Audio, drum and plain MIDI tracks have
+    no tab: `tab` is null and edits are refused with `no_tab`.
+  - **DemoHost, the spec and the `tab` vector now follow Studio exactly:**
+    R toggles a rest off again, Delete takes only the cursor string's note,
+    "Insert measure", and the shown value is the toolbar's.
+  - **Gate met:**
+    - 6 Studio tests over a real connection, read back from the model: a
+      tap with its label and toggle, Undo with `expect`, a piano key's
+      lowest fret, value and dot as one step, the keys, no tab on an audio
+      track, and the tab topic following a tap on the computer's fretboard.
+    - All 51 remote tests pass.
+    - The phone's 4 Tab UI tests and RemoteKit's 27 pass.
+  - **Not covered:** drum tracks and MIDI Tab. Studio's drum map takes GM
+    numbers, not frets, so a drum track shows no tab on the phone.
+  - **Owed:** writing a riff on a device against Tabber Studio, both
+    screens side by side.
+
 - **TR32 ✅ 2026-11-07, this repository: Tabber Tuner.** The owner: "maybe
   viga tuner, the guitar tuner could be implemented into tabber remote also?
   but as tabber tuner... the code is already built".

@@ -1,11 +1,14 @@
 import Foundation
 
 /// One tab track's notes in the demo computer, edited as Tabber Studio's Tab
-/// view edits them (ui/fretboard_widget.py, ui/piano_staff_input.py):
+/// view edits them (remote_host/tablature.py, ui/main_window.py
+/// _on_fretboard_click, ui/piano_staff_input.py, ui/score_scene.py):
 /// - a fretboard tap writes that fret on that string at the cursor's beat, or
 ///   takes it away if it is already there; the cursor stays, so more taps
 ///   build a chord; the chosen duration applies only to an empty beat;
 /// - a piano key does the same with the lowest fret that plays the pitch;
+/// - R toggles a rest; Delete takes the note on the cursor's string, and a
+///   beat left with none is a rest;
 /// - moving on past the last beat fills the bar with a rest beat, or starts
 ///   the next bar, adding one at the end of the song.
 struct DemoTab: Equatable, Sendable {
@@ -83,29 +86,35 @@ struct DemoTab: Equatable, Sendable {
         return true
     }
 
+    /// R: a beat with notes becomes a rest; a rest becomes an empty beat.
     mutating func rest(at cursor: TabCursor) -> Bool {
         guard bars.indices.contains(cursor.bar - 1), bars[cursor.bar - 1].indices.contains(cursor.beat - 1) else { return false }
         let beat = bars[cursor.bar - 1][cursor.beat - 1]
-        guard !(beat.rest && beat.notes.isEmpty) else { return false }
-        bars[cursor.bar - 1][cursor.beat - 1] = TabBeat(duration: beat.duration, rest: true, notes: [])
+        bars[cursor.bar - 1][cursor.beat - 1] = TabBeat(duration: beat.duration, rest: !beat.rest || !beat.notes.isEmpty, notes: [])
         return true
     }
 
-    /// Delete: the note on the cursor's string; on an empty beat, the beat itself.
+    /// Delete: the note on the cursor's string, and nothing else.
     mutating func delete(at cursor: TabCursor) -> Bool {
         guard bars.indices.contains(cursor.bar - 1), bars[cursor.bar - 1].indices.contains(cursor.beat - 1) else { return false }
         var beat = bars[cursor.bar - 1][cursor.beat - 1]
-        if beat.notes.contains(where: { $0.string == cursor.string }) {
-            beat.notes.removeAll { $0.string == cursor.string }
-            beat.rest = beat.notes.isEmpty
-            bars[cursor.bar - 1][cursor.beat - 1] = beat
-            return true
-        }
-        if beat.notes.isEmpty, bars[cursor.bar - 1].count > 1 {
-            bars[cursor.bar - 1].remove(at: cursor.beat - 1)
-            return true
-        }
-        return false
+        guard beat.notes.contains(where: { $0.string == cursor.string }) else { return false }
+        beat.notes.removeAll { $0.string == cursor.string }
+        beat.rest = beat.notes.isEmpty
+        bars[cursor.bar - 1][cursor.beat - 1] = beat
+        return true
+    }
+
+    /// The beat under the cursor, when the bar has it.
+    func beat(at cursor: TabCursor) -> TabBeat? {
+        guard bars.indices.contains(cursor.bar - 1), bars[cursor.bar - 1].indices.contains(cursor.beat - 1) else { return nil }
+        return bars[cursor.bar - 1][cursor.beat - 1]
+    }
+
+    /// The note on a string at the cursor's beat, for the undo label of a tap that takes it off.
+    func note(on string: Int, at cursor: TabCursor) -> TabNote? {
+        guard bars.indices.contains(cursor.bar - 1), bars[cursor.bar - 1].indices.contains(cursor.beat - 1) else { return nil }
+        return bars[cursor.bar - 1][cursor.beat - 1].notes.first { $0.string == string }
     }
 
     /// The next or previous beat. Forward past the last beat fills the bar
