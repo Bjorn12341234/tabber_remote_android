@@ -1177,6 +1177,19 @@ Each needs the owner's go-ahead:
     - **Here:** built, signed, notarized and installed on this Mac.
     - **Published** (website, download) only on the owner's go, since that
       is public.
+    - **Done 2026-11-07:**
+      - Built from Tabber Studio 5f82110a.
+      - Its engine is byte for byte the certified abc7bd5e once signatures
+        are removed.
+      - Signed, notarized and stapled; Gatekeeper accepts the app and the
+        DMG.
+      - The frozen-app smoke test passes 12 of 12: protocol 1.1 with
+        `mixer/1` and `tab/1`, TLS 1.3 with the pinned key, every module
+        from the bundle.
+      - Installed in /Applications, with the original 0.3.16 kept beside it.
+    - **For publishing:** the DMG has the plain layout, since the branded
+      one drives a Finder window, and the website's 0.3.17 page is not made
+      yet.
 
 ## Rules for every sprint
 
