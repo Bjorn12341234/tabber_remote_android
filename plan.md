@@ -1,9 +1,13 @@
 # Tabber Spak: plan
 
-Status: planning only, 2026-11-06. No code exists yet, in this repository or
+Status: planning, 2026-11-06 and 07. No code exists yet, in this repository or
 in Tabber Studio. Sources: Tabber Studio `main` at `1ecc4a79` (0.3.16), read
-for this plan, and web research done the same day (links at the end). Tabber
+for this plan, and web research done the same days (links at the end). Tabber
 Studio changes often: re-verify every reference before coding.
+
+On 2026-11-07 the owner set a date: a demo at Pustervik on 24 November 2026.
+The schedule and the demo cut are in The Pustervik demo. The toolchain and
+library facts were checked again that day (Development setup).
 
 Read `guiding_principles_remote.md` first. It decides every conflict in this
 plan. Inside Tabber Studio, Tabber Studio's own guiding principles and
@@ -28,6 +32,10 @@ The owner, 2026-11-06 (typing tidied):
 The owner has an Apple Developer Program membership and a Google Play
 developer account, so TestFlight, the App Store and Google Play are all
 available. The plan has no running costs: there is no server.
+
+The owner, 2026-11-07 (typing tidied): "I have a demo at a music tech fair at
+Pustervik on 24 November. It would be cool to have an app by then. You know I
+build fast with Claude and Codex." See The Pustervik demo.
 
 ## Goal
 
@@ -556,11 +564,86 @@ screen.
     still alpha, and Compose Multiplatform, which would give up native Liquid
     Glass.
 
+## Development setup
+
+Checked on the owner's Mac Studio (M1 Max, macOS 26.6.2) on 2026-11-07.
+
+- **Xcode.** Xcode 26.3 is installed, from the Mac App Store, with only the
+  iOS 26.2 Simulator runtime. It is what the owner ships with: GoPast
+  (`historia`) builds 56 and 57 went to TestFlight from this Mac on 6 and 7
+  November. The current release is Xcode 27.2 (29 October 2026, iOS 27.2 SDK,
+  Swift 6.4.2). Xcode 27 needs macOS 26.6 or later, which this Mac has.
+  - **Tabber Spak is built with Xcode 27.2,** installed next to 26.3 as
+    `/Applications/Xcode-27.2.app` (the owner, 2026-11-07, on condition that
+    historia is not affected). The app starts on the current SDK, so it never
+    needs a migration, and the iPhone Duo layout needs the iOS 27.1 SDK or
+    later (Known traps).
+  - **Nothing else changes.** `xcode-select` stays on 26.3, which is what
+    historia's `release-ios.sh` and Tabber Studio's `build_engine.sh` use.
+    Only this repository's builds set `DEVELOPER_DIR` to 27.2.
+  - **Updates cannot replace 26.3.** App Store app updates and automatic macOS
+    installs are off on this Mac (checked 2026-11-07).
+  - **The install is checked against historia.** Afterwards, historia must
+    still archive with 26.3 the way its release script does (without the
+    upload), as build 57 did before the install.
+  - **Simulator runtimes:** iOS 26.2, with 26.3. iOS 27.2 and the iPhone Duo
+    simulator, with 27.2.
+- **Disk.** The internal disk has about 56 GB free; Xcode 27.2 and its
+  runtimes take a large share of that, so the `.xip` is expanded on
+  `/Volumes/Data`. DerivedData and archives go on the
+  external drive (`/Volumes/Data` has 408 GB free).
+- **Signing.** Apple Development and Apple Distribution certificates for Viga
+  Works AB (team `VLBJ7VR4H8`) are in the keychain, and Xcode is signed in to
+  the team. That is all a TestFlight upload from this Mac needs.
+- **Releases copy historia's.** `historia/app/scripts/release-ios.sh` goes
+  from the next build number to an uploaded build in one command. It checks
+  git, archives with automatic signing (`-allowProvisioningUpdates`), and
+  exports with `method` `app-store-connect` and `destination` `upload` through
+  the account signed in to Xcode, with no API key. Then it tags `ios-b<N>`.
+  Build output goes to `/Volumes/Data/<project>/xcode`. TR5 adapts it, without
+  the Expo steps.
+- **TestFlight.** Internal testers get every build without App Review, 5 to 15
+  minutes after upload. Every phone sprint from TR5 on ends with an internal
+  build on the owner's iPhone, not only TR9. A public link for external testers
+  needs Beta App Review of the first build.
+- **The Simulator loop.** The Simulator uses the Mac's network, so the app in
+  the Simulator reaches Tabber Studio on the same Mac through `localhost` or
+  Bonjour. Most of M1 can be built and tested on this one Mac. The device
+  checks in the gates stay.
+  - **No camera:** pair by delivering the QR code's link with
+    `xcrun simctl openurl booted 'tabber-remote://pair?...'`. The link comes
+    from `remote.pair` through the Control API.
+  - **No Secure Enclave:** RemoteKit uses a software P-256 key in the
+    Simulator only (`#if targetEnvironment(simulator)`).
+  - **No haptics and no Local Network prompt.**
+- **The iOS API exists.** The iOS 26 SDK has what RemoteKit needs:
+  `NetworkConnection` with a `WebSocket { TLS() }` stack, `TLS`'s
+  `certificateValidator` for pinning the Mac's key, and `WebSocket`'s
+  `subprotocols` and `maximumMessageSize`. Checked in Xcode 26.3's iPhoneOS
+  26.2 interface file.
+- **Python libraries** (PyPI, 2026-11-07): websockets 17.4, cryptography
+  50.0.2, segno 1.6.6 (pure Python). None is in Tabber Studio's venv yet
+  (Python 3.14.8, PyInstaller 6.21.0, cffi 2.0.0).
+- **Android.** Nothing is installed: no Android Studio, SDK or `adb`. None is
+  needed before TR24. Google Play has required target API 36 for new apps and
+  updates since 31 August 2026.
+
 ## Known traps
 
 **Phone:**
 - **Test Local Network privacy on a device.** The Simulator does not enforce
   it.
+- **The Simulator has no Secure Enclave and no camera.** Use the software key
+  and `simctl openurl` there (Development setup). The software key path never
+  runs on a device.
+- **iPhone Duo moves the bars.** Built with the iOS 27.1 SDK, tab bars and
+  toolbars run vertically along the side of the display in some poses. The
+  transport lives in the tab bar's bottom accessory and must never move
+  (principle 5), so TR7 checks it in the iPhone Duo simulator. From April
+  2027, App Store submissions need iPhone Duo screenshots (TR9).
+- **iOS 27 SDK uploads need a launch screen key,** or App Store Connect
+  rejects them (ITMS-90870). They also need the scene life cycle, which a
+  SwiftUI `App` already has.
 - **Denial is silent in the background.** Get the permission in the
   foreground before offering Shortcuts or Controls.
 - **Detecting denial:** a denied connection waits with `localNetworkDenied`,
@@ -582,6 +665,13 @@ screen.
   same.
 - **The macOS firewall's "Block all incoming connections"** blocks the remote.
   The app must name it.
+- **Xcode 27 removes the ld64 linker.** Tabber Studio's engine build and
+  historia's release script use `/Applications/Xcode.app` through
+  `xcode-select`. Keep Xcode 26.3 there until each moves in a sprint of its
+  own.
+- **cryptography ships no Intel macOS wheel after 48.0.1** (June 2026), and
+  Tabber Studio still ships an Intel beta (`release/locks/macos-x86_64.txt`).
+  TR2 pins a version both architectures can use, or builds it for Intel.
 
 **Network:**
 - **Tailscale and most VPNs carry no multicast,** so Bonjour fails there: use
@@ -589,6 +679,8 @@ screen.
 - **Discovery breaks** on guest networks, VLANs, access-point isolation and
   across some mesh nodes. Wi-Fi Assist moves the phone to cellular.
 - **AirDrop's AWDL link** causes latency spikes. Measure p95 with it on.
+- **Fair and venue Wi-Fi** is usually a guest network with client isolation.
+  The phone then cannot reach the computer at all, so bring your own router.
 
 **Control API:**
 - **Never put a blocking verb in the vocabulary.** Handlers run on the main
@@ -601,6 +693,217 @@ screen.
 - **iOS mutes haptics while the phone records,** and they would be heard
   anyway.
 - **Record to CAF, not WAV,** so a cut-off take survives.
+
+## The Pustervik demo, 24 November 2026
+
+The owner shows Tabber Spak at a music tech fair at Pustervik on Tuesday
+24 November 2026, 17 days after 7 November. The demo is S1 and S2 on stage.
+The gates are not relaxed for it; the scope is. A demo that fakes state, such
+as a red light the computer did not confirm, breaks principle 3. The demo shows
+the real thing or drops the step.
+
+### What the room sees
+
+About four minutes:
+
+1. **Pair.** Turn the remote on in Tabber Studio and click Pair iPhone. Scan
+   the QR code in Tabber Spak. The phone shows the computer and the song.
+2. **Record from across the room.** Walk away from the computer. On the phone:
+   arm the guitar track, tap Chorus, set a one-bar count-in, record.
+3. **Go again.** Stop. The take card rises. Hold Discard, then Go again:
+   count-in, record, stop, Keep.
+4. **One undo history.** Undo on the computer. The discarded take comes back,
+   and the phone shows it.
+5. **Drop the Wi-Fi.** Record again and take the phone off the Wi-Fi mid-take.
+   The computer keeps recording and the phone says Reconnecting. Back on the
+   Wi-Fi, the phone shows the true state: still recording, with the right
+   time. Stop.
+6. **Loop.** Hold Chorus to loop it.
+
+### The demo cut
+
+**In** (the S1 and S2 path):
+- QR pairing with pinned TLS, the one-time token and the device key. Principle
+  2 is not cut for a demo, and one scan is the demo's first surprise.
+- Reconnecting by itself: Bonjour, plus the addresses from the QR code.
+- The Session screen and the take card: transport, recording frame, bars and
+  beats, the armed track and its meter, count-in, click, loop, marker chips,
+  keep, discard with hold and Undo, go again, haptics, keep awake.
+- Choosing the armed track from the Session screen.
+- The true state after a drop.
+- On the computer: Settings › Remote with on and off, the QR dialog, paired
+  devices with Remove, and activity notices.
+- DemoHost. The tests need it anyway, and it is the stage fallback.
+
+**After the demo,** still in 1.0:
+- the 6-digit fallback, several computers, and every fix-it card except "Can't
+  reach your computer" and "Update Tabber Studio"
+- the Tracks screen, the takes list with ratings, Settings
+- the accessibility audit, Swedish, App Store submission
+
+**Stretch,** only if every demo gate is green by 19 November:
+- the Action Button starts and stops a recording (TR10)
+- practice speed (S6)
+- flag a moment
+
+TR0 still specifies all of M1, not only the cut, so the work after the demo
+needs no protocol change.
+
+### One builder, in turns
+
+The owner's choice (decision 19): one builder works both repositories, one
+sprint at a time. The order alternates so that each sprint is tested against
+the one before it, and the phone has a real host to talk to as early as
+possible. The dates are targets.
+
+| Date | Sprint | Where | Checkpoint |
+|---|---|---|---|
+| Sat 7 Nov | planning | this repo | this plan |
+| Sun 8 | TR0 | this repo | every vector validates |
+| Mon 9 | TR1 | Studio | the TR1 gate, headless |
+| Tue 10 | TR5 | this repo | an internal TestFlight build on the owner's iPhone, running DemoHost |
+| Wed 11 to Thu 12 | TR2 | Studio | the M1 vectors pass against a headless Tabber Studio; then TR5's device check against this host |
+| Fri 13 | TR3 | Studio | feed values equal the Control API's read-backs |
+| Sat 14 to Sun 15 | TR7, TR8 (demo parts) | this repo | the Simulator runs S1 against Tabber Studio on this Mac |
+| Mon 16 to Tue 17 | TR4 (demo parts); the signed Tabber Studio build with the remote | Studio | QR pairing with the signed, installed app |
+| Wed 18 | TR6 (demo parts) | this repo | S1 and S2 on the owner's iPhone over the travel router |
+| Thu 19 to Fri 20 | hardening: TR3's stress test, TR7's latency, fixes | both | every demo gate green; stretch only then |
+| Sat 21 to Mon 23 | freeze: fixes only; rehearsals | both | three full rehearsals on the stage setup |
+| Tue 24 | the demo | | |
+
+There is no slack. When a sprint runs late, the stretch items go first, then
+demo-script steps from the end of the script. A gate is never relaxed.
+
+### The demo part of each sprint
+
+| Sprint | In the demo | After the demo |
+|---|---|---|
+| TR0, TR1, TR2, TR3, TR5, TR7 | all of it | |
+| TR4 | Bonjour advertising, both Info.plist keys, Settings › Remote, the QR dialog, paired devices with Remove, activity notices, the connected-phone indicator | the 6-digit fallback with Allow |
+| TR6 | Welcome, Find your Mac, the QR scanner, reconnecting after an address change, "Can't reach your computer" and "Update Tabber Studio" | the 6-digit fallback, several computers, the other fix-it cards |
+| TR8 | the take card, choosing the armed track | the takes list with ratings, the Tracks screen; flag a moment is stretch |
+| TR9 | a first app icon, made in TR5 | everything else |
+
+The demo part of a sprint passes the gate items for what it contains.
+
+### The next two sprints in detail
+
+**TR0, Sunday 8 November, this repository.**
+- **`protocol/spec.md`,** the Tabber Remote Protocol v1:
+  - transport: WebSocket over TLS 1.3, subprotocol `tabber-remote.v1`, JSON-RPC
+    2.0 in text frames; binary frames reserved for audio (M3)
+  - the connection in order: pinned TLS, `hello`, then `pair` or `auth`, then
+    `session.subscribe`, the snapshot, events, heartbeats, close codes
+  - pairing, exact to the byte: the QR link, the key hash (SHA-256 of the Mac's
+    DER SubjectPublicKeyInfo, base64url without padding), the device key's
+    encoding, the bytes the device signs, the signature encoding, and the
+    6-digit code
+  - every M1 verb: parameters, result, errors, idempotency, capability, and the
+    Control API calls it maps to
+  - the snapshot and the event topics, with sequence numbers and host time
+  - error codes, each with a sentence a musician can read
+  - versioning, capabilities and limits (frame size, rate limits)
+- **The M1 vocabulary,** exactly these verbs:
+  - connection: `hello`, `pair`, `auth.begin`, `auth.prove`,
+    `session.subscribe`, `session.unsubscribe`, `session.snapshot`,
+    `heartbeat`
+  - transport: `transport.play`, `transport.stop`, `transport.record`,
+    `transport.seek`, `transport.set_loop`, `transport.set_click`,
+    `transport.set_count_in`, `transport.set_tempo_scale`
+  - tracks: `tracks.arm`, `tracks.select`, `tracks.set_monitor`
+  - markers: `markers.go`, `markers.loop`, `markers.add`
+  - takes: `takes.list`, `takes.discard`, `takes.go_again`, `takes.rate`
+  - edits and the project: `edit.undo`, `edit.redo`, `project.save`
+- **Two rules the spec settles:**
+  - **Undo names the step it expects.** If the newest undo step on the
+    computer is a different one, the host refuses and says so. An Undo on the
+    phone can never undo someone else's edit (principle 3).
+  - **Heartbeats are protocol messages,** not WebSocket pings, so the remote
+    thread can report "Tabber Studio is busy" in them.
+- **`protocol/schemas/`:** one JSON Schema (draft 2020-12) per message.
+- **`protocol/vectors/`:**
+  - `hello`, when versions match and when they do not
+  - the pairing hashes and codes, computed from fixed test keys, and a signed
+    challenge
+  - each verb's exchange, and the errors
+  - an event sequence with a gap, followed by the new snapshot
+- **`tools/validate_vectors.py`:** checks every vector against its schema and
+  recomputes every hash and signature. Its packages (`jsonschema`,
+  `cryptography`) live in a venv for this repository's tools only.
+
+**TR5, Tuesday 10 November, this repository.**
+- **`apple/TabberSpak.xcodeproj`:**
+  - iOS 26 minimum, Swift 6 language mode
+  - automatic signing for team `VLBJ7VR4H8`
+  - built with Xcode 27.2 through `DEVELOPER_DIR`, with build output in
+    `/Volumes/Data/tabber_remote/xcode`
+- **`apple/RemoteKit/`,** a Swift package that imports no UI framework:
+  - models generated by hand from the schemas
+  - the connection: `NetworkConnection` with `WebSocket { TLS() }` and the
+    pinning validator
+  - `hello`, reconnect, idempotent resend, heartbeats
+  - the device key: the Secure Enclave on a device, a software key in the
+    Simulator
+- **DemoHost,** a simulated Tabber Studio inside RemoteKit that follows the same
+  vectors.
+- **Tests:** `xcodebuild test` runs every vector in Swift, plus the DemoHost
+  session tests.
+- **On the phone:** a first app icon, a debug screen, and the first internal
+  TestFlight build on the owner's iPhone, uploaded by
+  `apple/scripts/release-ios.sh` (adapted from historia's, with
+  `DEVELOPER_DIR` set to Xcode 27.2).
+- **TR5's device check against TR2's host** runs right after TR2, since TR2
+  now comes later.
+
+### Before the next session (the owner)
+
+- **Download Xcode 27.2** (`Xcode_27.2.xip`) from developer.apple.com, signed
+  in with your Apple ID. The rest of the install and the historia check happen
+  in a session.
+- **Reserve the app,** any time before TR5:
+  - register the identifier `studio.tabber.spak` at developer.apple.com
+  - create the App Store Connect app "Tabber Spak" with it, for Viga Works AB
+  - add an internal TestFlight group with automatic distribution, with
+    yourself in it
+- **Get a small travel router** with an Ethernet port.
+- **Decide how the room sees the phone** (The stage setup).
+
+### The stage setup
+
+- **The stage Mac is this Mac Studio** (the owner, 2026-11-07). Development,
+  the signed build and every rehearsal happen on the machine that goes on
+  stage. At the venue it needs a screen (a monitor or the venue's projector),
+  a keyboard and mouse, and the audio interface.
+- **Bring a small travel router.** The Mac Studio joins it by Ethernet, and
+  only the phone uses its Wi-Fi. It needs no internet. The venue's Wi-Fi is
+  the most likely thing to fail (Known traps).
+- **On the phone:** AirDrop receiving off, no VPN, Wi-Fi Assist off, fully
+  charged, keep awake on.
+- **Fallbacks, in order:** the remembered address; DemoHost, clearly labelled
+  Demo; a screen recording of a rehearsal.
+- **Rehearse on the stage hardware:** the same Mac, iPhone and router, and the
+  signed builds that will be used on the day.
+- **Open: how the room sees the phone.** The phone's screen in QuickTime over a
+  long USB-C cable (a cable takes something away from "across the room"), a
+  camera on the phone, or only the computer's screen reacting. The owner
+  decides.
+
+### Risks
+
+- **Tabber Studio internals.** Arming an audio track is UI-only today, and
+  discard and go again do not exist yet (TR1). TR1 goes first. If a verb runs
+  late, the demo script loses that step; the gate stays.
+- **Packaging.** websockets, cryptography and segno must go into the frozen,
+  signed app with two new Info.plist keys, and the Local Network prompt shows
+  only in the signed app. Hence the signed build by 18 November.
+- **The development Mac is the stage Mac.** An update or a half-finished
+  experiment on it in the last days can break the demo. Updates stay off, and a
+  known-good signed build of each app stays installed from 20 November.
+- **One builder.** Every slip moves everything after it. The cut order
+  handles it (One builder, in turns).
+- **Xcode.** Two versions side by side: Tabber Spak on 27.2, everything else
+  on 26.3 (Development setup).
+- **The venue's network.** The travel router.
 
 ## Milestones and sprints
 
@@ -682,12 +985,13 @@ Each needs the owner's go-ahead:
 1. **Order.** Default: M1 to M6 as listed. Scheduling is the owner's.
 2. **Names and ids.** The name is decided: Tabber Spak (see The name).
    Still open, with defaults:
-   - bundle id `studio.tabber.spak` (Tabber Studio is `studio.tabber.app`).
-     A bundle id can never change once the app exists in App Store Connect, so
-     confirm it before TR5 creates the Xcode project.
+   - bundle id: **decided, `studio.tabber.spak`** (the owner, 2026-11-07).
+     Tabber Studio is `studio.tabber.app`. A bundle id can never change once
+     the app exists in App Store Connect.
    - the home-screen label "Tabber Spak"
    - Bonjour type `_tabber-remote._tcp`, registered with IANA
-   - TR0 checks that "Tabber Spak" is free on the App Store
+   - "Tabber Spak" looks free: an App Store search on 2026-11-07 found no app
+     by that name. Creating the App Store Connect record is what reserves it.
 3. **Devices.** Default: iPhone first, iOS 26 minimum, iPad in TR21.
 4. **Price.** Default: free. It sells Tabber Studio.
 5. **Version 1.0.** Default: M1 only.
@@ -723,6 +1027,12 @@ Each needs the owner's go-ahead:
 17. **Languages.** Default: English, plus Swedish from 1.0, since an Xcode
     String Catalog makes a second language cheap. The App Store copy is in
     both.
+18. **The Pustervik demo.** Default: a stage demo of S1 and S2 on the owner's
+    devices, from the demo cut. Open: whether visitors can join a public
+    TestFlight beta that day. That needs Beta App Review and a Tabber Studio
+    build with the remote that visitors can download.
+19. **Who builds the Tabber Studio side.** Decided (the owner, 2026-11-07): one
+    builder works both repositories, in turns (One builder, in turns).
 
 ## Rules for every sprint
 
@@ -758,8 +1068,14 @@ Each needs the owner's go-ahead:
 
 ## Records
 
-None yet. Each sprint adds its record here: the date, the commits in both
-repositories, what was measured, and what changed in the plan.
+Each sprint adds its record here: the date, the commits in both repositories,
+what was measured, and what changed in the plan.
+
+- **2026-11-07, planning.** The owner set the demo date. Development setup,
+  The Pustervik demo and new Known traps were added after checking this Mac
+  and the web. Tabber Studio `main` was still at `1ecc4a79`, so the references
+  above stand. Its working tree held someone's uncommitted changes
+  (`control_api/handlers/buses.py` and two plans), left untouched.
 
 ## Sources
 
@@ -802,6 +1118,15 @@ Collected 2026-11-06.
 - [TouchOSC](https://apps.apple.com/us/app/touchosc/id1569996730)
 - [Guitar Pro for iOS](https://apps.apple.com/us/app/guitar-pro/id400666114)
 - AirDrop latency: [AWDL research](https://www.theregister.com/2025/10/23/apple_airdrop_awdl_latency_research/)
+
+**Checked 2026-11-07:**
+- Xcode 27 requirements and changes: [Xcode 27 Is Out](https://blakecrosley.com/blog/xcode-27-release) (secondary, quoting Apple's release notes)
+- App Store submissions for the 27 releases: [Apple developer news](https://developer.apple.com/news/?id=k1mtkt1k)
+- Uploads with the iOS 27 SDK: [checklist](https://ecorpit.com/app-store-ios-27-sdk-requirement-april-2027/) (secondary)
+- iPhone Duo: [Preparing your app for iPhone Duo](https://developer.apple.com/documentation/technologyoverviews/preparing-your-app-for-iphone-duo.md)
+- Android local network permission: [Android developers](https://developer.android.com/privacy-and-security/local-network-permission)
+- Google Play target API: [Play Console Help](https://support.google.com/googleplay/android-developer/answer/11926878)
+- Library versions: PyPI for [websockets](https://pypi.org/project/websockets/), [cryptography](https://pypi.org/project/cryptography/), [segno](https://pypi.org/project/segno/)
 
 **Live audio over a network:**
 - [SonoBus guide](https://sonobus.net/sonobus_userguide.html)
