@@ -2062,6 +2062,25 @@ what was measured, and what changed in the plan.
       more and a held Previous back to the start.
   - **Owed:** on a device against Studio 0.3.20.
 
+- **Tabber Studio 0.3.19 and 0.3.20, built 2026-11-07; 0.3.20 installed.**
+  - **0.3.19 (496326cc)** carried the chat fixes. It was built and checked,
+    then never installed: 0.3.20 came the same evening.
+  - **0.3.20 (0b95bf05)** adds `view/1`.
+  - **Both were built and checked as 0.3.18 was:**
+    - the certified engine abc7bd5e;
+    - signed, notarized and stapled, and Gatekeeper accepts them;
+    - the frozen-app smoke test passes.
+  - **Installed** after the owner quit Studio, with 0.3.18 kept beside it
+    as "Tabber Studio 0.3.18". The 0.3.17 app was removed; its DMG stays in
+    rel0317.
+  - **The DMG** is at
+    /Volumes/Data/tabber_work/rel0320/download/Tabber-Studio-0.3.20-macOS-arm64.dmg.
+  - **Running:** its remote listens on every address, the Tailscale one
+    included.
+  - **TestFlight builds 7 and 8:**
+    - 7: where the sound plays;
+    - 8: the view row and the held Previous and Next.
+
 ## Sources
 
 Collected 2026-11-06.
