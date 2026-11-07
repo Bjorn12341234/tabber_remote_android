@@ -770,7 +770,7 @@ toggle loops the range set on the computer.
 **Before the stage freeze on 19 November,** in this order (the owner,
 2026-11-07: "we have time to build stuff"):
 1. Take lanes for passes (TR33, done 7 November).
-2. Routing (TR27, TR28).
+2. Routing (TR27, TR28, done 7 November).
 3. Chat (TR29, TR30).
 
 From the freeze to the summit: rehearsal and fixes only.
@@ -1792,6 +1792,96 @@ what was measured, and what changed in the plan.
     chorus.
   - **Not built:** choosing an earlier take from the phone. Delete the newer
     take to hear the earlier one again; comping stays on the computer.
+
+- **TR27 ✅ 2026-11-07, Tabber Studio (a84bc9f8); protocol 1.2 (c8bed0a,
+  labels 4b94a69).** Routing for phones, `routing/1`.
+  - **The protocol:**
+    - `routing.state` and the `routing` topic: every track and bus with
+      its one output, and every send with its level, `level_db`,
+      `level_label` and Pre-fader, with the mixer's strip ids;
+    - `routing.set_output`, `routing.set_send` and `routing.remove_send`;
+    - new errors `routing_loop` (1034, with `path`) and `wrong_kind`
+      (1035); `unknown_strip` may carry the routing.
+    - A 1.2 phone works with a 1.1 or 1.0 host, which simply lists no
+      `routing/1`.
+  - **Each change is the Routing panel's own,** read from its snapshot
+    (`build_routing_overview`):
+    - an output moves as the matrix moves it, one undo step, "Routing
+      change";
+    - a send is added and removed as Alt+click does, each an undo step
+      ("Add send → Reverb"), and starts at Studio's -6 dB;
+    - its level and Pre-fader are the mixer's send controls, not undo
+      steps;
+    - a loop is refused before anything changes, named ("Reverb → Delay
+      → Reverb").
+  - **Fixed in Tabber Studio on the way:**
+    - A send added in the matrix or a header stayed silent until its level
+      was dragged, and a removed one kept playing: the send commands now
+      get the engine.
+    - The track header's Output menu edited the song alone, with no undo
+      and no engine call. It now takes the panel's path
+      (`ui/routing_edits.py`), one undo step.
+    - The headers' output and send chips went stale after a matrix change.
+    - Routing undo labels name the track and bus instead of numbers.
+    - The new code sits in `ui/routing_edits.py` under the RS29 growth
+      freeze; `main_window.py` shrank by 8 lines (ceiling 15,704).
+  - **Gate met:** 8 Studio tests over a real connection (`test_tr27_routing.py`):
+    - the panel's own routing;
+    - an output moved, read back from the model, the engine and the
+      header chip;
+    - a loop refused with its path, leaving the routing unchanged;
+    - a send heard at once, its level no undo step, a removed send
+      stopped, Undo bringing it back as it was;
+    - wrong kinds, the header menu's one step, the topic following the
+      computer, and a 1.1 phone seeing no routing.
+    - Putting the send-engine and header-chip fixes back fails 2 of them;
+      the remote, routing and freeze suites pass (205).
+  - **Owed:** routing on a device against Tabber Studio.
+
+- **TR28 ✅ 2026-11-07, this repository (4b94a69).** Routing on the phone.
+  - **Where:** the Mixer's other view (Mixer | Routing in its bar), as
+    Studio's Routing panel can sit as a tab beside its Mixer. A list for
+    one thumb, not the Flow graph.
+  - **Each track** has its Output (Master or a bus, from a menu) and its
+    sends, drawn like Studio's send row: the bus, a thin bar with the thumb
+    at the level, the level in dB, PRE. Add send and remove are beside
+    them. A send drags from where it is, and double-tap is silence, as
+    Studio's double-click is.
+  - **Each bus** has its Output, where a bus that would loop back is shown
+    but can't be chosen, and what feeds it: outputs and sends.
+  - **Undo** is in the Mixer's toolbar, as on the Tab screen (routing,
+    mute and solo are undo steps). A refused loop is explained with its
+    path.
+  - **DemoHost** speaks 1.2 with Studio's routing and labels; Vocals and
+    Lead guitar send to Reverb.
+  - **Gate met:**
+    - RemoteKit's 30 tests, the vectors round-tripping;
+    - 26 UI tests, two new: an output to a bus and back; a send added,
+      Pre-fader, removed and brought back by Undo;
+    - the accessibility audit covers Routing. Text resting under the
+      transport is left out of its contrast check; with a list that fits,
+      Routing passes the whole audit.
+  - **Owed:** on a device against Tabber Studio.
+
+- **Tuner crash fixed 2026-11-07 (ffa9f8d), TestFlight build 4.** The
+  owner: the app "crashed when the mic of the tuner was activated", on
+  build 3, away from the Wi-Fi.
+  - **Why:** the microphone tap's block was made inside `TunerModel`, which
+    is main-actor code, and `AVAudioNodeTapBlock` is not marked Sendable.
+    So Swift 6 gave the block a main-actor check, and AVAudioEngine calls
+    it on its audio thread: the first buffer stopped the app (SIGTRAP).
+    The UI tests run the tuner's demo, never the microphone, so they could
+    not see it.
+  - **Fix:** `PitchTap.install` makes the block outside the main actor. An
+    input with no channels or sample rate is not tapped at all.
+  - **Proof without a phone:** the same shape on this Mac with an offline
+    AVAudioEngine under Swift 6 (no microphone, no system audio). The old
+    one exits with SIGTRAP on the first tap call; the new one runs the tap
+    30 times.
+  - **Owed:** the tuner on the owner's iPhone with build 4.
+  - **Lesson:** a block that a system framework calls on its own thread is
+    made in nonisolated code. The app has no other such block; Discovery's
+    network handler is already nonisolated.
 
 ## Sources
 
