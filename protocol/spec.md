@@ -254,8 +254,12 @@ whether Tabber Studio is busy:
 ## 7. Versions and capabilities
 
 - **The protocol version** is `major.minor`. `hello` lists what the remote
-  speaks (`"protocol_versions": ["1.0"]`, one entry per major, the highest
-  minor it knows); the host answers with the version it chose.
+  speaks (`"protocol_versions": ["1.1"]`, one entry per major, the highest
+  minor it knows); the host answers with the version it chose: the major
+  both speak, and the lower of the two minors. It lists only that version's
+  capabilities, refuses the verbs of any other with `not_supported` and
+  their topics with `invalid_params`, so a 1.0 remote sees exactly the 1.0
+  host it knew.
 - **An additive change** (a new verb, field, event topic or error) raises the
   minor version and adds a capability. Remotes ignore fields they do not know.
 - **A breaking change** raises the major version. The host keeps serving the

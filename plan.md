@@ -1523,6 +1523,40 @@ what was measured, and what changed in the plan.
   - **Next:** TR25 and TR15 in Studio, so the real Studio offers `mixer/1`
     and `tab/1`; then the tuner (TR32); then routing and chat.
 
+- **TR25 ✅ 2026-11-07, Tabber Studio (d78967bd).** The mixer for phones,
+  `mixer/1`, on the real Tabber Studio.
+  - **Strips and units:**
+    - A strip for every track in strip order, then every bus, then the
+      master.
+    - Volume crosses the wire as the fader's travel in the mixer's own taper
+      (`ui/mixer_dock.py`, as `ui/mixer_level.py` uses it): 0 dB at 70 %,
+      -12 dB at 45 %. The phone's fader therefore sits where Studio's does.
+    - Pan uses the mixer's labels: L64, C and R63, buses in percent.
+  - **Edits:**
+    - Solo and mute are undo steps through the Control API. Volume and pan
+      are direct writes, as in the mixer.
+    - The master has no pan, mute or solo, and a gone strip is refused with
+      the current mixer.
+  - **Feed:**
+    - The `mixer` topic rides the 100 ms check with the other cheap topics.
+    - `mixer_meters` reads the engine's live strips and the master strip,
+      never the master's offline render, and runs only while a phone
+      subscribes.
+  - **Versions:** the host speaks 1.1, and each session gets the lower of
+    the two minors with only that version's capabilities and topics (spec
+    7). So TestFlight build 2, a 1.0 phone, sees exactly the 1.0 host it
+    knew, and the exact replays of the 1.0 connection vectors still hold.
+  - **Gate met:**
+    - Every answer obeys the pinned 1.1 schemas.
+    - Every change matches its read-back from the model and the Control
+      API.
+    - A fader move is not an undo step, and Undo leaves the fader alone.
+    - The mixer topic follows a change made on the computer.
+    - The meters stop when the last phone leaves.
+    - 7 new tests; all 45 remote tests pass.
+  - **Owed:** the feed's cost with the mixer open, measured on a real song
+    (TR3's rule), and a fader drag on a device against Tabber Studio.
+
 - **TR32, planned: Tabber Tuner.** The owner: "maybe viga tuner, the guitar
   tuner could be implemented into tabber remote also? but as tabber tuner...
   the code is already built". The iPhone Viga Tuner
