@@ -1,0 +1,519 @@
+import Foundation
+
+/// A simulated Tabber Studio in the app, speaking the protocol over memory.
+///
+/// The app runs it in demo mode (App Review, screenshots, the stage fallback)
+/// and every screen's tests run against it (plan: Rules, iOS). It keeps a real
+/// session: a moving playhead, count-in, recording that makes takes, discard
+/// and undo with step ids, markers, idempotency keys and events. It does no
+/// TLS and accepts any device: it is a demo, never a host on the network.
+public actor DemoHost {
+    public static let hostID = "5e1f0a2b-3c4d-4e5f-8a6b-7c8d9e0f1a2b"
+    public static let name = "Demo Studio"
+
+    struct Step { var id: String; var label: String; var before: Song; var after: Song }
+
+    struct Song: Equatable {
+        var tracks: [Track]
+        var markers: [Marker]
+        var takes: [Take]
+        var project: ProjectState
+    }
+
+    final class Connection {
+        let transport: MemoryTransport
+        var topics: Set<String> = []
+        var seq = 0
+        var authed = false
+        var challenge = Data()
+        init(transport: MemoryTransport) { self.transport = transport }
+    }
+
+    // Session state
+    private var song: Song
+    private var gone: [String: Take] = [:]
+    private var undo: [Step] = []
+    private var undoIndex = 0
+    private var tempo = 96.0
+    private var scale = 1.0
+    private var click = false
+    private var countIn = 0
+    private var loop = LoopState(enabled: false, start: nil, end: nil)
+    private var playing = false
+    private var anchorBeat = 0.0              // where the playhead was at anchorTime
+    private var anchorTime = ContinuousClock.now
+    private var recordingStart: (position: Position, at: ContinuousClock.Instant, track: String)?
+    private var takeCounter = 0
+    private var stepCounter = 40
+    private var markerCounter = 0
+    private var answers: [String: JSONValue] = [:]
+    private var connections: [ObjectIdentifier: Connection] = [:]
+    private var ticker: Task<Void, Never>?
+    private var lastSent: [String: JSONValue] = [:]
+    private let epoch = ContinuousClock.now
+
+    /// Tests: drop the connection after doing the next request, before answering.
+    public var dropBeforeNextAnswer = false
+    public private(set) var recordingsStarted = 0
+
+    public init() {
+        song = Song(
+            tracks: [Track(id: "demo-vocals", name: "Vocals", kind: .audio, armed: false, monitor: .auto, selected: true, color: "#E5484D"),
+                     Track(id: "demo-guitar", name: "Guitar", kind: .audio, armed: false, monitor: .auto, selected: false, color: "#3E63DD"),
+                     Track(id: "demo-keys", name: "Keys", kind: .midi, armed: false, monitor: .auto, selected: false, color: "#30A46C")],
+            markers: [Marker(id: "demo-intro", name: "Intro", bar: 1, beat: 1),
+                      Marker(id: "demo-verse", name: "Verse", bar: 9, beat: 1),
+                      Marker(id: "demo-chorus", name: "Chorus", bar: 25, beat: 1),
+                      Marker(id: "demo-solo", name: "Solo", bar: 41, beat: 1)],
+            takes: [],
+            project: ProjectState(title: "Demo Song", unsaved: false, hasFile: true))
+    }
+
+    public func setDropBeforeNextAnswer(_ value: Bool) { dropBeforeNextAnswer = value }
+
+    /// A new connection; the phone uses the returned end.
+    public func connect() -> MemoryTransport {
+        let (phone, host) = MemoryTransport.pair()
+        let connection = Connection(transport: host)
+        connections[ObjectIdentifier(connection)] = connection
+        Task { await self.serve(connection) }
+        Task { await self.heartbeats(connection) }
+        return phone
+    }
+
+    private func serve(_ connection: Connection) async {
+        while let text = try? await connection.transport.receive() {
+            await handle(text, on: connection)
+        }
+        connections[ObjectIdentifier(connection)] = nil
+    }
+
+    private func heartbeats(_ connection: Connection) async {
+        while connections[ObjectIdentifier(connection)] != nil {
+            try? await Task.sleep(for: .seconds(2))
+            guard connections[ObjectIdentifier(connection)] != nil else { return }
+            send(["jsonrpc": "2.0", "method": "heartbeat",
+                  "params": ["t": .number(now()), "seq": .number(Double(connection.seq)), "busy": false]], to: connection)
+        }
+    }
+
+    private func now() -> Double { (ContinuousClock.now - epoch).seconds + 1000.0 }
+
+    private func send(_ message: JSONValue, to connection: Connection) {
+        guard let text = try? JSONCoding.encode(message) else { return }
+        connection.transport.sendNow(text)
+    }
+
+    // MARK: requests
+
+    private func handle(_ text: String, on connection: Connection) async {
+        guard let message = try? JSONCoding.parse(text), let id = message["id"],
+              let method = message["method"]?.stringValue else { return }
+        let params = message["params"] ?? [:]
+        let before = topicData()
+        var answer: JSONValue
+        do {
+            answer = ["jsonrpc": "2.0", "id": id, "result": try run(method, params, connection)]
+        } catch let failure as RemoteError {
+            answer = ["jsonrpc": "2.0", "id": id,
+                      "error": ["code": .number(Double(failure.code)), "message": .string(failure.message),
+                                "data": failure.data]]
+        } catch {
+            answer = errorAnswer(id, "internal_error")
+        }
+        if dropBeforeNextAnswer {
+            dropBeforeNextAnswer = false
+            connection.transport.drop()
+            connections[ObjectIdentifier(connection)] = nil
+        } else {
+            send(answer, to: connection)
+        }
+        broadcastChanges(from: before)
+    }
+
+    private func errorAnswer(_ id: JSONValue, _ reason: String) -> JSONValue {
+        let failure = DemoErrors.make(reason)
+        return ["jsonrpc": "2.0", "id": id, "error": ["code": .number(Double(failure.code)),
+                                                      "message": .string(failure.message), "data": failure.data]]
+    }
+
+    private func run(_ method: String, _ p: JSONValue, _ connection: Connection) throws -> JSONValue {
+        switch method {
+        case "hello":
+            connection.challenge = Data((0..<32).map { _ in UInt8.random(in: 0...255) })
+            return ["host": ["id": .string(Self.hostID), "name": .string(Self.name), "app_version": "demo"],
+                    "protocol_version": "1.0",
+                    "capabilities": ["transport/1", "record/1", "tempo_scale/1", "tracks/1", "tracks.monitor/1",
+                                     "markers/1", "takes/1", "takes.discard/1", "takes.go_again/1", "undo/1",
+                                     "save/1", "meters/1"],
+                    "limits": ["max_frame_bytes": 65536, "requests_per_second": 20, "burst": 40,
+                               "heartbeat_ms": 2000, "heartbeat_misses": 3, "connections_per_device": 2],
+                    "challenge": .string(Base64URL.encode(connection.challenge))]
+        case "pair":
+            guard let key = p["device"]?["key"]?.stringValue, let der = Base64URL.decode(key) else {
+                throw DemoErrors.make("invalid_params", ["field": "device"])
+            }
+            connection.authed = true
+            return ["device_id": .string(RemoteCrypto.deviceID(publicKeyDER: der)),
+                    "host": ["id": .string(Self.hostID), "name": .string(Self.name)]]
+        case "auth":
+            connection.authed = true
+            return ["device": ["id": p["device_id"] ?? "", "name": "Demo iPhone"]]
+        default:
+            break
+        }
+        guard connection.authed else { throw DemoErrors.make("unauthenticated") }
+        if let key = p["key"]?.stringValue {
+            if let stored = answers[key] { return stored }
+            let value = try verb(method, p, connection)
+            answers[key] = value
+            return value
+        }
+        return try verb(method, p, connection)
+    }
+
+    private func verb(_ method: String, _ p: JSONValue, _ connection: Connection) throws -> JSONValue {
+        switch method {
+        case "session.subscribe":
+            for topic in p["topics"]?.arrayValue ?? [] { if let t = topic.stringValue { connection.topics.insert(t) } }
+            return try snapshot(seq: connection.seq)
+        case "session.unsubscribe":
+            for topic in p["topics"]?.arrayValue ?? [] { if let t = topic.stringValue { connection.topics.remove(t) } }
+            return ["topics": .array(connection.topics.sorted().map { .string($0) })]
+        case "session.snapshot":
+            return try snapshot(seq: connection.seq)
+        case "transport.play":
+            if let from = p["from"], let bar = from["bar"]?.intValue, let beat = from["beat"]?.intValue {
+                anchorBeat = Double((bar - 1) * 4 + beat - 1)
+            } else {
+                anchorBeat = currentBeat()
+            }
+            anchorTime = .now
+            playing = true
+            startTicker()
+            return ["transport": try JSONCoding.value(transport())]
+        case "transport.stop":
+            let take = try stopEverything()
+            return ["transport": try JSONCoding.value(transport()), "record": try JSONCoding.value(record()),
+                    "take": take.map { (try? JSONCoding.value($0)) ?? .null } ?? .null]
+        case "transport.record":
+            let wanted = Set((p["armed_track_ids"]?.arrayValue ?? []).compactMap(\.stringValue))
+            if recordingStart != nil { throw DemoErrors.make("already_recording", ["record": try JSONCoding.value(record())]) }
+            if wanted != Set(song.tracks.filter(\.armed).map(\.id)) || wanted.isEmpty {
+                throw DemoErrors.make("stale_target", ["tracks": try JSONCoding.value(song.tracks),
+                                                       "record": try JSONCoding.value(record())])
+            }
+            if let bars = p["count_in_bars"]?.intValue { countIn = bars }
+            try startRecording(track: song.tracks.first(where: \.armed)!.id, atBeat: playing ? currentBeat() : anchorBeat)
+            return ["transport": try JSONCoding.value(transport()), "record": try JSONCoding.value(record())]
+        case "transport.seek":
+            guard let bar = p["to"]?["bar"]?.intValue, let beat = p["to"]?["beat"]?.intValue else {
+                throw DemoErrors.make("invalid_params", ["field": "to"])
+            }
+            anchorBeat = Double((bar - 1) * 4 + beat - 1)
+            anchorTime = .now
+            return ["transport": try JSONCoding.value(transport())]
+        case "transport.set_loop":
+            let enabled = p["enabled"]?.boolValue ?? false
+            if let start = p["start"], let end = p["end"] {
+                loop = LoopState(enabled: enabled, start: try JSONCoding.decode(BarBeat.self, from: start),
+                                 end: try JSONCoding.decode(BarBeat.self, from: end))
+            } else {
+                loop.enabled = enabled
+            }
+            return ["transport": try JSONCoding.value(transport())]
+        case "transport.set_click":
+            click = p["enabled"]?.boolValue ?? false
+            return ["transport": try JSONCoding.value(transport())]
+        case "transport.set_count_in":
+            countIn = max(0, min(2, p["bars"]?.intValue ?? 0))
+            return ["transport": try JSONCoding.value(transport())]
+        case "transport.set_tempo_scale":
+            anchorBeat = currentBeat(); anchorTime = .now
+            scale = max(0.25, min(2.0, p["scale"]?.doubleValue ?? 1))
+            return ["transport": try JSONCoding.value(transport())]
+        case "tracks.arm":
+            let id = p["track_id"]?.stringValue ?? ""
+            guard let index = song.tracks.firstIndex(where: { $0.id == id }) else {
+                throw DemoErrors.make("unknown_track", ["tracks": try JSONCoding.value(song.tracks)])
+            }
+            song.tracks[index].armed = p["armed"]?.boolValue ?? false
+            return ["tracks": try JSONCoding.value(song.tracks)]
+        case "tracks.select":
+            let id = p["track_id"]?.stringValue ?? ""
+            guard song.tracks.contains(where: { $0.id == id }) else {
+                throw DemoErrors.make("unknown_track", ["tracks": try JSONCoding.value(song.tracks)])
+            }
+            for i in song.tracks.indices { song.tracks[i].selected = song.tracks[i].id == id }
+            return ["tracks": try JSONCoding.value(song.tracks)]
+        case "tracks.set_monitor":
+            let id = p["track_id"]?.stringValue ?? ""
+            guard let index = song.tracks.firstIndex(where: { $0.id == id }) else {
+                throw DemoErrors.make("unknown_track", ["tracks": try JSONCoding.value(song.tracks)])
+            }
+            song.tracks[index].monitor = MonitorMode(rawValue: p["mode"]?.stringValue ?? "auto") ?? .auto
+            return ["tracks": try JSONCoding.value(song.tracks)]
+        case "markers.go", "markers.loop":
+            let id = p["marker_id"]?.stringValue ?? ""
+            guard let marker = song.markers.first(where: { $0.id == id }) else {
+                throw DemoErrors.make("unknown_marker", ["markers": try JSONCoding.value(song.markers)])
+            }
+            if method == "markers.go" {
+                anchorBeat = Double((marker.bar - 1) * 4 + marker.beat - 1)
+                anchorTime = .now
+            } else {
+                let next = song.markers.map(\.bar).filter { $0 > marker.bar }.min() ?? marker.bar + 8
+                loop = LoopState(enabled: true, start: BarBeat(bar: marker.bar, beat: marker.beat), end: BarBeat(bar: next, beat: 1))
+            }
+            return ["transport": try JSONCoding.value(transport())]
+        case "markers.add":
+            guard let bar = p["at"]?["bar"]?.intValue, let beat = p["at"]?["beat"]?.intValue else {
+                throw DemoErrors.make("invalid_params", ["field": "at"])
+            }
+            markerCounter += 1
+            let marker = Marker(id: "demo-flag-\(markerCounter)", name: p["name"]?.stringValue ?? "Flag", bar: bar, beat: beat)
+            edit("Add marker '\(marker.name)'") { $0.markers.append(marker); $0.markers.sort { ($0.bar, $0.beat) < ($1.bar, $1.beat) } }
+            return ["marker": try JSONCoding.value(marker), "markers": try JSONCoding.value(song.markers)]
+        case "takes.list":
+            let id = p["track_id"]?.stringValue ?? ""
+            return ["takes": try JSONCoding.value(song.takes.filter { $0.trackID == id })]
+        case "takes.discard":
+            let id = p["take_id"]?.stringValue ?? ""
+            guard let take = song.takes.first(where: { $0.id == id }) else {
+                throw DemoErrors.make("unknown_take", ["takes": try JSONCoding.value(recentTakes())])
+            }
+            gone[id] = take
+            edit("Discard take") { $0.takes.removeAll { $0.id == id } }
+            return ["takes": try JSONCoding.value(recentTakes()), "undo": try JSONCoding.value(undoState())]
+        case "takes.go_again":
+            let id = p["take_id"]?.stringValue ?? ""
+            guard let take = song.takes.first(where: { $0.id == id }) ?? gone[id] else {
+                throw DemoErrors.make("unknown_take", ["takes": try JSONCoding.value(recentTakes())])
+            }
+            _ = try stopEverything()
+            for i in song.tracks.indices where song.tracks[i].id == take.trackID { song.tracks[i].armed = true }
+            try startRecording(track: take.trackID, atBeat: Double((take.start.bar - 1) * 4 + take.start.beat - 1))
+            return ["transport": try JSONCoding.value(transport()), "record": try JSONCoding.value(record())]
+        case "takes.rate":
+            let id = p["take_id"]?.stringValue ?? ""
+            guard song.takes.contains(where: { $0.id == id }) else {
+                throw DemoErrors.make("unknown_take", ["takes": try JSONCoding.value(recentTakes())])
+            }
+            let rating = max(0, min(5, p["rating"]?.intValue ?? 0))
+            edit("Rate take") { song in
+                for i in song.takes.indices where song.takes[i].id == id { song.takes[i].rating = rating }
+            }
+            return ["take": try JSONCoding.value(song.takes.first { $0.id == id }!)]
+        case "edit.undo", "edit.redo":
+            let redo = method == "edit.redo"
+            let expect = p["expect"]?.stringValue ?? ""
+            let index = redo ? undoIndex : undoIndex - 1
+            guard undo.indices.contains(index) else {
+                throw DemoErrors.make(redo ? "nothing_to_redo" : "nothing_to_undo", ["undo": try JSONCoding.value(undoState())])
+            }
+            guard undo[index].id == expect else {
+                throw DemoErrors.make("undo_mismatch", ["undo": try JSONCoding.value(undoState())])
+            }
+            song = redo ? undo[index].after : undo[index].before
+            undoIndex = redo ? undoIndex + 1 : undoIndex - 1
+            return ["undo": try JSONCoding.value(undoState())]
+        case "project.save":
+            song.project.unsaved = false
+            return ["project": try JSONCoding.value(song.project)]
+        default:
+            throw DemoErrors.make("method_not_found")
+        }
+    }
+
+    // MARK: the session
+
+    private func edit(_ label: String, _ change: (inout Song) -> Void) {
+        let before = song
+        change(&song)
+        song.project.unsaved = true
+        stepCounter += 1
+        undo.removeSubrange(undoIndex...)
+        undo.append(Step(id: "demo-u\(stepCounter)", label: label, before: before, after: song))
+        undoIndex = undo.count
+    }
+
+    private func undoState() -> UndoState {
+        UndoState(undo: undoIndex > 0 ? UndoStep(id: undo[undoIndex - 1].id, label: undo[undoIndex - 1].label) : nil,
+                  redo: undoIndex < undo.count ? UndoStep(id: undo[undoIndex].id, label: undo[undoIndex].label) : nil)
+    }
+
+    private func currentBeat() -> Double {
+        guard playing else { return anchorBeat }
+        let elapsed = (ContinuousClock.now - anchorTime).seconds
+        var beat = anchorBeat + elapsed * tempo / 60.0 * scale
+        if loop.enabled, let start = loop.start, let end = loop.end {
+            let a = Double((start.bar - 1) * 4 + start.beat - 1), b = Double((end.bar - 1) * 4 + end.beat - 1)
+            if b > a, beat >= b { beat = a + (beat - a).truncatingRemainder(dividingBy: b - a) }
+        }
+        return max(0, beat)
+    }
+
+    private func position(_ beat: Double) -> Position {
+        Position(bar: Int(beat / 4) + 1, beat: Int(beat.truncatingRemainder(dividingBy: 4)) + 1,
+                 seconds: (beat * 60.0 / tempo * 1000).rounded() / 1000)
+    }
+
+    private func transport() -> TransportState {
+        TransportState(state: playing ? .playing : .stopped, position: position(currentBeat()), tempoBPM: tempo,
+                       tempoScale: scale, timeSignature: TimeSignature(beats: 4, unit: 4), loop: loop, click: click,
+                       countInBars: countIn, countingIn: recordingStart.map { ContinuousClock.now < $0.at } ?? false)
+    }
+
+    private func record() -> RecordState {
+        let armed = song.tracks.filter(\.armed).map(\.id)
+        guard let start = recordingStart else { return RecordState(recording: false, started: nil, armedTrackIDs: armed) }
+        let t = now() + (start.at - ContinuousClock.now).seconds
+        return RecordState(recording: true, started: RecordStart(position: start.position, t: (t * 1000).rounded() / 1000),
+                           armedTrackIDs: armed)
+    }
+
+    private func recentTakes() -> [Take] { Array(song.takes.reversed().prefix(20)) }
+
+    private func startRecording(track: String, atBeat beat: Double) throws {
+        let leadBeats = Double(countIn * 4)
+        let lead = Duration.seconds(leadBeats * 60.0 / tempo / scale)
+        anchorBeat = max(0, beat - leadBeats)
+        anchorTime = .now
+        playing = true
+        recordingStart = (position(beat), ContinuousClock.now + lead, track)
+        recordingsStarted += 1
+        startTicker()
+    }
+
+    private func stopEverything() throws -> Take? {
+        var made: Take?
+        if let start = recordingStart {
+            let length = max(0, (ContinuousClock.now - start.at).seconds)
+            takeCounter += 1
+            let name = song.tracks.first { $0.id == start.track }?.name ?? "Take"
+            let take = Take(id: "demo-take-\(takeCounter)", trackID: start.track, name: "\(name) take \(takeCounter)",
+                            start: start.position, lengthSeconds: (length * 1000).rounded() / 1000, rating: 0, active: true)
+            recordingStart = nil
+            edit("Record take") { $0.takes.append(take) }
+            made = take
+        }
+        anchorBeat = currentBeat()
+        anchorTime = .now
+        playing = false
+        return made
+    }
+
+    private func snapshot(seq: Int) throws -> JSONValue {
+        ["seq": .number(Double(seq)), "t": .number(now()), "project": try JSONCoding.value(song.project),
+         "transport": try JSONCoding.value(transport()), "record": try JSONCoding.value(record()),
+         "tracks": try JSONCoding.value(song.tracks), "markers": try JSONCoding.value(song.markers),
+         "takes": try JSONCoding.value(recentTakes()), "undo": try JSONCoding.value(undoState())]
+    }
+
+    // MARK: events
+
+    private func topicData() -> [String: JSONValue] {
+        var data: [String: JSONValue] = [:]
+        var transportValue = (try? JSONCoding.value(transport())) ?? .null
+        if case .object(var fields) = transportValue { fields["position"] = nil; transportValue = .object(fields) }
+        data["transport"] = transportValue
+        data["record"] = try? JSONCoding.value(RecordState(recording: recordingStart != nil,
+                                                           started: recordingStart.map { RecordStart(position: $0.position, t: 0) },
+                                                           armedTrackIDs: song.tracks.filter(\.armed).map(\.id)))
+        data["tracks"] = try? JSONCoding.value(song.tracks)
+        data["markers"] = try? JSONCoding.value(song.markers)
+        data["takes"] = try? JSONCoding.value(recentTakes())
+        data["undo"] = try? JSONCoding.value(undoState())
+        data["project"] = try? JSONCoding.value(song.project)
+        return data
+    }
+
+    private func full(_ topic: String) -> JSONValue {
+        switch topic {
+        case "transport": return (try? JSONCoding.value(transport())) ?? .null
+        case "record": return (try? JSONCoding.value(record())) ?? .null
+        case "tracks": return ["tracks": (try? JSONCoding.value(song.tracks)) ?? []]
+        case "markers": return ["markers": (try? JSONCoding.value(song.markers)) ?? []]
+        case "takes": return ["takes": (try? JSONCoding.value(recentTakes())) ?? []]
+        case "undo": return (try? JSONCoding.value(undoState())) ?? .null
+        default: return (try? JSONCoding.value(song.project)) ?? .null
+        }
+    }
+
+    private func broadcastChanges(from before: [String: JSONValue]) {
+        let after = topicData()
+        for topic in ["transport", "record", "tracks", "markers", "takes", "undo", "project"] where before[topic] != after[topic] {
+            emit(topic, full(topic))
+        }
+    }
+
+    private func emit(_ topic: String, _ data: JSONValue) {
+        for connection in connections.values where connection.authed && connection.topics.contains(topic) {
+            connection.seq += 1
+            send(["jsonrpc": "2.0", "method": "event",
+                  "params": ["topic": .string(topic), "seq": .number(Double(connection.seq)), "t": .number(now()), "data": data]],
+                 to: connection)
+        }
+    }
+
+    private func startTicker() {
+        guard ticker == nil else { return }
+        ticker = Task { [weak self] in
+            var tick = 0
+            while let self, await self.tickOnce(tick) {
+                tick += 1
+                try? await Task.sleep(for: .milliseconds(50))
+            }
+        }
+    }
+
+    /// Position at 10 a second, meters at 20, while playing (spec 8.2).
+    private func tickOnce(_ tick: Int) -> Bool {
+        guard playing else { ticker = nil; return false }
+        let before = lastSent["counting"]
+        let counting: JSONValue = .bool(transport().countingIn)
+        if before != counting { lastSent["counting"] = counting; emit("transport", full("transport")) }
+        if tick % 2 == 0 {
+            let t = transport()
+            emit("position", ["state": .string(t.state.rawValue), "position": (try? JSONCoding.value(t.position)) ?? .null])
+        }
+        let level = 0.35 + 0.3 * abs(sin(Double(tick) / 3.0))
+        let levels: [JSONValue] = song.tracks.filter { $0.armed || $0.selected }.map {
+            ["track_id": .string($0.id), "peak": [.number((level * 1000).rounded() / 1000), .number((level * 900).rounded() / 1000)]]
+        }
+        emit("meters", ["levels": .array(levels)])
+        return true
+    }
+}
+
+extension Duration {
+    var seconds: Double {
+        let parts = components
+        return Double(parts.seconds) + Double(parts.attoseconds) / 1e18
+    }
+}
+
+/// The error table (spec 10), word for word.
+public enum DemoErrors {
+    static let table: [String: (Int, String)] = [
+        "method_not_found": (-32601, "This version of Tabber Studio cannot do that."),
+        "invalid_params": (-32602, "The phone sent a request the computer could not use."),
+        "internal_error": (-32603, "Something went wrong in Tabber Studio."),
+        "unauthenticated": (1001, "Pair this phone with the computer first."),
+        "already_recording": (1021, "Tabber Studio is already recording."),
+        "unknown_track": (1023, "That track is gone from the song."),
+        "unknown_take": (1024, "That take is gone from the song."),
+        "unknown_marker": (1025, "That marker is gone from the song."),
+        "stale_target": (1026, "This changed on the computer. The phone now shows the new state."),
+        "undo_mismatch": (1027, "The computer's newest change is a different one. Undo it there, or try again."),
+        "nothing_to_undo": (1028, "There is nothing to undo."),
+        "nothing_to_redo": (1029, "There is nothing to redo."),
+    ]
+
+    static func make(_ reason: String, _ data: [String: JSONValue] = [:]) -> RemoteError {
+        let (code, message) = table[reason] ?? (1099, "Tabber Studio could not do that.")
+        var fields = data
+        fields["reason"] = .string(reason)
+        return RemoteError(code: code, message: message, reason: reason, data: .object(fields))
+    }
+}

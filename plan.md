@@ -644,6 +644,17 @@ Checked on the owner's Mac Studio (M1 Max, macOS 26.6.2) on 2026-11-07.
 - **iOS 27 SDK uploads need a launch screen key,** or App Store Connect
   rejects them (ITMS-90870). They also need the scene life cycle, which a
   SwiftUI `App` already has.
+- **A WebSocket needs a `wss://` URL endpoint.** Given a bare host and port,
+  the Network framework's WebSocket client (`NetworkConnection` and
+  `NWConnection` alike) aborts right after the TLS handshake with
+  `ECONNABORTED`, before it sends its upgrade request (found in TR5's
+  interop test). A Bonjour result is resolved to an address first (TR6).
+- **A connection that cannot connect waits and retries.** `receive()` fails
+  at once, but `send()` waits forever and `close()` never returns; only
+  releasing the connection cancels it. RemoteKit times out every call and
+  lets such connections go.
+- **`swift test` holds a test's output until the process exits,** so a hung
+  test shows nothing. Write to a file and kill the process to read it.
 - **Denial is silent in the background.** Get the permission in the
   foreground before offering Shortcuts or Controls.
 - **Detecting denial:** a denied connection waits with `localNetworkDenied`,
@@ -1194,6 +1205,34 @@ what was measured, and what changed in the plan.
     reports their event rates and seq gaps and the engine's xrun and
     deadline-miss change, and forgets the phones afterwards. The gate is
     zero dropouts.
+- **TR5 ✅ 2026-11-07, this repository.** Built with Xcode 26.3 (27.2 was not
+  downloaded yet; the release script switches to it by itself).
+  - **RemoteKit** (`apple/RemoteKit`, Swift 6, no UI framework): the
+    protocol's models; its cryptography (pin, device id, signed bytes,
+    6-digit code, QR link); the device key (Secure Enclave on a phone,
+    software in the Simulator); `NetworkTransport` (WebSocket over TLS 1.3
+    with the pin checked in the validator); `RemoteClient`; and
+    `RemoteSession`, which reconnects with backoff, resnapshots on a seq gap
+    or a heartbeat ahead, and resends a change with its key after a drop.
+    `DemoHost` is a simulated Tabber Studio for demo mode and the tests.
+  - **The app** (`apple/TabberSpak.xcodeproj`, synchronized folders): a debug
+    screen, demo mode (`-demo`), pairing from a `tabber-remote://` link
+    (paste, or `xcrun simctl openurl`), the Bonjour and Local Network keys,
+    and the icon: a spak, literally (the owner: "the literal image of a
+    spak"), a lever whose knob is the record button's red
+    (`apple/scripts/draw_icon.swift` draws it).
+  - **Gate:** every vector passes in Swift (6 crypto tests, the exchange test
+    over all 14 vectors); the DemoHost tests pass (S1 with five takes, two
+    discarded; discard then Undo; a resend after a drop records once; a
+    stale target refused with the truth; events in order without gaps); the
+    UI test passes in the Simulator (`xcodebuild test`). Beyond the gate,
+    `apple/scripts/interop.sh` runs RemoteKit against Tabber Studio's real
+    host over pinned TLS 1.3 on this Mac (`tools/interop_host.py`): pair,
+    authenticate, `method_not_found` for a raw Control API method, a wrong
+    pin refused, the pin read during 6-digit pairing. It found the two
+    Network framework traps now in Known traps.
+  - **Owed to the owner:** the same connection from a real iPhone on the
+    Wi-Fi, once a TestFlight build is installed.
 
 ## Sources
 

@@ -2,3 +2,9 @@
 __pycache__/
 *.pyc
 .DS_Store
+
+# Xcode and SwiftPM
+xcuserdata/
+*.xcuserstate
+.build/
+.swiftpm/
