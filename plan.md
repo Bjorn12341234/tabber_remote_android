@@ -987,8 +987,8 @@ them raw.
 | TR26 | Mixer screen: strips for tracks and buses and the master, with fader, pan, mute, solo and meter in Tabber Studio's mixer colours; a tapped strip opens a long-throw fader for fine moves; faders adjustable with VoiceOver | this repo | UI tests against DemoHost; on a device, a fader move confirmed within the latency target |
 | TR27 | Routing verbs and the `routing` topic: each track's output (the master or a bus) and its sends (bus, level, pre or post); `routing.set_output`, `routing.set_send`, `routing.remove_send`; a cycle is refused in words (`buses.would_cycle`) | spec, Studio | Vectors; read-backs; a refused cycle leaves the routing unchanged |
 | TR28 | Routing screen: for each track its Output and its Sends, and for each bus what feeds it; a send's level as a slider. A list, not the Flow graph: it must work with one thumb | this repo | UI tests against DemoHost; on a device against Tabber Studio |
-| TR29 | Chat on the computer's side: `chat.send` (text in, the plan out, in the words the chat bubble shows), `chat.confirm`, `chat.cancel`, and the `chat` topic (messages, thinking, results). The planner runs off the main thread. The same reach, flow and undo as the chat in Tabber Studio (decision 21) | spec, Studio | A typed request becomes the same plan the computer's chat makes, and nothing runs until Confirm; the confirmed plan is one undo step, and Undo on the phone takes it back; every chat action is logged like other remote actions |
-| TR30 | Chat screen: the conversation, the plan with Confirm and Cancel, and the keyboard's dictation for speaking a request | this repo | UI tests against DemoHost with a scripted planner; on a device against Tabber Studio |
+| TR29 | Chat on the computer's side: `chat.send` (text in, the plan out, in the words the chat bubble shows), `chat.confirm`, `chat.cancel`, and the `chat` topic (messages, thinking, results). The planner runs off the main thread. The same reach, flow and undo as the chat in Tabber Studio (decision 21) | spec, Studio | A typed request becomes the same plan the computer's chat makes, and nothing runs until Confirm; the confirmed plan is one undo step, and Undo on the phone takes it back; every chat action is logged like other remote actions; **adversarial:** asking the phone's chat for the API key, the settings file, the remote's keys, an environment variable, a shell command or a file outside the song is refused, and no frame sent to the phone in the whole suite contains the test API key or any device or pairing key (scanned byte by byte); 11 requests in a minute, the 11th is refused |
+| TR30 | Chat screen: the conversation, the plan with Confirm and Cancel, and the keyboard's dictation for speaking a request; Face ID, Touch ID or the passcode before it opens | this repo | UI tests against DemoHost with a scripted planner; on a device against Tabber Studio; the Chat screen does not open without the device owner's authentication |
 
 Order: the mixer first (done, TR25), then take lanes (TR33), routing and
 chat, all before the stage freeze on 19 November (The demo cut).
@@ -1127,6 +1127,43 @@ Each needs the owner's go-ahead:
       pairing already decides which phones get in.
     - **Logged:** every chat action is logged on the computer like the
       remote's other actions.
+
+    **Safe** (the owner: "but we must make it safe, so no hackers steal api
+    keys or other shit"). These are hard requirements of TR29 and TR30.
+    - **Secrets never leave the computer.**
+      - The AI provider's API key, the remote's own keys and tokens, and the
+        paired devices' keys are never sent to a phone, by any verb, event,
+        plan or result.
+      - The planner and its API key run on the computer only. The phone
+        sends words and gets words back.
+    - **Two locks on secrets:**
+      - (a) On a phone's turn, the planner refuses the few Control API
+        methods that read secrets or reach outside Tabber Studio: the AI
+        provider settings and key, the remote's pairing, devices and keys,
+        environment variables, shells and scripts, and files outside the
+        song's own folder. The refusal is in words, before anything runs.
+      - (b) Everything the chat sends a phone passes a filter that blanks
+        anything that looks like a secret: fields named key, token, secret
+        or password, and values shaped like API keys or private keys.
+    - **No cost runaway:** chat requests from phones are rate limited (10 a
+      minute), so a stolen phone cannot run up the AI bill.
+    - **The phone guards its Chat:** Face ID, Touch ID or the passcode
+      before the Chat screen opens, so an unlocked phone left on a stand
+      cannot use it.
+    - **The computer sees and stops it:**
+      - Every chat request and action is named in Tabber Studio's
+        activity notices.
+      - Remove in Settings › Remote disconnects that phone at once.
+      - Turning the remote off stops all of it.
+    - **What already holds** (TR2 to TR6):
+      - local network only, nothing in any cloud;
+      - TLS 1.3 with the computer's key pinned;
+      - each phone's own key in the Secure Enclave, with signed,
+        single-use challenges;
+      - pairing only by the QR code shown on the computer's screen, single
+        use, valid for five minutes;
+      - rate and size limits on every message;
+      - the remote off until it is turned on.
 
 22. **Light mode.** Decided (the owner, 2026-11-07, "do what you
     recommend"): dark only for 1.x. The phone is a studio and stage tool,
