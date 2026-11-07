@@ -14,6 +14,7 @@ struct RootView: View {
                     Tab("Tracks", systemImage: "rectangle.stack", value: AppModel.Screen.tracks) { TracksScreen(model: model) }
                     Tab("Tab", systemImage: "guitars", value: AppModel.Screen.tab) { TabScreen(model: model) }
                     Tab("Mixer", systemImage: "slider.vertical.3", value: AppModel.Screen.mixer) { MixerScreen(model: model) }
+                    Tab("Tuner", systemImage: "tuningfork", value: AppModel.Screen.tuner) { TunerScreen(model: model) }
                 }
                 .tabViewBottomAccessory { TransportBar(model: model) }
                 .tabBarMinimizeBehavior(.never)          // the transport never moves (principle 5)

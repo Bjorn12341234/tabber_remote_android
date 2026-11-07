@@ -52,7 +52,7 @@ final class AppModel {
     /// Go to: the start or a marker, from the transport's position.
     var choosingPlace = false
     /// The screen on show; `-screen tab` opens another one (screenshots, tests).
-    enum Screen: String, Hashable { case tracks, tab, mixer }
+    enum Screen: String, Hashable { case tracks, tab, mixer, tuner }
     var screen: Screen = ProcessInfo.processInfo.arguments.firstIndex(of: "-screen")
         .flatMap { index in ProcessInfo.processInfo.arguments.dropFirst(index + 1).first }
         .flatMap(Screen.init(rawValue:)) ?? .tracks

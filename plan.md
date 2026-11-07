@@ -1557,14 +1557,39 @@ what was measured, and what changed in the plan.
   - **Owed:** the feed's cost with the mixer open, measured on a real song
     (TR3's rule), and a fader drag on a device against Tabber Studio.
 
-- **TR32, planned: Tabber Tuner.** The owner: "maybe viga tuner, the guitar
-  tuner could be implemented into tabber remote also? but as tabber tuner...
-  the code is already built". The iPhone Viga Tuner
-  (`viga_guitar_tuner/ios`) is native Swift with its own YIN pitch detector,
-  filters and AVAudioEngine capture, about 3,800 lines, no JUCE. A Tuner tab
-  in Studio's look that follows the chosen track's tuning (drop D, bass,
-  seven strings) and works without a computer. It needs the microphone
-  permission; nothing leaves the phone, so the privacy label stays.
+- **TR32 ✅ 2026-11-07, this repository: Tabber Tuner.** The owner: "maybe
+  viga tuner, the guitar tuner could be implemented into tabber remote also?
+  but as tabber tuner... the code is already built".
+  - **The Viga Tuner's pitch detection, unchanged.** `YinPitchDetector`
+    and `BiquadFilter` are copied from `viga_guitar_tuner/ios` at a3527b5
+    (YIN with 4x decimation, a band-pass, a median of five). Its VST
+    sources are untouched.
+  - **Written for Swift 6:**
+    - The microphone tap feeds the detector on the audio thread, and the
+      newest result crosses to the main actor under a lock, 20 times a
+      second.
+    - `TunerModel` matches the nearest string of the tuning within a
+      semitone (chromatic otherwise) and smooths the cents while the target
+      holds.
+  - **The screen in Studio's language:**
+    - The note is the one large thing, teal within 3 cents.
+    - A cents scale from -50 to +50 with the in-tune band, the needle, and
+      the words ("24 cents flat", "In tune").
+    - The strings low to high, the one being tuned lit.
+    - The frequency, and where the strings come from.
+  - **Where the strings come from:** the chosen track's (a tab track's
+    `tuning`), else a standard guitar. It works with no computer at all.
+  - **The microphone:**
+    - One sentence explains it before iOS asks: "Nothing is recorded, and
+      the sound never leaves the phone".
+    - If denied, Open Settings.
+    - Listening stops when the tab is left.
+    - The privacy label stays Data Not Collected.
+  - **Demo mode** tunes a guitar string by string (flat, then settling), for
+    App Review, screenshots and the tests. Two UI tests, and the
+    accessibility audit now includes the Tuner.
+  - **Owed:** tuning a real guitar on a device, against the Viga Tuner app
+    side by side.
 
 ## Sources
 
