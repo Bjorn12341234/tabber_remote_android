@@ -1118,7 +1118,7 @@ what was measured, and what changed in the plan.
   `takes.discard`, `takes.go_again`, `takes.rate_pass`, `markers.list`,
   `markers.go`, `markers.add`, `session.snapshot`; `project.undo` and
   `project.redo` take `expect`.
-  - **Gate:** `tests/remote/test_tr1_remote_verbs.py`, 17 tests through the
+  - **Gate:** `tests/remote/test_tr1_remote_verbs.py`, 16 tests through the
     shared dispatcher on a real MainWindow (the engine faked only where it
     would open a device). Arming by verb leaves the arm button's state;
     discard then Undo brings back the same clip with its WAV byte-identical;
@@ -1142,6 +1142,40 @@ what was measured, and what changed in the plan.
   - **Open for the owner (decision 20):** recording again over a kept take
     leaves both clips audible, because a linear pass is a plain clip. The take
     loop is still right for the demo (record, discard, go again, keep).
+- **TR2 🟡 2026-11-07, Tabber Studio `85d51115`; vectors fixed here in
+  `9036723`.** `remote_host/` (identity, pairing, bridge, vocabulary, session,
+  server, runtime) and `control_api/handlers/remote.py` (`remote.enable`,
+  `disable`, `status`, `pair`, `devices`, `revoke`). websockets 17.4 and
+  cryptography 48.0.1 in `requirements.txt`; jsonschema in
+  `requirements-dev.txt`. The vectors are pinned in Tabber Studio's
+  `tests/remote/protocol`.
+  - **Gate, met:** the eight connection vectors replay exactly over real TLS
+    against a headless Tabber Studio, with the test pin checked (QR pairing,
+    6-digit pairing with Deny, timeout and Allow, auth, version mismatch,
+    and every refusal: closed, expired and wrong tokens, a wrong key, a
+    replayed challenge, three failures closing 1008). S1 runs through the
+    host with every answer checked against the pinned schemas and error
+    table. Refused as well: a raw Control API method and an unknown verb
+    (`method_not_found`), bad params, a binary frame (1003), a 70 KB frame
+    (1009), a 41st request in a second, an unknown subprotocol (4002). A
+    record resent after a dropped connection gets the first answer and
+    records once. With the remote off nothing listens, and the MP13 check
+    now proves `remote_host` and websockets stay unloaded. 323 targeted
+    tests pass on a clean checkout of the commit.
+  - **Gate, moved to TR4:** the frozen app with the package and its
+    dependencies, and the bundle growth. The release locks are a certified,
+    hashed wheelhouse; they change with the signed build TR4 makes anyway.
+  - **Found while building it:** websockets rejects an unknown subprotocol
+    with HTTP 400, so the host selects none itself and closes with 4002, as
+    the spec says. `pairing_errors` contradicted itself (a closed window
+    cannot answer `pairing_token_invalid`) and was fixed here first.
+  - **Capabilities:** the host never offers `tracks.monitor/1` (Tabber
+    Studio monitors audio input for all armed tracks at once) and offers
+    `pair.code/1` only while the computer can show Allow (TR4).
+  - **Content vectors** (take loop, conflicts, limits) are not replayed byte
+    for byte: their ids and host times belong to the vector's own song.
+    The S1 test and the refusal tests run the same exchanges on a real song
+    instead.
 
 ## Sources
 
