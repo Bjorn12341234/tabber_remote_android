@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Made by android/scripts/draw-icon.py from the iPhone's apple/scripts/draw_icon.swift. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp" android:viewportWidth="1024" android:viewportHeight="1024">
+    <group android:pivotX="512" android:pivotY="512" android:scaleX="0.8" android:scaleY="0.8" android:translateY="-10"><group android:pivotY="512" android:scaleY="-1"><path android:fillColor="#FF000000" android:pathData="M308,196 H716 A56,56 0 0 1 772,252 V272 A56,56 0 0 1 716,328 H308 A56,56 0 0 1 252,272 V252 A56,56 0 0 1 308,196 Z" /><group android:translateX="470" android:translateY="276" android:rotation="-17.1887"><group android:translateX="-16"><path android:fillColor="#FF000000" android:pathData="M0,-10 H0 A28,28 0 0 1 28,18 V362 A28,28 0 0 1 0,390 H0 A28,28 0 0 1 -28,362 V18 A28,28 0 0 1 0,-10 Z" /><path android:fillColor="#FF000000" android:pathData="M-33,352 H33 A11,10 0 0 1 44,362 V370 A11,10 0 0 1 33,380 H-33 A11,10 0 0 1 -44,370 V362 A11,10 0 0 1 -33,352 Z" /><path android:fillColor="#FF000000" android:pathData="M0,372 H0 A62,62 0 0 1 62,434 V524 A62,62 0 0 1 0,586 H0 A62,62 0 0 1 -62,524 V434 A62,62 0 0 1 0,372 Z" /></group></group></group></group>
+</vector>

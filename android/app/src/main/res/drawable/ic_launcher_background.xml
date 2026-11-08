@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Made by android/scripts/draw-icon.py from the iPhone's apple/scripts/draw_icon.swift. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android" xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp" android:height="108dp" android:viewportWidth="1024" android:viewportHeight="1024">
+    <path android:pathData="M0,0 H1024 V1024 H0 Z"><aapt:attr name="android:fillColor"><gradient android:type="linear" android:startX="0" android:startY="0" android:endX="0" android:endY="1024" android:startColor="#FF2B2B42" android:endColor="#FF121219" /></aapt:attr></path>
+</vector>
