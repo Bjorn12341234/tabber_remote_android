@@ -111,8 +111,9 @@ fun TracksScreen(model: AppModel) {
 
 /**
  * The screen's frame: its title, the computer's name at the top right, the take slot at the
- * bottom. A screen may put a button before the title ([leading], the Tab screen's Undo) and make
- * the title a menu ([titleChoices], the Tab screen's tracks), as the iPhone's title menu.
+ * bottom (not on the Tuner, as on the iPhone). A screen may put a button before the title
+ * ([leading], the Tab screen's Undo) and make the title a menu ([titleChoices], the Tab screen's
+ * tracks), as the iPhone's title menu.
  */
 @Composable
 fun ScreenScaffold(
@@ -120,6 +121,7 @@ fun ScreenScaffold(
     title: String,
     leading: (@Composable () -> Unit)? = null,
     titleChoices: List<Pair<String, () -> Unit>> = emptyList(),
+    takeSlot: Boolean = true,
     content: @Composable () -> Unit,
 ) {
     Column(Modifier.fillMaxSize().background(Studio.bg1).statusBarsPadding()) {
@@ -152,7 +154,7 @@ fun ScreenScaffold(
             ComputerChip(model)
         }
         Box(Modifier.weight(1f)) { content() }
-        TakeSlot(model)
+        if (takeSlot) TakeSlot(model)
     }
 }
 

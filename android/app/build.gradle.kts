@@ -82,6 +82,8 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.9.4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
+    // The tuner's pitch detection and its arithmetic, on the JVM (./gradlew :app:testDebugUnitTest).
+    testImplementation("junit:junit:4.13.2")
     // Every screen's tests run in the emulator against the demo computer, as the iPhone's UI tests
     // run against DemoHost (plan: Rules for every sprint).
     androidTestImplementation(platform("androidx.compose:compose-bom:2026.09.00"))
