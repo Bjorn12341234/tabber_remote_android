@@ -63,6 +63,19 @@ final class AccessibilityUITests: XCTestCase {
         try audit(app, "Tab, no tab tracks")
     }
 
+    /// The Tab screen with Tabber Studio's "MIDI part" card (TR39).
+    @MainActor
+    func testTheMidiPartCard() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo", "-reset-input"]
+        app.launch()
+        XCTAssertTrue(element(app, "track-Drums").waitForExistence(timeout: 8))
+        element(app, "track-Drums").tap()
+        app.tabBars.buttons["Tab"].tap()
+        XCTAssertTrue(element(app, "midi-part").waitForExistence(timeout: 8))
+        try audit(app, "Tab, a MIDI part")
+    }
+
     @MainActor
     func testEveryScreen() throws {
         let app = XCUIApplication()
@@ -90,8 +103,13 @@ final class AccessibilityUITests: XCTestCase {
         app.tabBars.buttons["Tab"].tap()
         XCTAssertTrue(element(app, "fretboard").waitForExistence(timeout: 8))
         try audit(app, "Tab")
-        app.segmentedControls["input"].buttons["Piano"].tap()
-        XCTAssertTrue(element(app, "piano").waitForExistence(timeout: 8))
+        // As for Routing below: right after an audit puts the text size back,
+        // a tap can land while the screen lays out again; tap again if needed.
+        for _ in 0..<3 where !element(app, "piano").exists {
+            app.segmentedControls["input"].buttons["Piano"].tap()
+            _ = element(app, "piano").waitForExistence(timeout: 4)
+        }
+        XCTAssertTrue(element(app, "piano").exists)
         try audit(app, "Piano")
         app.tabBars.buttons["Mixer"].tap()
         XCTAssertTrue(element(app, "fader-Guitar").waitForExistence(timeout: 8))

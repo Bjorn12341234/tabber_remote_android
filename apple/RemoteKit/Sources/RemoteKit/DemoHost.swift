@@ -73,6 +73,11 @@ public actor DemoHost {
     private var chatAction: (planID: String, track: String, solo: Bool)?
     /// What the demo computer shows (view/1), and the editor Split goes back to.
     private var view = ViewState(editor: "tab", split: false)
+    /// How each MIDI track shows in the Tab editor once its "MIDI part" card
+    /// was answered: "midi_tab" or "notation" (view.part/1).
+    private var partShows: [String: String] = [:]
+    /// Tracks that cannot show MIDI tab, as drums cannot in Tabber Studio.
+    private let drums: Set<String> = ["demo-drums"]
     private var preSplit = "tab"
     /// The Speed Trainer (trainer/1); its speed is the demo's tempo scale.
     private var trainer = TrainerState()
@@ -223,11 +228,11 @@ public actor DemoHost {
             }
             connection.challenge = Data((0..<32).map { _ in UInt8.random(in: 0...255) })
             return ["host": ["id": .string(Self.hostID), "name": .string(computerName), "app_version": "demo"],
-                    "protocol_version": "1.6",
+                    "protocol_version": "1.7",
                     "capabilities": ["transport/1", "record/1", "tempo_scale/1", "tracks/1", "tracks.monitor/1",
                                      "markers/1", "takes/1", "takes.discard/1", "takes.go_again/1", "undo/1",
                                      "save/1", "meters/1", "mixer/1", "tab/1", "routing/1", "chat/1", "view/1",
-                                     "trainer/1", "tracks.add/1"],
+                                     "trainer/1", "tracks.add/1", "view.part/1"],
                     "limits": ["max_frame_bytes": 65536, "requests_per_second": 20, "burst": 40,
                                "heartbeat_ms": 2000, "heartbeat_misses": 3, "connections_per_device": 2],
                     "challenge": .string(Base64URL.encode(connection.challenge))]
@@ -463,7 +468,7 @@ public actor DemoHost {
             scale = enabled ? Double(trainer.start) / 100 : 1.0     // a changed field starts again, as in Studio
             return ["trainer": try JSONCoding.value(trainerState())]
         case "view.state":
-            return ["view": try JSONCoding.value(view)]
+            return ["view": try JSONCoding.value(viewState())]
         case "view.set":
             if let editor = p["editor"]?.stringValue {
                 guard ViewState.editors.contains(editor) else { throw DemoErrors.make("invalid_params", ["field": "editor"]) }
@@ -477,7 +482,19 @@ public actor DemoHost {
                     view = ViewState(editor: preSplit, split: false)
                 }
             }
-            return ["view": try JSONCoding.value(view)]
+            return ["view": try JSONCoding.value(viewState())]
+        case "view.show_part":
+            let id = p["track_id"]?.stringValue ?? ""
+            guard let shows = p["as"]?.stringValue, ["midi_tab", "notation"].contains(shows) else {
+                throw DemoErrors.make("invalid_params", ["field": "as"])
+            }
+            // The card's own buttons: only while the card waits, and MIDI tab not for drums.
+            guard let part = viewState().part, part.trackID == id, part.shows == "card",
+                  shows == "notation" || part.midiTab else {
+                throw DemoErrors.make("stale_target", ["view": try JSONCoding.value(viewState())])
+            }
+            partShows[id] = shows
+            return ["view": try JSONCoding.value(viewState())]
         case "chat.state":
             return ["chat": try JSONCoding.value(chat)]
         case "chat.send", "chat.confirm", "chat.cancel", "chat.stop":
@@ -756,6 +773,21 @@ public actor DemoHost {
         tabCursors[id] = doc.clamp(cursor)
     }
 
+    // MARK: the view
+
+    /// What the demo computer shows, with the MIDI part its Tab editor shows:
+    /// the chosen MIDI track without tab gets Tabber Studio's card until the
+    /// phone or the computer answers it (view.part/1).
+    private func viewState() -> ViewState {
+        var shown = view
+        shown.hasPart = true
+        shown.part = nil
+        if shown.editor == "tab", let track = song.tracks.first(where: \.selected), track.kind == .midi, track.tuning == nil {
+            shown.part = ViewPart(trackID: track.id, shows: partShows[track.id] ?? "card", midiTab: !drums.contains(track.id))
+        }
+        return shown
+    }
+
     // MARK: adding tracks
 
     /// Tabber Studio's track colours (core/models.py TRACK_COLORS), in its order.
@@ -947,7 +979,7 @@ public actor DemoHost {
         data["tab"] = ["tab": tabValue()]
         data["routing"] = try? JSONCoding.value(routingState())
         data["chat"] = try? JSONCoding.value(chat)
-        data["view"] = try? JSONCoding.value(view)
+        data["view"] = try? JSONCoding.value(viewState())
         data["trainer"] = try? JSONCoding.value(trainerState())
         return data
     }
@@ -964,7 +996,7 @@ public actor DemoHost {
         case "tab": return ["tab": tabValue()]
         case "routing": return (try? JSONCoding.value(routingState())) ?? .null
         case "chat": return (try? JSONCoding.value(chat)) ?? .null
-        case "view": return (try? JSONCoding.value(view)) ?? .null
+        case "view": return (try? JSONCoding.value(viewState())) ?? .null
         case "trainer": return (try? JSONCoding.value(trainerState())) ?? .null
         default: return (try? JSONCoding.value(song.project)) ?? .null
         }

@@ -117,6 +117,30 @@ final class ScreenshotUITests: SpakUITestCase {
         try shoot("tr36-5-largest-text")
     }
 
+    /// TR39: Tabber Studio's "MIDI part" card on the phone, then answered.
+    @MainActor
+    func testTheMidiPartCard() throws {
+        launch(["-demo"])
+        tap("track-Drums")
+        app.tabBars.buttons["Tab"].tap()
+        XCTAssertTrue(appears("midi-part"))
+        sleep(1)
+        try shoot("tr39-1-drums-card")
+        app.tabBars.buttons["Tracks"].tap()
+        reveal("add-track")
+        tap("add-track")
+        XCTAssertTrue(app.buttons["MIDI track"].waitForExistence(timeout: 8))
+        app.buttons["MIDI track"].tap()
+        app.tabBars.buttons["Tab"].tap()
+        XCTAssertTrue(appears("show-midi-tab"))
+        sleep(1)
+        try shoot("tr39-2-midi-card")
+        tap("show-midi-tab")
+        XCTAssertTrue(waitFor("part-shows", "as MIDI tab"))
+        sleep(1)
+        try shoot("tr39-3-answered")
+    }
+
     @MainActor
     func testTheComputerSheetAtTheLargestText() throws {
         app = XCUIApplication()

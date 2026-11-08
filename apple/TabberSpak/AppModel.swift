@@ -468,6 +468,16 @@ final class AppModel {
         act("view-split", "view.set", ["split": .bool(!(state.view?.split ?? false))])
     }
 
+    /// Tabber Studio's "MIDI part" card, on a computer that offers it to phones (view.part/1).
+    var partAvailable: Bool { state.capabilities.contains("view.part/1") }
+
+    /// The card's Show standard notation ("notation") or Show MIDI tab
+    /// ("midi_tab"), pressed on the computer (the owner, 2026-11-08: "so it's
+    /// not stuck on that screen ... and you have to go to the computer").
+    func showPart(_ trackID: String, as shows: String) {
+        act("show-part", "view.show_part", ["track_id": .string(trackID), "as": .string(shows)])
+    }
+
     /// Tabber Studio's Speed Trainer, on a computer that offers it to phones (trainer/1).
     var trainerAvailable: Bool { state.capabilities.contains("trainer/1") }
 

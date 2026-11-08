@@ -397,4 +397,32 @@ struct DemoHostTests {
         _ = try await session.perform("transport.stop")
         await session.stop()
     }
+
+    /// TR39 on the demo computer: a MIDI track chosen in the Tab editor waits
+    /// on Tabber Studio's "MIDI part" card until the phone answers it; drums
+    /// offer only notation, and a card that is gone is refused.
+    @Test func theMidiPartCardWaitsForTheChoice() async throws {
+        let session = session(DemoHost())
+        let start = try await connected(session)
+        #expect(start.view?.part == nil, "Guitar has tab: no part")
+        let added = try JSONCoding.decode(Track.self, from: try await session.perform("tracks.add", ["kind": "midi"])["track"]!)
+        let card = try await eventually(session) { $0.view?.part?.trackID == added.id }
+        #expect(card.view?.part == ViewPart(trackID: added.id, shows: "card", midiTab: true))
+        let shown = try await session.perform("view.show_part", ["track_id": .string(added.id), "as": "midi_tab"])
+        #expect(try JSONCoding.decode(ViewState.self, from: shown["view"]!).part?.shows == "midi_tab")
+        await #expect(throws: RemoteError.self, "the card is gone") {
+            try await session.perform("view.show_part", ["track_id": .string(added.id), "as": "notation"])
+        }
+        _ = try await session.perform("tracks.select", ["track_id": "demo-drums"])
+        let drums = try await eventually(session) { $0.view?.part?.trackID == "demo-drums" }
+        #expect(drums.view?.part?.midiTab == false)
+        await #expect(throws: RemoteError.self, "drums cannot show MIDI tab") {
+            try await session.perform("view.show_part", ["track_id": "demo-drums", "as": "midi_tab"])
+        }
+        _ = try await session.perform("view.show_part", ["track_id": "demo-drums", "as": "notation"])
+        _ = try await session.perform("view.set", ["editor": "arrange"])
+        let arrange = try await eventually(session) { $0.view?.editor == "arrange" }
+        #expect(arrange.view?.part == nil, "Arrange shows no card")
+        await session.stop()
+    }
 }

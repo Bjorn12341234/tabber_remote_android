@@ -9,7 +9,7 @@ public enum Incoming: Sendable, Hashable {
 
 /// One connection to a host: requests matched to answers by id, events in order.
 public actor RemoteClient {
-    public static let protocolVersions = ["1.6"]
+    public static let protocolVersions = ["1.7"]
 
     private let transport: any RemoteTransport
     private var nextID = 0

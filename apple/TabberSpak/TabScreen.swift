@@ -137,7 +137,9 @@ private struct EditChip: View {
 }
 
 /// When the chosen track has no tab: which tracks do, and "+ Add Tab Track"
-/// for a new one, as in a song of only audio (the owner, 2026-11-08).
+/// for a new one, as in a song of only audio (the owner, 2026-11-08). A MIDI
+/// track the computer's Tab editor shows gets Tabber Studio's "MIDI part"
+/// card first, so the computer never waits on it (TR39).
 private struct ChooseTabTrack: View {
     @Bindable var model: AppModel
 
@@ -146,8 +148,13 @@ private struct ChooseTabTrack: View {
         let chosen = model.state.tracks.first(where: \.selected)
         ScrollView {
             VStack(alignment: .leading, spacing: 12) {
+                let part = model.partAvailable ? model.state.view?.part.flatMap { p in chosen?.id == p.trackID ? p : nil } : nil
+                if let part, let track = chosen {
+                    MidiPartCard(model: model, part: part, name: track.name)
+                }
                 Text(tabs.isEmpty ? (model.addTrackAvailable ? "This song has no tab tracks yet. Add one to write on it here."
                                      : "This song has no tab tracks yet. Add one in Tabber Studio, then write on it here.")
+                     : part != nil ? "Tab tracks to write on here:"
                      : chosen.map { "\($0.name) has no tab. Choose a track to write on:" } ?? "Choose a track to write on:")
                     .font(.body)
                     .foregroundStyle(Studio.text2)
@@ -180,6 +187,56 @@ private struct ChooseTabTrack: View {
                 }
             }
             .padding(16)
+        }
+    }
+}
+
+/// Tabber Studio's "MIDI part" card for the chosen MIDI track, as the
+/// computer's Tab editor shows it: Show standard notation, and for a melodic
+/// track Show MIDI tab, pressing the computer's own buttons. Once answered,
+/// what the computer shows.
+private struct MidiPartCard: View {
+    @Bindable var model: AppModel
+    let part: ViewPart
+    let name: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("MIDI part")
+                .font(.headline)
+                .foregroundStyle(Studio.text1)
+                .accessibilityAddTraits(.isHeader)
+            Text(words)
+                .font(.subheadline)
+                .foregroundStyle(Studio.text2)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityIdentifier("part-shows")
+            if part.shows == "card" {
+                Button("Show standard notation") { model.showPart(part.trackID, as: "notation") }
+                    .buttonStyle(.studioPrimary)
+                    .accessibilityHint("Shows \(name) in standard notation on the computer.")
+                    .accessibilityIdentifier("show-notation")
+                if part.midiTab {
+                    Button("Show MIDI tab") { model.showPart(part.trackID, as: "midi_tab") }
+                        .buttonStyle(.studio)
+                        .accessibilityHint("Shows \(name) as tab on the computer.")
+                        .accessibilityIdentifier("show-midi-tab")
+                }
+            }
+        }
+        .disabled(model.pending.contains("show-part"))
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .studioCard()
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("midi-part")
+    }
+
+    private var words: String {
+        switch part.shows {
+        case "midi_tab": "The computer shows \(name) as MIDI tab."
+        case "notation": "The computer shows \(name) in standard notation."
+        default: "\(name) is a MIDI part. The computer waits for a choice: how should it show it?"
         }
     }
 }
