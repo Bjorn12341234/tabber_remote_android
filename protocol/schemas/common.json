@@ -699,8 +699,13 @@
         },
         "fret": {
           "type": "integer",
-          "minimum": 0,
-          "maximum": 36
+          "minimum": -127,
+          "maximum": 127,
+          "description": "0 to 36 on guitar tab; on MIDI tab (tab.midi/1) also beyond the strings' frets, then virtual."
+        },
+        "virtual": {
+          "type": "boolean",
+          "description": "MIDI tab only: the note is below its open string or past the last fret, drawn where Tabber Studio draws it."
         }
       },
       "required": [
@@ -822,6 +827,10 @@
             "$ref": "#/$defs/tab_bar"
           },
           "description": "The cursor's bar and its neighbours: one before, three after."
+        },
+        "midi": {
+          "type": "boolean",
+          "description": "True when this is a melodic MIDI track's MIDI tab (tab.midi/1); absent or false for tab."
         }
       },
       "required": [

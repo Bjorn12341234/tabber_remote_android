@@ -1,0 +1,2550 @@
+{
+ "name": "tab_midi",
+ "description": "Tab on a MIDI track: Keys shown as MIDI tab, a fret, a chord, a pitch already sounding, a low piano note drawn virtual, and a note value, each one of Tabber Studio's MIDI Tab edits (spec 9, tab.midi/1).",
+ "start": "authenticated",
+ "host_state": {
+  "pairing": {
+   "open": false
+  },
+  "paired_devices": [
+   {
+    "device_id": "zsiNWgOpGPu3nnQsDLV1c5EUoLWC_GqaxM6F0p8aU88",
+    "name": "Björn's iPhone",
+    "key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAELmFLfdxxNIkeJNkXdNhfQVal4qrDnl_C1tq3bYJMIbARSFIBJiHBKBXg2n0qXdRgpN7x-2sEbrFmAaCll5zfdw"
+   }
+  ],
+  "capabilities": [
+   "transport/1",
+   "record/1",
+   "tempo_scale/1",
+   "tracks/1",
+   "tracks.monitor/1",
+   "markers/1",
+   "takes/1",
+   "takes.discard/1",
+   "takes.go_again/1",
+   "undo/1",
+   "save/1",
+   "meters/1",
+   "pair.code/1",
+   "mixer/1",
+   "tab/1",
+   "routing/1",
+   "chat/1",
+   "view/1",
+   "view.part/1",
+   "tab.midi/1"
+  ],
+  "snapshot": {
+   "seq": 10,
+   "t": 9000.0,
+   "project": {
+    "title": "My Song",
+    "unsaved": false,
+    "has_file": true
+   },
+   "transport": {
+    "state": "stopped",
+    "position": {
+     "bar": 1,
+     "beat": 1,
+     "seconds": 0.0
+    },
+    "tempo_bpm": 96.0,
+    "tempo_scale": 1.0,
+    "time_signature": {
+     "beats": 4,
+     "unit": 4
+    },
+    "loop": {
+     "enabled": false,
+     "start": null,
+     "end": null
+    },
+    "click": false,
+    "count_in_bars": 0,
+    "counting_in": false
+   },
+   "record": {
+    "recording": false,
+    "started": null,
+    "armed_track_ids": []
+   },
+   "tracks": [
+    {
+     "id": "trk-guitar",
+     "name": "Guitar",
+     "kind": "midi",
+     "armed": false,
+     "monitor": "auto",
+     "selected": false,
+     "color": "#50A0DC",
+     "instrument": "Acoustic Guitar (steel)",
+     "tuning": [
+      64,
+      59,
+      55,
+      50,
+      45,
+      40
+     ]
+    },
+    {
+     "id": "trk-vocals",
+     "name": "Vocals",
+     "kind": "audio",
+     "armed": false,
+     "monitor": "auto",
+     "selected": false,
+     "color": "#DC5050"
+    },
+    {
+     "id": "trk-keys",
+     "name": "Keys",
+     "kind": "midi",
+     "armed": false,
+     "monitor": "auto",
+     "selected": true,
+     "color": "#64BE64",
+     "instrument": "Electric Piano 1"
+    }
+   ],
+   "markers": [
+    {
+     "id": "mrk-intro",
+     "name": "Intro",
+     "bar": 1,
+     "beat": 1
+    },
+    {
+     "id": "mrk-verse",
+     "name": "Verse",
+     "bar": 9,
+     "beat": 1
+    },
+    {
+     "id": "mrk-chorus",
+     "name": "Chorus",
+     "bar": 25,
+     "beat": 1
+    },
+    {
+     "id": "mrk-solo",
+     "name": "Solo",
+     "bar": 41,
+     "beat": 1
+    }
+   ],
+   "takes": [],
+   "undo": {
+    "undo": null,
+    "redo": null
+   }
+  }
+ },
+ "steps": [
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "session.subscribe",
+    "params": {
+     "topics": [
+      "tab",
+      "view",
+      "undo"
+     ]
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "result": {
+     "seq": 10,
+     "t": 9000.0,
+     "project": {
+      "title": "My Song",
+      "unsaved": false,
+      "has_file": true
+     },
+     "transport": {
+      "state": "stopped",
+      "position": {
+       "bar": 1,
+       "beat": 1,
+       "seconds": 0.0
+      },
+      "tempo_bpm": 96.0,
+      "tempo_scale": 1.0,
+      "time_signature": {
+       "beats": 4,
+       "unit": 4
+      },
+      "loop": {
+       "enabled": false,
+       "start": null,
+       "end": null
+      },
+      "click": false,
+      "count_in_bars": 0,
+      "counting_in": false
+     },
+     "record": {
+      "recording": false,
+      "started": null,
+      "armed_track_ids": []
+     },
+     "tracks": [
+      {
+       "id": "trk-guitar",
+       "name": "Guitar",
+       "kind": "midi",
+       "armed": false,
+       "monitor": "auto",
+       "selected": false,
+       "color": "#50A0DC",
+       "instrument": "Acoustic Guitar (steel)",
+       "tuning": [
+        64,
+        59,
+        55,
+        50,
+        45,
+        40
+       ]
+      },
+      {
+       "id": "trk-vocals",
+       "name": "Vocals",
+       "kind": "audio",
+       "armed": false,
+       "monitor": "auto",
+       "selected": false,
+       "color": "#DC5050"
+      },
+      {
+       "id": "trk-keys",
+       "name": "Keys",
+       "kind": "midi",
+       "armed": false,
+       "monitor": "auto",
+       "selected": true,
+       "color": "#64BE64",
+       "instrument": "Electric Piano 1"
+      }
+     ],
+     "markers": [
+      {
+       "id": "mrk-intro",
+       "name": "Intro",
+       "bar": 1,
+       "beat": 1
+      },
+      {
+       "id": "mrk-verse",
+       "name": "Verse",
+       "bar": 9,
+       "beat": 1
+      },
+      {
+       "id": "mrk-chorus",
+       "name": "Chorus",
+       "bar": 25,
+       "beat": 1
+      },
+      {
+       "id": "mrk-solo",
+       "name": "Solo",
+       "bar": 41,
+       "beat": 1
+      }
+     ],
+     "takes": [],
+     "undo": {
+      "undo": null,
+      "redo": null
+     }
+    }
+   }
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 2,
+    "method": "view.state",
+    "params": {}
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 2,
+    "result": {
+     "view": {
+      "editor": "tab",
+      "split": false,
+      "part": {
+       "track_id": "trk-keys",
+       "shows": "midi_tab",
+       "midi_tab": true
+      }
+     }
+    }
+   },
+   "note": "The phone answered Keys's MIDI part card with Show MIDI tab (view_part.json)."
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 3,
+    "method": "tab.state",
+    "params": {}
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 3,
+    "result": {
+     "tab": {
+      "track_id": "trk-keys",
+      "revision": 501,
+      "tuning": [
+       64,
+       59,
+       55,
+       50,
+       45,
+       40
+      ],
+      "drum": false,
+      "midi": true,
+      "cursor": {
+       "bar": 1,
+       "beat": 1,
+       "string": 1
+      },
+      "duration": {
+       "value": 4,
+       "dotted": false,
+       "triplet": false
+      },
+      "bar_count": 8,
+      "bars": [
+       {
+        "bar": 1,
+        "time_signature": {
+         "beats": 4,
+         "unit": 4
+        },
+        "beats": [
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         }
+        ]
+       },
+       {
+        "bar": 2,
+        "time_signature": {
+         "beats": 4,
+         "unit": 4
+        },
+        "beats": [
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         }
+        ]
+       },
+       {
+        "bar": 3,
+        "time_signature": {
+         "beats": 4,
+         "unit": 4
+        },
+        "beats": [
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         }
+        ]
+       },
+       {
+        "bar": 4,
+        "time_signature": {
+         "beats": 4,
+         "unit": 4
+        },
+        "beats": [
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         }
+        ]
+       }
+      ]
+     }
+    }
+   },
+   "note": "Keys's MIDI tab: Tabber Studio's six strings, empty bars."
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 4,
+    "method": "tab.put",
+    "params": {
+     "key": "0b6c3f1e-7a2d-4e59-9c84-000000001000",
+     "string": 2,
+     "fret": 3
+    }
+   },
+   "note": "A fret on string 2: Studio's MIDI Tab writes a D at the caret."
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 4,
+    "result": {
+     "tab": {
+      "track_id": "trk-keys",
+      "revision": 502,
+      "tuning": [
+       64,
+       59,
+       55,
+       50,
+       45,
+       40
+      ],
+      "drum": false,
+      "midi": true,
+      "cursor": {
+       "bar": 1,
+       "beat": 1,
+       "string": 2
+      },
+      "duration": {
+       "value": 4,
+       "dotted": false,
+       "triplet": false
+      },
+      "bar_count": 8,
+      "bars": [
+       {
+        "bar": 1,
+        "time_signature": {
+         "beats": 4,
+         "unit": 4
+        },
+        "beats": [
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": false,
+          "notes": [
+           {
+            "string": 2,
+            "fret": 3
+           }
+          ]
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         }
+        ]
+       },
+       {
+        "bar": 2,
+        "time_signature": {
+         "beats": 4,
+         "unit": 4
+        },
+        "beats": [
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         }
+        ]
+       },
+       {
+        "bar": 3,
+        "time_signature": {
+         "beats": 4,
+         "unit": 4
+        },
+        "beats": [
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         }
+        ]
+       },
+       {
+        "bar": 4,
+        "time_signature": {
+         "beats": 4,
+         "unit": 4
+        },
+        "beats": [
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         }
+        ]
+       }
+      ]
+     },
+     "undo": {
+      "undo": {
+       "id": "u-81",
+       "label": "Write staff note"
+      },
+      "redo": null
+     }
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "method": "event",
+    "params": {
+     "topic": "tab",
+     "seq": 11,
+     "t": 9001.1,
+     "data": {
+      "tab": {
+       "track_id": "trk-keys",
+       "revision": 502,
+       "tuning": [
+        64,
+        59,
+        55,
+        50,
+        45,
+        40
+       ],
+       "drum": false,
+       "midi": true,
+       "cursor": {
+        "bar": 1,
+        "beat": 1,
+        "string": 2
+       },
+       "duration": {
+        "value": 4,
+        "dotted": false,
+        "triplet": false
+       },
+       "bar_count": 8,
+       "bars": [
+        {
+         "bar": 1,
+         "time_signature": {
+          "beats": 4,
+          "unit": 4
+         },
+         "beats": [
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": false,
+           "notes": [
+            {
+             "string": 2,
+             "fret": 3
+            }
+           ]
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          }
+         ]
+        },
+        {
+         "bar": 2,
+         "time_signature": {
+          "beats": 4,
+          "unit": 4
+         },
+         "beats": [
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          }
+         ]
+        },
+        {
+         "bar": 3,
+         "time_signature": {
+          "beats": 4,
+          "unit": 4
+         },
+         "beats": [
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          }
+         ]
+        },
+        {
+         "bar": 4,
+         "time_signature": {
+          "beats": 4,
+          "unit": 4
+         },
+         "beats": [
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          }
+         ]
+        }
+       ]
+      }
+     }
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "method": "event",
+    "params": {
+     "topic": "undo",
+     "seq": 12,
+     "t": 9001.2,
+     "data": {
+      "undo": {
+       "id": "u-81",
+       "label": "Write staff note"
+      },
+      "redo": null
+     }
+    }
+   }
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 5,
+    "method": "tab.put",
+    "params": {
+     "key": "0b6c3f1e-7a2d-4e59-9c84-000000001001",
+     "string": 1,
+     "fret": 0
+    }
+   },
+   "note": "The caret stays: another string makes a chord."
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 5,
+    "result": {
+     "tab": {
+      "track_id": "trk-keys",
+      "revision": 503,
+      "tuning": [
+       64,
+       59,
+       55,
+       50,
+       45,
+       40
+      ],
+      "drum": false,
+      "midi": true,
+      "cursor": {
+       "bar": 1,
+       "beat": 1,
+       "string": 1
+      },
+      "duration": {
+       "value": 4,
+       "dotted": false,
+       "triplet": false
+      },
+      "bar_count": 8,
+      "bars": [
+       {
+        "bar": 1,
+        "time_signature": {
+         "beats": 4,
+         "unit": 4
+        },
+        "beats": [
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": false,
+          "notes": [
+           {
+            "string": 1,
+            "fret": 0
+           },
+           {
+            "string": 2,
+            "fret": 3
+           }
+          ]
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         }
+        ]
+       },
+       {
+        "bar": 2,
+        "time_signature": {
+         "beats": 4,
+         "unit": 4
+        },
+        "beats": [
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         }
+        ]
+       },
+       {
+        "bar": 3,
+        "time_signature": {
+         "beats": 4,
+         "unit": 4
+        },
+        "beats": [
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         }
+        ]
+       },
+       {
+        "bar": 4,
+        "time_signature": {
+         "beats": 4,
+         "unit": 4
+        },
+        "beats": [
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         }
+        ]
+       }
+      ]
+     },
+     "undo": {
+      "undo": {
+       "id": "u-82",
+       "label": "Write staff note"
+      },
+      "redo": null
+     }
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "method": "event",
+    "params": {
+     "topic": "tab",
+     "seq": 13,
+     "t": 9001.3,
+     "data": {
+      "tab": {
+       "track_id": "trk-keys",
+       "revision": 503,
+       "tuning": [
+        64,
+        59,
+        55,
+        50,
+        45,
+        40
+       ],
+       "drum": false,
+       "midi": true,
+       "cursor": {
+        "bar": 1,
+        "beat": 1,
+        "string": 1
+       },
+       "duration": {
+        "value": 4,
+        "dotted": false,
+        "triplet": false
+       },
+       "bar_count": 8,
+       "bars": [
+        {
+         "bar": 1,
+         "time_signature": {
+          "beats": 4,
+          "unit": 4
+         },
+         "beats": [
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": false,
+           "notes": [
+            {
+             "string": 1,
+             "fret": 0
+            },
+            {
+             "string": 2,
+             "fret": 3
+            }
+           ]
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          }
+         ]
+        },
+        {
+         "bar": 2,
+         "time_signature": {
+          "beats": 4,
+          "unit": 4
+         },
+         "beats": [
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          }
+         ]
+        },
+        {
+         "bar": 3,
+         "time_signature": {
+          "beats": 4,
+          "unit": 4
+         },
+         "beats": [
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          }
+         ]
+        },
+        {
+         "bar": 4,
+         "time_signature": {
+          "beats": 4,
+          "unit": 4
+         },
+         "beats": [
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          }
+         ]
+        }
+       ]
+      }
+     }
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "method": "event",
+    "params": {
+     "topic": "undo",
+     "seq": 14,
+     "t": 9001.4,
+     "data": {
+      "undo": {
+       "id": "u-82",
+       "label": "Write staff note"
+      },
+      "redo": null
+     }
+    }
+   }
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 6,
+    "method": "tab.put",
+    "params": {
+     "key": "0b6c3f1e-7a2d-4e59-9c84-000000001002",
+     "string": 2,
+     "fret": 5
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 6,
+    "error": {
+     "code": 1099,
+     "message": "Tabber Studio could not do that.",
+     "data": {
+      "reason": "host_error",
+      "detail": "That pitch already sounds in this beat, on another string."
+     }
+    }
+   },
+   "note": "Fret 5 on string 2 is the E the open top string already sounds; MIDI holds one of each pitch at a time."
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 7,
+    "method": "tab.put_pitch",
+    "params": {
+     "key": "0b6c3f1e-7a2d-4e59-9c84-000000001003",
+     "pitch": 28
+    }
+   },
+   "note": "A low E from the piano, on the caret's string as Studio's piano places it."
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 7,
+    "result": {
+     "tab": {
+      "track_id": "trk-keys",
+      "revision": 504,
+      "tuning": [
+       64,
+       59,
+       55,
+       50,
+       45,
+       40
+      ],
+      "drum": false,
+      "midi": true,
+      "cursor": {
+       "bar": 1,
+       "beat": 2,
+       "string": 1
+      },
+      "duration": {
+       "value": 4,
+       "dotted": false,
+       "triplet": false
+      },
+      "bar_count": 8,
+      "bars": [
+       {
+        "bar": 1,
+        "time_signature": {
+         "beats": 4,
+         "unit": 4
+        },
+        "beats": [
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": false,
+          "notes": [
+           {
+            "string": 1,
+            "fret": -36,
+            "virtual": true
+           },
+           {
+            "string": 1,
+            "fret": 0
+           },
+           {
+            "string": 2,
+            "fret": 3
+           }
+          ]
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         }
+        ]
+       },
+       {
+        "bar": 2,
+        "time_signature": {
+         "beats": 4,
+         "unit": 4
+        },
+        "beats": [
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         }
+        ]
+       },
+       {
+        "bar": 3,
+        "time_signature": {
+         "beats": 4,
+         "unit": 4
+        },
+        "beats": [
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         }
+        ]
+       },
+       {
+        "bar": 4,
+        "time_signature": {
+         "beats": 4,
+         "unit": 4
+        },
+        "beats": [
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         }
+        ]
+       }
+      ]
+     },
+     "undo": {
+      "undo": {
+       "id": "u-83",
+       "label": "Write staff note"
+      },
+      "redo": null
+     }
+    }
+   },
+   "note": "Below the open string: fret -36, virtual. Studio's piano moves the caret on."
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "method": "event",
+    "params": {
+     "topic": "tab",
+     "seq": 15,
+     "t": 9001.5,
+     "data": {
+      "tab": {
+       "track_id": "trk-keys",
+       "revision": 504,
+       "tuning": [
+        64,
+        59,
+        55,
+        50,
+        45,
+        40
+       ],
+       "drum": false,
+       "midi": true,
+       "cursor": {
+        "bar": 1,
+        "beat": 2,
+        "string": 1
+       },
+       "duration": {
+        "value": 4,
+        "dotted": false,
+        "triplet": false
+       },
+       "bar_count": 8,
+       "bars": [
+        {
+         "bar": 1,
+         "time_signature": {
+          "beats": 4,
+          "unit": 4
+         },
+         "beats": [
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": false,
+           "notes": [
+            {
+             "string": 1,
+             "fret": -36,
+             "virtual": true
+            },
+            {
+             "string": 1,
+             "fret": 0
+            },
+            {
+             "string": 2,
+             "fret": 3
+            }
+           ]
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          }
+         ]
+        },
+        {
+         "bar": 2,
+         "time_signature": {
+          "beats": 4,
+          "unit": 4
+         },
+         "beats": [
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          }
+         ]
+        },
+        {
+         "bar": 3,
+         "time_signature": {
+          "beats": 4,
+          "unit": 4
+         },
+         "beats": [
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          }
+         ]
+        },
+        {
+         "bar": 4,
+         "time_signature": {
+          "beats": 4,
+          "unit": 4
+         },
+         "beats": [
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          }
+         ]
+        }
+       ]
+      }
+     }
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "method": "event",
+    "params": {
+     "topic": "undo",
+     "seq": 16,
+     "t": 9001.6,
+     "data": {
+      "undo": {
+       "id": "u-83",
+       "label": "Write staff note"
+      },
+      "redo": null
+     }
+    }
+   }
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 8,
+    "method": "tab.set_duration",
+    "params": {
+     "key": "0b6c3f1e-7a2d-4e59-9c84-000000001004",
+     "value": 8,
+     "dotted": false,
+     "triplet": false
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 8,
+    "result": {
+     "tab": {
+      "track_id": "trk-keys",
+      "revision": 505,
+      "tuning": [
+       64,
+       59,
+       55,
+       50,
+       45,
+       40
+      ],
+      "drum": false,
+      "midi": true,
+      "cursor": {
+       "bar": 1,
+       "beat": 2,
+       "string": 1
+      },
+      "duration": {
+       "value": 8,
+       "dotted": false,
+       "triplet": false
+      },
+      "bar_count": 8,
+      "bars": [
+       {
+        "bar": 1,
+        "time_signature": {
+         "beats": 4,
+         "unit": 4
+        },
+        "beats": [
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": false,
+          "notes": [
+           {
+            "string": 1,
+            "fret": -36,
+            "virtual": true
+           },
+           {
+            "string": 1,
+            "fret": 0
+           },
+           {
+            "string": 2,
+            "fret": 3
+           }
+          ]
+         },
+         {
+          "duration": {
+           "value": 8,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         }
+        ]
+       },
+       {
+        "bar": 2,
+        "time_signature": {
+         "beats": 4,
+         "unit": 4
+        },
+        "beats": [
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         }
+        ]
+       },
+       {
+        "bar": 3,
+        "time_signature": {
+         "beats": 4,
+         "unit": 4
+        },
+        "beats": [
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         }
+        ]
+       },
+       {
+        "bar": 4,
+        "time_signature": {
+         "beats": 4,
+         "unit": 4
+        },
+        "beats": [
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         },
+         {
+          "duration": {
+           "value": 4,
+           "dotted": false,
+           "triplet": false
+          },
+          "rest": true,
+          "notes": []
+         }
+        ]
+       }
+      ]
+     },
+     "undo": {
+      "undo": {
+       "id": "u-84",
+       "label": "Edit MIDI tab beats"
+      },
+      "redo": null
+     }
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "method": "event",
+    "params": {
+     "topic": "tab",
+     "seq": 17,
+     "t": 9001.7,
+     "data": {
+      "tab": {
+       "track_id": "trk-keys",
+       "revision": 505,
+       "tuning": [
+        64,
+        59,
+        55,
+        50,
+        45,
+        40
+       ],
+       "drum": false,
+       "midi": true,
+       "cursor": {
+        "bar": 1,
+        "beat": 2,
+        "string": 1
+       },
+       "duration": {
+        "value": 8,
+        "dotted": false,
+        "triplet": false
+       },
+       "bar_count": 8,
+       "bars": [
+        {
+         "bar": 1,
+         "time_signature": {
+          "beats": 4,
+          "unit": 4
+         },
+         "beats": [
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": false,
+           "notes": [
+            {
+             "string": 1,
+             "fret": -36,
+             "virtual": true
+            },
+            {
+             "string": 1,
+             "fret": 0
+            },
+            {
+             "string": 2,
+             "fret": 3
+            }
+           ]
+          },
+          {
+           "duration": {
+            "value": 8,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          }
+         ]
+        },
+        {
+         "bar": 2,
+         "time_signature": {
+          "beats": 4,
+          "unit": 4
+         },
+         "beats": [
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          }
+         ]
+        },
+        {
+         "bar": 3,
+         "time_signature": {
+          "beats": 4,
+          "unit": 4
+         },
+         "beats": [
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          }
+         ]
+        },
+        {
+         "bar": 4,
+         "time_signature": {
+          "beats": 4,
+          "unit": 4
+         },
+         "beats": [
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          },
+          {
+           "duration": {
+            "value": 4,
+            "dotted": false,
+            "triplet": false
+           },
+           "rest": true,
+           "notes": []
+          }
+         ]
+        }
+       ]
+      }
+     }
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "method": "event",
+    "params": {
+     "topic": "undo",
+     "seq": 18,
+     "t": 9001.8,
+     "data": {
+      "undo": {
+       "id": "u-84",
+       "label": "Edit MIDI tab beats"
+      },
+      "redo": null
+     }
+    }
+   }
+  }
+ ]
+}

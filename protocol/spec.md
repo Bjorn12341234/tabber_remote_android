@@ -254,7 +254,7 @@ whether Tabber Studio is busy:
 ## 7. Versions and capabilities
 
 - **The protocol version** is `major.minor`. `hello` lists what the remote
-  speaks (`"protocol_versions": ["1.7"]`, one entry per major, the highest
+  speaks (`"protocol_versions": ["1.8"]`, one entry per major, the highest
   minor it knows); the host answers with the version it chose: the major
   both speak, and the lower of the two minors. It lists only that version's
   capabilities, refuses the verbs of any other with `not_supported` and
@@ -335,6 +335,13 @@ shows a MIDI part's choice only when the host lists it:
 | Capability | Gives |
 |---|---|
 | `view.part/1` | `view.show_part`, and `part` in `view` |
+
+Version 1.8 adds one capability. A 1.8 remote works with any 1.x host and
+writes MIDI tab only when the host lists it:
+
+| Capability | Gives |
+|---|---|
+| `tab.midi/1` | the tab/1 verbs and the `tab` topic on a melodic MIDI track the Tab editor shows as MIDI tab; `midi` in `tab`, and `virtual` on its notes |
 
 ## 8. Snapshot and events
 
@@ -581,6 +588,30 @@ plain MIDI track).
   changes whenever they do.
 - **No tab, no edits.** With no tab on the selected track (an audio, drum or
   plain MIDI track), every verb but `tab.state` is refused with `no_tab`.
+
+**MIDI tab (tab.midi/1).** When the Tab editor shows the selected melodic
+MIDI track as MIDI tab (`view.part.shows` is `midi_tab`), `tab` is that MIDI
+tab, read and written as Tabber Studio's own MIDI Tab reads and writes it:
+
+- **`midi`** is true, `tuning` is the MIDI tab's strings, and each note is
+  where Tabber Studio draws it. A note below its open string or past the
+  last fret keeps that fret, which can be negative, and says `virtual`.
+- **`tab.put`** is a fret typed on that string at the caret: it changes the
+  note on that string there, or adds one of the chosen value, and the same
+  fret again takes it off. The caret stays, so frets on other strings make a
+  chord. A pitch already sounding in the beat is refused with `host_error`,
+  in words.
+- **`tab.put_pitch`** is Tabber Studio's piano on MIDI tab: the note goes on
+  the caret's string, and the caret moves on, as it does there.
+- **`tab.set_duration`** sets the caret's beat's value, dot and triplet in
+  one step, and the value of the next note. **`tab.move`** steps through the
+  part's beats and adds none. **`tab.rest`** and **`tab.delete`** are its R
+  and Delete keys.
+- Each edit is one undo step with Tabber Studio's label ("Write staff note",
+  "Delete staff tones", "Edit MIDI tab beats", "Toggle rest"), and the
+  track keeps its instrument.
+- The MIDI tab is there only while the computer's Tab editor shows it, as in
+  Tabber Studio; otherwise `tab` is null and the verbs answer `no_tab`.
 
 ### Routing (routing/1)
 
