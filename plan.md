@@ -1035,7 +1035,7 @@ you have to go to the computer and click on it manually on the computer?"
 |---|---|---|---|
 | TR39 | A MIDI track in the Tab view: Studio's own "MIDI part" card on the phone, "Show MIDI tab" and "Show standard notation" doing there what they do on the computer, so the computer is never left on the card | spec, Studio, this repo | Headless: each choice shows on the computer as a click on the card does, read back; the phone shows the card whenever the computer does; UI tests against DemoHost |
 | TR40 | Tab on MIDI tracks: with MIDI tab shown, the phone's fretboard and piano write on a MIDI track as Studio's MIDI Tab does, each edit one undo step | spec, Studio, this repo | Headless: a fret from the phone is the note Studio's MIDI Tab writes, at the same string and fret, one undo step; the instrument is untouched; UI tests |
-| TR41 | Add Bus from the phone, as the mixer's "+ Bus" makes it | spec, Studio, this repo | Headless: the bus equals "+ Bus"'s, one undo step; it shows in the phone's Mixer and Routing at once; UI tests |
+| TR41 | Add Bus from the phone, as the mixer's "+ Bus" makes it: Studio asks for its name first | spec, Studio, this repo | Headless: the bus equals "+ Bus"'s, named as typed; not an undo step there, nor here; it shows in the phone's Mixer and Routing at once; UI tests |
 | TR42 | The routing Flow view on the phone: Studio's Flow tab, tracks through buses to the master | this repo, Studio if a read is missing | The phone draws what Studio's Flow tab draws for the same song, checked against Studio's own flow model; readable at the largest text; UI tests and the accessibility audit |
 
 ### M2, the Lock Screen and the Action Button (1.1)
@@ -2488,6 +2488,37 @@ what was measured, and what changed in the plan.
   - **TestFlight build 13** was uploaded 2026-11-08 at about 17:25.
   - **Owed:** on the iPhone, add a MIDI track while the computer shows Tab,
     and answer the card from the phone.
+
+- **TR40 ✅ 2026-11-08: tab on MIDI tracks from the phone (protocol 1.8,
+  c20c1ed; Studio a12df43a, 0.3.26; TestFlight build 14).** The owner: "i
+  still miss ... tabbing in midi tracks".
+  - **`tab.midi/1`:** when the Tab editor shows the selected melodic MIDI
+    track as MIDI tab, the tab/1 verbs and topic cover it, through Studio's
+    own MIDI tab editor (`remote_host/midi_tab.py`, MidiTabController):
+    - `tab` says `midi`; the strings are the MIDI tab profile's; each note
+      is where Studio draws it, and a note out of the strings' frets keeps
+      that fret, negative if need be, and says `virtual`;
+    - a fret is the fret typed on that string at the caret (changed, added,
+      or the same fret again taken off), and the caret stays, so frets on
+      other strings make a chord; the piano is Studio's MIDI tab piano;
+      note values, Next, R and Delete are its toolbar and keys;
+    - each edit is one undo step with Studio's label ("Write staff note",
+      "Delete staff tones", "Edit MIDI tab beats", "Toggle rest"); the
+      track keeps its instrument;
+    - MIDI holds one of each pitch at a time: a pitch already sounding in
+      the beat is refused, "That pitch already sounds in this beat, on
+      another string.";
+    - only while the computer's Tab editor shows it; else `no_tab`.
+  - **On the phone:** Show MIDI tab on the card opens the track's tab, and
+    everything on the Tab screen works on it.
+  - **Found first by a headless probe:** Studio's MIDI tab editor works
+    headless with the window shown, its typed frets leave the caret where
+    it is, as the phone's frets do, and its piano moves on.
+  - **Gate met:** Studio `test_tr40_midi_tab.py` (2) and the remote suite
+    (111); RemoteKit 45 with the demo's MIDI tab; the card's UI test writes
+    a fret on the MIDI tab; the full UI suite (40).
+  - **Owed:** on the iPhone, answer a MIDI track's card with Show MIDI tab
+    and write a riff on it.
   - **Left as they are, public:** the samples download, and the Synth's
     source record, point at the owner's GitHub account.
   - **Found on the way, not ours:** in Studio's `tests/core`, the warp and
