@@ -1,0 +1,957 @@
+{
+ "name": "tracks_add",
+ "description": "Add tracks from the phone: a tab track in a song of only audio, a MIDI track and an audio track, as Tabber Studio's \"+ Add Track\" makes each; Undo takes one back; refused while recording; a kind the host does not know, and a song at Tabber Studio's track limit (spec 9, tracks.add/1).",
+ "start": "authenticated",
+ "host_state": {
+  "pairing": {
+   "open": false
+  },
+  "paired_devices": [
+   {
+    "device_id": "zsiNWgOpGPu3nnQsDLV1c5EUoLWC_GqaxM6F0p8aU88",
+    "name": "Björn's iPhone",
+    "key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAELmFLfdxxNIkeJNkXdNhfQVal4qrDnl_C1tq3bYJMIbARSFIBJiHBKBXg2n0qXdRgpN7x-2sEbrFmAaCll5zfdw"
+   }
+  ],
+  "capabilities": [
+   "transport/1",
+   "record/1",
+   "tempo_scale/1",
+   "tracks/1",
+   "tracks.monitor/1",
+   "markers/1",
+   "takes/1",
+   "takes.discard/1",
+   "takes.go_again/1",
+   "undo/1",
+   "save/1",
+   "meters/1",
+   "pair.code/1",
+   "mixer/1",
+   "tab/1",
+   "routing/1",
+   "chat/1",
+   "tracks.add/1"
+  ],
+  "snapshot": {
+   "seq": 10,
+   "t": 9000.0,
+   "project": {
+    "title": "Demo from the rehearsal",
+    "unsaved": false,
+    "has_file": true
+   },
+   "transport": {
+    "state": "stopped",
+    "position": {
+     "bar": 1,
+     "beat": 1,
+     "seconds": 0.0
+    },
+    "tempo_bpm": 96.0,
+    "tempo_scale": 1.0,
+    "time_signature": {
+     "beats": 4,
+     "unit": 4
+    },
+    "loop": {
+     "enabled": false,
+     "start": null,
+     "end": null
+    },
+    "click": false,
+    "count_in_bars": 0,
+    "counting_in": false
+   },
+   "record": {
+    "recording": false,
+    "started": null,
+    "armed_track_ids": []
+   },
+   "tracks": [
+    {
+     "id": "trk-vocals",
+     "name": "Vocals",
+     "kind": "audio",
+     "armed": false,
+     "monitor": "auto",
+     "selected": true,
+     "color": "#DC5050"
+    },
+    {
+     "id": "trk-drum-loop",
+     "name": "Drum loop",
+     "kind": "audio",
+     "armed": false,
+     "monitor": "auto",
+     "selected": false,
+     "color": "#E0A040"
+    }
+   ],
+   "markers": [
+    {
+     "id": "mrk-intro",
+     "name": "Intro",
+     "bar": 1,
+     "beat": 1
+    },
+    {
+     "id": "mrk-verse",
+     "name": "Verse",
+     "bar": 9,
+     "beat": 1
+    },
+    {
+     "id": "mrk-chorus",
+     "name": "Chorus",
+     "bar": 25,
+     "beat": 1
+    },
+    {
+     "id": "mrk-solo",
+     "name": "Solo",
+     "bar": 41,
+     "beat": 1
+    }
+   ],
+   "takes": [],
+   "undo": {
+    "undo": null,
+    "redo": null
+   }
+  }
+ },
+ "steps": [
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "session.subscribe",
+    "params": {
+     "topics": [
+      "tracks",
+      "undo"
+     ]
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "result": {
+     "seq": 10,
+     "t": 9000.0,
+     "project": {
+      "title": "Demo from the rehearsal",
+      "unsaved": false,
+      "has_file": true
+     },
+     "transport": {
+      "state": "stopped",
+      "position": {
+       "bar": 1,
+       "beat": 1,
+       "seconds": 0.0
+      },
+      "tempo_bpm": 96.0,
+      "tempo_scale": 1.0,
+      "time_signature": {
+       "beats": 4,
+       "unit": 4
+      },
+      "loop": {
+       "enabled": false,
+       "start": null,
+       "end": null
+      },
+      "click": false,
+      "count_in_bars": 0,
+      "counting_in": false
+     },
+     "record": {
+      "recording": false,
+      "started": null,
+      "armed_track_ids": []
+     },
+     "tracks": [
+      {
+       "id": "trk-vocals",
+       "name": "Vocals",
+       "kind": "audio",
+       "armed": false,
+       "monitor": "auto",
+       "selected": true,
+       "color": "#DC5050"
+      },
+      {
+       "id": "trk-drum-loop",
+       "name": "Drum loop",
+       "kind": "audio",
+       "armed": false,
+       "monitor": "auto",
+       "selected": false,
+       "color": "#E0A040"
+      }
+     ],
+     "markers": [
+      {
+       "id": "mrk-intro",
+       "name": "Intro",
+       "bar": 1,
+       "beat": 1
+      },
+      {
+       "id": "mrk-verse",
+       "name": "Verse",
+       "bar": 9,
+       "beat": 1
+      },
+      {
+       "id": "mrk-chorus",
+       "name": "Chorus",
+       "bar": 25,
+       "beat": 1
+      },
+      {
+       "id": "mrk-solo",
+       "name": "Solo",
+       "bar": 41,
+       "beat": 1
+      }
+     ],
+     "takes": [],
+     "undo": {
+      "undo": null,
+      "redo": null
+     }
+    }
+   }
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 2,
+    "method": "tracks.add",
+    "params": {
+     "key": "0b6c3f1e-7a2d-4e59-9c84-000000000800",
+     "kind": "tab"
+    }
+   },
+   "note": "A song of only audio: the musician adds a tab track to write the riff down."
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 2,
+    "result": {
+     "track": {
+      "id": "trk-track-1",
+      "name": "Track 1",
+      "kind": "midi",
+      "armed": false,
+      "monitor": "auto",
+      "selected": true,
+      "color": "#50A0DC",
+      "instrument": "Acoustic Guitar (steel)",
+      "tuning": [
+       64,
+       59,
+       55,
+       50,
+       45,
+       40
+      ]
+     },
+     "tracks": [
+      {
+       "id": "trk-track-1",
+       "name": "Track 1",
+       "kind": "midi",
+       "armed": false,
+       "monitor": "auto",
+       "selected": true,
+       "color": "#50A0DC",
+       "instrument": "Acoustic Guitar (steel)",
+       "tuning": [
+        64,
+        59,
+        55,
+        50,
+        45,
+        40
+       ]
+      },
+      {
+       "id": "trk-vocals",
+       "name": "Vocals",
+       "kind": "audio",
+       "armed": false,
+       "monitor": "auto",
+       "selected": false,
+       "color": "#DC5050"
+      },
+      {
+       "id": "trk-drum-loop",
+       "name": "Drum loop",
+       "kind": "audio",
+       "armed": false,
+       "monitor": "auto",
+       "selected": false,
+       "color": "#E0A040"
+      }
+     ],
+     "undo": {
+      "undo": {
+       "id": "u-61",
+       "label": "Add track: Track 1"
+      },
+      "redo": null
+     }
+    }
+   },
+   "note": "The new tab track spans the song's audio and comes selected, so the phone's Tab screen writes on it at once."
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "method": "event",
+    "params": {
+     "topic": "tracks",
+     "seq": 11,
+     "t": 9001.1,
+     "data": {
+      "tracks": [
+       {
+        "id": "trk-track-1",
+        "name": "Track 1",
+        "kind": "midi",
+        "armed": false,
+        "monitor": "auto",
+        "selected": true,
+        "color": "#50A0DC",
+        "instrument": "Acoustic Guitar (steel)",
+        "tuning": [
+         64,
+         59,
+         55,
+         50,
+         45,
+         40
+        ]
+       },
+       {
+        "id": "trk-vocals",
+        "name": "Vocals",
+        "kind": "audio",
+        "armed": false,
+        "monitor": "auto",
+        "selected": false,
+        "color": "#DC5050"
+       },
+       {
+        "id": "trk-drum-loop",
+        "name": "Drum loop",
+        "kind": "audio",
+        "armed": false,
+        "monitor": "auto",
+        "selected": false,
+        "color": "#E0A040"
+       }
+      ]
+     }
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "method": "event",
+    "params": {
+     "topic": "undo",
+     "seq": 12,
+     "t": 9001.2,
+     "data": {
+      "undo": {
+       "id": "u-61",
+       "label": "Add track: Track 1"
+      },
+      "redo": null
+     }
+    }
+   }
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 3,
+    "method": "tracks.add",
+    "params": {
+     "key": "0b6c3f1e-7a2d-4e59-9c84-000000000801",
+     "kind": "midi"
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 3,
+    "result": {
+     "track": {
+      "id": "trk-midi-2",
+      "name": "MIDI Track 2",
+      "kind": "midi",
+      "armed": false,
+      "monitor": "auto",
+      "selected": true,
+      "color": "#64BE64",
+      "instrument": "Acoustic Grand Piano"
+     },
+     "tracks": [
+      {
+       "id": "trk-track-1",
+       "name": "Track 1",
+       "kind": "midi",
+       "armed": false,
+       "monitor": "auto",
+       "selected": false,
+       "color": "#50A0DC",
+       "instrument": "Acoustic Guitar (steel)",
+       "tuning": [
+        64,
+        59,
+        55,
+        50,
+        45,
+        40
+       ]
+      },
+      {
+       "id": "trk-midi-2",
+       "name": "MIDI Track 2",
+       "kind": "midi",
+       "armed": false,
+       "monitor": "auto",
+       "selected": true,
+       "color": "#64BE64",
+       "instrument": "Acoustic Grand Piano"
+      },
+      {
+       "id": "trk-vocals",
+       "name": "Vocals",
+       "kind": "audio",
+       "armed": false,
+       "monitor": "auto",
+       "selected": false,
+       "color": "#DC5050"
+      },
+      {
+       "id": "trk-drum-loop",
+       "name": "Drum loop",
+       "kind": "audio",
+       "armed": false,
+       "monitor": "auto",
+       "selected": false,
+       "color": "#E0A040"
+      }
+     ],
+     "undo": {
+      "undo": {
+       "id": "u-62",
+       "label": "Add track: MIDI Track 2"
+      },
+      "redo": null
+     }
+    }
+   },
+   "note": "Tab and MIDI tracks come before the audio tracks, as Tabber Studio lists them."
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "method": "event",
+    "params": {
+     "topic": "tracks",
+     "seq": 13,
+     "t": 9001.3,
+     "data": {
+      "tracks": [
+       {
+        "id": "trk-track-1",
+        "name": "Track 1",
+        "kind": "midi",
+        "armed": false,
+        "monitor": "auto",
+        "selected": false,
+        "color": "#50A0DC",
+        "instrument": "Acoustic Guitar (steel)",
+        "tuning": [
+         64,
+         59,
+         55,
+         50,
+         45,
+         40
+        ]
+       },
+       {
+        "id": "trk-midi-2",
+        "name": "MIDI Track 2",
+        "kind": "midi",
+        "armed": false,
+        "monitor": "auto",
+        "selected": true,
+        "color": "#64BE64",
+        "instrument": "Acoustic Grand Piano"
+       },
+       {
+        "id": "trk-vocals",
+        "name": "Vocals",
+        "kind": "audio",
+        "armed": false,
+        "monitor": "auto",
+        "selected": false,
+        "color": "#DC5050"
+       },
+       {
+        "id": "trk-drum-loop",
+        "name": "Drum loop",
+        "kind": "audio",
+        "armed": false,
+        "monitor": "auto",
+        "selected": false,
+        "color": "#E0A040"
+       }
+      ]
+     }
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "method": "event",
+    "params": {
+     "topic": "undo",
+     "seq": 14,
+     "t": 9001.4,
+     "data": {
+      "undo": {
+       "id": "u-62",
+       "label": "Add track: MIDI Track 2"
+      },
+      "redo": null
+     }
+    }
+   }
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 4,
+    "method": "tracks.add",
+    "params": {
+     "key": "0b6c3f1e-7a2d-4e59-9c84-000000000802",
+     "kind": "audio"
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 4,
+    "result": {
+     "track": {
+      "id": "trk-audio-3",
+      "name": "Audio 3",
+      "kind": "audio",
+      "armed": false,
+      "monitor": "auto",
+      "selected": false,
+      "color": "#B478DC"
+     },
+     "tracks": [
+      {
+       "id": "trk-track-1",
+       "name": "Track 1",
+       "kind": "midi",
+       "armed": false,
+       "monitor": "auto",
+       "selected": false,
+       "color": "#50A0DC",
+       "instrument": "Acoustic Guitar (steel)",
+       "tuning": [
+        64,
+        59,
+        55,
+        50,
+        45,
+        40
+       ]
+      },
+      {
+       "id": "trk-midi-2",
+       "name": "MIDI Track 2",
+       "kind": "midi",
+       "armed": false,
+       "monitor": "auto",
+       "selected": true,
+       "color": "#64BE64",
+       "instrument": "Acoustic Grand Piano"
+      },
+      {
+       "id": "trk-vocals",
+       "name": "Vocals",
+       "kind": "audio",
+       "armed": false,
+       "monitor": "auto",
+       "selected": false,
+       "color": "#DC5050"
+      },
+      {
+       "id": "trk-drum-loop",
+       "name": "Drum loop",
+       "kind": "audio",
+       "armed": false,
+       "monitor": "auto",
+       "selected": false,
+       "color": "#E0A040"
+      },
+      {
+       "id": "trk-audio-3",
+       "name": "Audio 3",
+       "kind": "audio",
+       "armed": false,
+       "monitor": "auto",
+       "selected": false,
+       "color": "#B478DC"
+      }
+     ],
+     "undo": {
+      "undo": {
+       "id": "u-63",
+       "label": "Add audio track: Audio 3"
+      },
+      "redo": null
+     }
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "method": "event",
+    "params": {
+     "topic": "tracks",
+     "seq": 15,
+     "t": 9001.5,
+     "data": {
+      "tracks": [
+       {
+        "id": "trk-track-1",
+        "name": "Track 1",
+        "kind": "midi",
+        "armed": false,
+        "monitor": "auto",
+        "selected": false,
+        "color": "#50A0DC",
+        "instrument": "Acoustic Guitar (steel)",
+        "tuning": [
+         64,
+         59,
+         55,
+         50,
+         45,
+         40
+        ]
+       },
+       {
+        "id": "trk-midi-2",
+        "name": "MIDI Track 2",
+        "kind": "midi",
+        "armed": false,
+        "monitor": "auto",
+        "selected": true,
+        "color": "#64BE64",
+        "instrument": "Acoustic Grand Piano"
+       },
+       {
+        "id": "trk-vocals",
+        "name": "Vocals",
+        "kind": "audio",
+        "armed": false,
+        "monitor": "auto",
+        "selected": false,
+        "color": "#DC5050"
+       },
+       {
+        "id": "trk-drum-loop",
+        "name": "Drum loop",
+        "kind": "audio",
+        "armed": false,
+        "monitor": "auto",
+        "selected": false,
+        "color": "#E0A040"
+       },
+       {
+        "id": "trk-audio-3",
+        "name": "Audio 3",
+        "kind": "audio",
+        "armed": false,
+        "monitor": "auto",
+        "selected": false,
+        "color": "#B478DC"
+       }
+      ]
+     }
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "method": "event",
+    "params": {
+     "topic": "undo",
+     "seq": 16,
+     "t": 9001.6,
+     "data": {
+      "undo": {
+       "id": "u-63",
+       "label": "Add audio track: Audio 3"
+      },
+      "redo": null
+     }
+    }
+   }
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 5,
+    "method": "edit.undo",
+    "params": {
+     "key": "0b6c3f1e-7a2d-4e59-9c84-000000000803",
+     "expect": "u-63"
+    }
+   },
+   "note": "Undo on the phone takes the new track back, as Undo on the computer does."
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 5,
+    "result": {
+     "undo": {
+      "undo": {
+       "id": "u-62",
+       "label": "Add track: MIDI Track 2"
+      },
+      "redo": {
+       "id": "u-63",
+       "label": "Add audio track: Audio 3"
+      }
+     }
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "method": "event",
+    "params": {
+     "topic": "tracks",
+     "seq": 17,
+     "t": 9001.7,
+     "data": {
+      "tracks": [
+       {
+        "id": "trk-track-1",
+        "name": "Track 1",
+        "kind": "midi",
+        "armed": false,
+        "monitor": "auto",
+        "selected": false,
+        "color": "#50A0DC",
+        "instrument": "Acoustic Guitar (steel)",
+        "tuning": [
+         64,
+         59,
+         55,
+         50,
+         45,
+         40
+        ]
+       },
+       {
+        "id": "trk-midi-2",
+        "name": "MIDI Track 2",
+        "kind": "midi",
+        "armed": false,
+        "monitor": "auto",
+        "selected": true,
+        "color": "#64BE64",
+        "instrument": "Acoustic Grand Piano"
+       },
+       {
+        "id": "trk-vocals",
+        "name": "Vocals",
+        "kind": "audio",
+        "armed": false,
+        "monitor": "auto",
+        "selected": false,
+        "color": "#DC5050"
+       },
+       {
+        "id": "trk-drum-loop",
+        "name": "Drum loop",
+        "kind": "audio",
+        "armed": false,
+        "monitor": "auto",
+        "selected": false,
+        "color": "#E0A040"
+       }
+      ]
+     }
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "method": "event",
+    "params": {
+     "topic": "undo",
+     "seq": 18,
+     "t": 9001.8,
+     "data": {
+      "undo": {
+       "id": "u-62",
+       "label": "Add track: MIDI Track 2"
+      },
+      "redo": {
+       "id": "u-63",
+       "label": "Add audio track: Audio 3"
+      }
+     }
+    }
+   }
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 6,
+    "method": "tracks.add",
+    "params": {
+     "key": "0b6c3f1e-7a2d-4e59-9c84-000000000806",
+     "kind": "audio"
+    }
+   },
+   "note": "While the computer records on Vocals."
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 6,
+    "error": {
+     "code": 1021,
+     "message": "Tabber Studio is already recording.",
+     "data": {
+      "reason": "already_recording",
+      "record": {
+       "recording": true,
+       "started": {
+        "position": {
+         "bar": 9,
+         "beat": 1,
+         "seconds": 20.0
+        },
+        "t": 9010.0
+       },
+       "armed_track_ids": [
+        "trk-vocals"
+       ]
+      }
+     }
+    }
+   },
+   "note": "A new track would clear the record arms, so the take goes on and nothing is added."
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 7,
+    "method": "tracks.add",
+    "params": {
+     "key": "0b6c3f1e-7a2d-4e59-9c84-000000000804",
+     "kind": "bass"
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 7,
+    "error": {
+     "code": -32602,
+     "message": "The phone sent a request the computer could not use.",
+     "data": {
+      "reason": "invalid_params",
+      "field": "kind"
+     }
+    }
+   }
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 8,
+    "method": "tracks.add",
+    "params": {
+     "key": "0b6c3f1e-7a2d-4e59-9c84-000000000805",
+     "kind": "tab"
+    }
+   },
+   "note": "Later, in a song as big as Tabber Studio plays."
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 8,
+    "error": {
+     "code": 1040,
+     "message": "This song has as many tracks as Tabber Studio can play.",
+     "data": {
+      "reason": "track_limit",
+      "limit": 500
+     }
+    }
+   },
+   "note": "Nothing was added and nothing joined the undo history."
+  }
+ ]
+}

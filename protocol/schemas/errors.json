@@ -38,6 +38,7 @@
     {"code": 1037, "reason": "chat_busy", "message": "The chat is still working on the last request.", "data": ["chat"]},
     {"code": 1038, "reason": "unknown_plan", "message": "That plan is gone. Ask again.", "data": ["chat"]},
     {"code": 1039, "reason": "needs_loop", "message": "Turn Loop on first: the trainer speeds up each time the loop comes round.", "data": ["trainer"]},
+    {"code": 1040, "reason": "track_limit", "message": "This song has as many tracks as Tabber Studio can play.", "data": ["limit"]},
     {"code": 1099, "reason": "host_error", "message": "Tabber Studio could not do that.", "data": ["detail"]}
   ],
   "data_schemas": {
@@ -55,6 +56,7 @@
     "routing": {"$ref": "common.json#/$defs/routing"},
     "chat": {"$ref": "common.json#/$defs/chat"},
     "trainer": {"$ref": "common.json#/$defs/trainer"},
+    "limit": {"type": "integer", "minimum": 1, "description": "The most tracks Tabber Studio plays."},
     "path": {"type": "array", "minItems": 2, "maxItems": 64, "items": {"type": "string", "maxLength": 200},
              "description": "The loop the route would close, by name, from the source back to it."}
   }

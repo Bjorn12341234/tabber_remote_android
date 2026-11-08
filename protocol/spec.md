@@ -254,7 +254,7 @@ whether Tabber Studio is busy:
 ## 7. Versions and capabilities
 
 - **The protocol version** is `major.minor`. `hello` lists what the remote
-  speaks (`"protocol_versions": ["1.5"]`, one entry per major, the highest
+  speaks (`"protocol_versions": ["1.6"]`, one entry per major, the highest
   minor it knows); the host answers with the version it chose: the major
   both speak, and the lower of the two minors. It lists only that version's
   capabilities, refuses the verbs of any other with `not_supported` and
@@ -321,6 +321,13 @@ shows the Speed Trainer only when the host lists it:
 | Capability | Gives |
 |---|---|
 | `trainer/1` | `trainer.state`, `trainer.set`, the `trainer` topic |
+
+Version 1.6 adds one capability. A 1.6 remote works with any 1.x host and
+shows Add Track only when the host lists it:
+
+| Capability | Gives |
+|---|---|
+| `tracks.add/1` | `tracks.add` |
 
 ## 8. Snapshot and events
 
@@ -429,6 +436,26 @@ effect. Names marked TR1 are added to the Control API in sprint TR1.
 | `tracks.arm` | `key`, `track_id`, `armed` | `tracks` | `recording.arm_audio_track` (TR1) for audio, `recording.arm_track` for MIDI |
 | `tracks.select` | `key`, `track_id` | `tracks` | `tracks.select` |
 | `tracks.set_monitor` | `key`, `track_id`, `mode` (`off`, `auto`, `on`) | `tracks` | `recording.set_monitor` for MIDI; audio tracks as TR8 finds |
+| `tracks.add` | `key`, `kind` (`tab`, `midi` or `audio`) | `track`, `tracks`, `undo` | "+ Add Track" and its Tab, Midi or Audio track (tracks.add/1) |
+
+`tracks.add` adds a track as Tabber Studio's "+ Add Track" does, with what
+its chooser and its New Track dialog start with. Nothing opens on the
+computer:
+
+- **`tab`** is a six-string guitar track in standard tuning. It spans the
+  song's bars, or its audio in a song of only audio, and comes selected, so
+  the phone can write tab on it at once.
+- **`midi`** is a MIDI track for the piano roll, selected.
+- **`audio`** is an empty audio track to record on. When the computer shows
+  Tab, it turns to Arrange to show the new track, as it does there.
+- **Names** are the computer's own: "Track 2", "MIDI Track 2", "Audio 3".
+- **One undo step,** named in the result's `undo`, which Undo on either
+  device takes back.
+- `track` is the new track as the `tracks` topic shows it. A song with as
+  many tracks as Tabber Studio plays is refused with `track_limit`.
+- **Not while recording:** a new track clears the computer's record arms,
+  so while it records, `tracks.add` is refused with `already_recording`
+  and the take goes on.
 
 ### Markers
 
@@ -706,6 +733,7 @@ state in `data`, as listed.
 | 1037 | `chat_busy` | The chat is still working on the last request. | `chat` |
 | 1038 | `unknown_plan` | That plan is gone. Ask again. | `chat` |
 | 1039 | `needs_loop` | Turn Loop on first: the trainer speeds up each time the loop comes round. | `trainer` |
+| 1040 | `track_limit` | This song has as many tracks as Tabber Studio can play. | `limit` |
 | 1099 | `host_error` | Tabber Studio could not do that. | `detail` |
 
 `schemas/errors.json` holds this table; the validator checks every error in

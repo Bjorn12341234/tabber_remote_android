@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tabber.studio/schemas/remote/1/methods/tracks.add.json",
+  "title": "tracks.add",
+  "x-capability": "tracks.add/1",
+  "x-changes": true,
+  "$defs": {
+    "params": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "$ref": "../common.json#/$defs/key"
+        },
+        "kind": {
+          "enum": [
+            "tab",
+            "midi",
+            "audio"
+          ]
+        }
+      },
+      "required": [
+        "key",
+        "kind"
+      ],
+      "additionalProperties": false
+    },
+    "result": {
+      "type": "object",
+      "properties": {
+        "track": {
+          "$ref": "../common.json#/$defs/track"
+        },
+        "tracks": {
+          "$ref": "../common.json#/$defs/tracks"
+        },
+        "undo": {
+          "$ref": "../common.json#/$defs/undo"
+        }
+      },
+      "required": [
+        "track",
+        "tracks",
+        "undo"
+      ],
+      "additionalProperties": false
+    }
+  }
+}
