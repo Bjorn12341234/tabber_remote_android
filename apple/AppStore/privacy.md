@@ -15,7 +15,7 @@ nothing about you or how you use it is sent to us or anyone else.
   encrypted connection. Nothing it sends leaves your network.
 - **Pairing stays on your devices.** Pairing makes a key on your iPhone, kept
   in its Keychain, and Tabber Studio remembers the phone on your Mac. Remove
-  the phone in Tabber Studio's Preferences > Remote at any time.
+  the phone in Tabber Studio's Settings > Remote at any time.
 - **The camera** is used only to scan the pairing code your computer shows.
 - **The microphone** is used only by the tuner, which listens to your
   instrument. Nothing is recorded, and the sound never leaves your iPhone.

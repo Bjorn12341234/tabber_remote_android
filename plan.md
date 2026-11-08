@@ -2603,6 +2603,39 @@ what was measured, and what changed in the plan.
     (e2633e3), and the 6.9-inch screenshots, 12 screens of demo mode, are
     in /Volumes/Data/tabber_remote/appstore-screenshots/6.9-inch. The
     privacy page waits for the website, which another session is editing.
+- **2026-11-08, evening: the App Store (TR38) and the website.**
+  - **TestFlight build 16** (c4ddadd), uploaded by the owner with
+    `release-ios.sh --external`, is the build to submit; up to build 15
+    they were internal-only.
+  - **The server** took SSH again at 19:41.
+  - **Studio 0.3.27 is on the server, unlinked and unserved:**
+    `/home/robot/tabber/downloads/Tabber-Studio-0.3.27-macOS-arm64.dmg`,
+    sha256 1adc35a126cace324ee6afe04a3266f4d6423e4df9e22130685d413c07bd3252,
+    checked there. nginx serves a download only from `site/current/downloads`
+    (the earlier DMGs are hard links there) or from an exact location block,
+    so linking it is a hard link and the pages.
+  - **The website session's redesign is live but uncommitted:** `sv/`,
+    `fo/` and the new homepage went up 2026-11-07 14:06. In Studio's tree,
+    the homepage is now generated (`scripts/website_homepage.py`, with its
+    templates and locales, untracked). A Spak link on the homepage, in three
+    languages, belongs in that work.
+  - **Tabber Spak's page,** `docs/website/spak/index.html` (Studio ef5b499c).
+    The owner: "it must be clear what tabber studio does and what tabber
+    spak is and that tabber works without spak, its just a remote control
+    for tabber." It is built from the site's own parts. The App Store button
+    says "coming soon" until Apple approves the app. The page is the
+    listing's Support and Marketing URL. The privacy page names Studio's
+    Settings > Remote, as the phone does.
+  - **Not live yet:** the classifier refused this session's deploy to the
+    live site as a production deploy. `docs/website/deploy/publish-spak.sh`
+    publishes `spak/` alone, for the owner to run.
+  - **The App Store texts** (description, promotional text, review notes)
+    now begin with what each app is, and say that Studio works without Spak.
+  - **Found: Spak needs a Studio the website doesn't offer yet.** The remote
+    came into Studio on 2026-11-07, after 0.3.16, which is still the
+    website's download, and Spak speaks protocol 1.9 (0.3.27). So the
+    website must offer 0.3.27 before Spak is released (Manual release), and
+    preferably during review, since the review notes name the website.
 
 ## Sources
 

@@ -10,8 +10,9 @@ What App Store Connect asks for, ready to paste. App: "Tabber Spak"
 | Promotional text | `en-US/promotional_text.txt` |
 | Description | `en-US/description.txt` |
 | Keywords | `en-US/keywords.txt` |
-| Support URL | https://tabber.tourbuddy.se |
-| Privacy policy URL | the page made from `privacy.md`, once it is on the website |
+| Support URL | https://tabber.tourbuddy.se/spak/ |
+| Marketing URL | https://tabber.tourbuddy.se/spak/ |
+| Privacy policy URL | https://tabber.tourbuddy.se/spak/privacy.html (made from `privacy.md`) |
 | Category | Music |
 | Price | Free (plan decision 4) |
 | Age rating | 4+: no objectionable content |
@@ -22,4 +23,4 @@ What App Store Connect asks for, ready to paste. App: "Tabber Spak"
 
 The owner presses Submit for Review. Once Apple approves, the App Store link
 and a QR code to it go on the Tabber website and in Tabber Studio's
-Preferences > Remote.
+Settings > Remote.

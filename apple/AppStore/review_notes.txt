@@ -1,4 +1,4 @@
-Tabber Spak is a remote control for Tabber Studio, a music app for macOS from https://tabber.tourbuddy.se. In everyday use it connects only to a Mac running Tabber Studio on the same network, after pairing with a code that Mac shows.
+Tabber Spak is a remote control for Tabber Studio, a free music app (a DAW) for macOS from https://tabber.tourbuddy.se. Tabber Studio works on its own; Tabber Spak is optional and does nothing without it. In everyday use Tabber Spak connects only to a Mac running Tabber Studio 0.3.27 or later on the same network, after pairing with a code that Mac shows. More: https://tabber.tourbuddy.se/spak/
 
 To review without a Mac, tap "Try the demo" on the first screen. The demo runs a simulated Tabber Studio inside the app, so every screen works:
 - Tracks: play, pause, record a take (tap the circle on a track, then the red record button), keep or delete it, add a track with "+ Add Track".
