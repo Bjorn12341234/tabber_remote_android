@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tabber.studio/schemas/remote/1/methods/plugins.remove.json",
+  "title": "plugins.remove",
+  "x-capability": "plugins/1",
+  "x-changes": true,
+  "$defs": {
+    "params": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "$ref": "../common.json#/$defs/key"
+        },
+        "strip_id": {
+          "$ref": "../common.json#/$defs/id",
+          "description": "The strip, as in the mixer."
+        },
+        "insert_id": {
+          "$ref": "../common.json#/$defs/id",
+          "description": "The insert, as in the strip's inserts."
+        }
+      },
+      "required": [
+        "key",
+        "strip_id",
+        "insert_id"
+      ],
+      "additionalProperties": false
+    },
+    "result": {
+      "type": "object",
+      "properties": {
+        "strip": {
+          "$ref": "../common.json#/$defs/strip"
+        },
+        "mixer": {
+          "$ref": "../common.json#/$defs/mixer"
+        }
+      },
+      "required": [
+        "strip",
+        "mixer"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

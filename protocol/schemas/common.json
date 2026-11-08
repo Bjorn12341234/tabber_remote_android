@@ -575,6 +575,14 @@
         },
         "soloed": {
           "type": "boolean"
+        },
+        "inserts": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/$defs/insert"
+          },
+          "description": "The strip's INSERTS in chain order (plugins/1)."
         }
       },
       "required": [
@@ -1169,6 +1177,100 @@
         "track_id",
         "shows",
         "midi_tab"
+      ],
+      "additionalProperties": false
+    },
+    "insert": {
+      "type": "object",
+      "description": "One plug-in in a strip's INSERTS, as Tabber Studio's mixer strip lists it (plugins/1).",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "bypassed": {
+          "type": "boolean",
+          "description": "Bypassed: the strip's hollow dot, the sound passes it by."
+        },
+        "auto_bypassed": {
+          "type": "boolean",
+          "description": "Tabber Studio bypassed it itself, because it took too long."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "bypassed",
+        "auto_bypassed"
+      ],
+      "additionalProperties": false
+    },
+    "plugin": {
+      "type": "object",
+      "description": "One row of Tabber Studio's Insert Plugin browser (plugins/1).",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "vendor": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "category": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "kind": {
+          "enum": [
+            "effect",
+            "instrument"
+          ]
+        },
+        "format": {
+          "enum": [
+            "native",
+            "vst3",
+            "clap"
+          ],
+          "description": "native: one of Tabber's own devices."
+        },
+        "tabber": {
+          "type": "boolean",
+          "description": "In the browser's Tabber Plugins tab; otherwise its Plugins tab."
+        },
+        "available": {
+          "type": "boolean"
+        },
+        "reason": {
+          "oneOf": [
+            {
+              "type": "string",
+              "maxLength": 300
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Why it cannot be inserted, in the browser's words; null when it can."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "vendor",
+        "category",
+        "kind",
+        "format",
+        "tabber",
+        "available",
+        "reason"
       ],
       "additionalProperties": false
     }

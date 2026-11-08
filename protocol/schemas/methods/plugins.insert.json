@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tabber.studio/schemas/remote/1/methods/plugins.insert.json",
+  "title": "plugins.insert",
+  "x-capability": "plugins/1",
+  "x-changes": true,
+  "$defs": {
+    "params": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "$ref": "../common.json#/$defs/key"
+        },
+        "strip_id": {
+          "$ref": "../common.json#/$defs/id",
+          "description": "The strip, as in the mixer."
+        },
+        "plugin_id": {
+          "$ref": "../common.json#/$defs/id",
+          "description": "A row of plugins.catalog."
+        }
+      },
+      "required": [
+        "key",
+        "strip_id",
+        "plugin_id"
+      ],
+      "additionalProperties": false
+    },
+    "result": {
+      "type": "object",
+      "properties": {
+        "strip": {
+          "$ref": "../common.json#/$defs/strip"
+        },
+        "mixer": {
+          "$ref": "../common.json#/$defs/mixer"
+        },
+        "sound_source": {
+          "type": "boolean",
+          "description": "An instrument that became the track's sound source, outside its inserts."
+        }
+      },
+      "required": [
+        "strip",
+        "mixer",
+        "sound_source"
+      ],
+      "additionalProperties": false
+    }
+  }
+}
