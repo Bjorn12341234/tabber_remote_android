@@ -136,7 +136,8 @@ private struct EditChip: View {
     }
 }
 
-/// When the chosen track has no tab: which tracks do.
+/// When the chosen track has no tab: which tracks do, and "+ Add Tab Track"
+/// for a new one, as in a song of only audio (the owner, 2026-11-08).
 private struct ChooseTabTrack: View {
     @Bindable var model: AppModel
 
@@ -145,7 +146,8 @@ private struct ChooseTabTrack: View {
         let chosen = model.state.tracks.first(where: \.selected)
         ScrollView {
             VStack(alignment: .leading, spacing: 12) {
-                Text(tabs.isEmpty ? "This song has no tab tracks yet. Add one in Tabber Studio, then write on it here."
+                Text(tabs.isEmpty ? (model.addTrackAvailable ? "This song has no tab tracks yet. Add one to write on it here."
+                                     : "This song has no tab tracks yet. Add one in Tabber Studio, then write on it here.")
                      : chosen.map { "\($0.name) has no tab. Choose a track to write on:" } ?? "Choose a track to write on:")
                     .font(.body)
                     .foregroundStyle(Studio.text2)
@@ -167,6 +169,14 @@ private struct ChooseTabTrack: View {
                     }
                     .buttonStyle(.plain)
                     .accessibilityIdentifier("write-\(track.name)")
+                }
+                if model.addTrackAvailable {
+                    Button("+ Add Tab Track") { model.addTrack(.tab) }
+                        .buttonStyle(.studioGhost)
+                        .disabled(model.pending.contains("add-track") || model.state.record.recording)
+                        .accessibilityLabel("Add Tab Track")
+                        .accessibilityHint("Adds a guitar tab track to the song on the computer, to write on here.")
+                        .accessibilityIdentifier("add-tab-track")
                 }
             }
             .padding(16)

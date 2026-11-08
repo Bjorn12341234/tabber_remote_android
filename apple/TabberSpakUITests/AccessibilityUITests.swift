@@ -53,6 +53,16 @@ final class AccessibilityUITests: XCTestCase {
         try audit(app, "Find")
     }
 
+    /// A song of only audio: the Tab screen's "+ Add Tab Track" (TR36).
+    @MainActor
+    func testASongOfOnlyAudio() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo", "-demo-only-audio", "-reset-input", "-screen", "tab"]
+        app.launch()
+        XCTAssertTrue(element(app, "add-tab-track").waitForExistence(timeout: 8))
+        try audit(app, "Tab, no tab tracks")
+    }
+
     @MainActor
     func testEveryScreen() throws {
         let app = XCUIApplication()

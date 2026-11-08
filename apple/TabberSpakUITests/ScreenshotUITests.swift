@@ -88,6 +88,30 @@ final class ScreenshotUITests: SpakUITestCase {
 
     /// The Computer sheet at the largest text, with a measured tap: the
     /// response time rows grow and wrap rather than clip.
+    /// TR36 in a song of only audio: "+ Add Track" and its chooser, the Tab
+    /// screen's "+ Add Tab Track", the new track's tab, and the list after.
+    @MainActor
+    func testAddingTracks() throws {
+        launch(["-demo", "-demo-only-audio"])
+        tap("add-track")
+        XCTAssertTrue(app.buttons["Audio track"].waitForExistence(timeout: 8))
+        try shoot("tr36-1-chooser")
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.15, dy: 0.15)).tap()   // outside the chooser: it closes
+        XCTAssertTrue(app.buttons["Audio track"].waitForNonExistence(timeout: 8))
+        app.tabBars.buttons["Tab"].tap()
+        XCTAssertTrue(appears("add-tab-track"))
+        try shoot("tr36-2-tab-empty")
+        tap("add-tab-track")
+        XCTAssertTrue(appears("fretboard"))
+        try shoot("tr36-3-tab-written")
+        app.tabBars.buttons["Tracks"].tap()
+        XCTAssertTrue(appears("track-Track 1"))
+        try shoot("tr36-4-tracks-after")
+        launch(["-demo", "-demo-only-audio", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"])
+        reveal("add-track")
+        try shoot("tr36-5-largest-text")
+    }
+
     @MainActor
     func testTheComputerSheetAtTheLargestText() throws {
         app = XCUIApplication()

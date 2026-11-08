@@ -361,4 +361,40 @@ struct DemoHostTests {
         _ = try await session.perform("transport.stop")
         await session.stop()
     }
+
+    /// TR36 on the demo computer: each kind as Tabber Studio's "+ Add Track"
+    /// makes it, in its place in the list, one undo step that Undo takes back.
+    @Test func addingATrackOfEachKindIsOneUndoStep() async throws {
+        let session = session(DemoHost())
+        _ = try await connected(session)
+        let tab = try await session.perform("tracks.add", ["kind": "tab"])
+        let track = try JSONCoding.decode(Track.self, from: tab["track"]!)
+        #expect(track.name == "Track 4" && track.hasTab && track.selected)
+        let added = try await eventually(session) { $0.tab?.trackID == track.id }
+        #expect(added.tracks.map(\.name) == ["Guitar", "Bass", "Drums", "Track 4", "Lead guitar", "Vocals"],
+                "after the last tab or MIDI track, before the audio")
+        #expect(added.tab?.barCount == 16, "it spans the song, and the Tab screen writes on it at once")
+        #expect(added.undo.undo?.label == "Add track: Track 4")
+
+        let midi = try JSONCoding.decode(Track.self, from: try await session.perform("tracks.add", ["kind": "midi"])["track"]!)
+        #expect(midi.name == "MIDI Track 5" && !midi.hasTab && midi.instrument == "Acoustic Grand Piano")
+        let audio = try await session.perform("tracks.add", ["kind": "audio"])
+        #expect(try JSONCoding.decode(Track.self, from: audio["track"]!).name == "Audio 3")
+        let shown = try await eventually(session) { $0.view?.editor == "arrange" }
+        #expect(shown.tracks.last?.name == "Audio 3", "an audio track goes last, and the computer shows Arrange")
+
+        let step = try #require(shown.undo.undo)
+        #expect(step.label == "Add audio track: Audio 3")
+        _ = try await session.perform("edit.undo", ["expect": .string(step.id)])
+        let back = try await eventually(session) { !$0.tracks.contains { $0.name == "Audio 3" } }
+        #expect(back.tracks.count == 7 && back.undo.redo?.label == "Add audio track: Audio 3")
+        await #expect(throws: RemoteError.self) { try await session.perform("tracks.add", ["kind": "bass"]) }
+        _ = try await session.perform("tracks.arm", ["track_id": "demo-vocals", "armed": true])
+        _ = try await session.perform("transport.record", ["armed_track_ids": ["demo-vocals"]])
+        await #expect(throws: RemoteError.self, "not while recording: it would end the take") {
+            try await session.perform("tracks.add", ["kind": "audio"])
+        }
+        _ = try await session.perform("transport.stop")
+        await session.stop()
+    }
 }

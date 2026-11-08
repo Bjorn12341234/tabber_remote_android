@@ -69,7 +69,7 @@ struct UndoBanner: View {
                 .foregroundStyle(Studio.text1)
                 .fixedSize(horizontal: false, vertical: true)
             Spacer()
-            Button("Undo") { model.undoDiscard() }
+            Button("Undo") { model.undoOffered() }
                 .buttonStyle(.studio)
                 .accessibilityIdentifier("undo-delete")
         }

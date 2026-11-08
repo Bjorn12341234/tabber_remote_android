@@ -13,6 +13,20 @@ final class TabScreenUITests: SpakUITestCase {
         return element("fretboard").coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: x, dy: (Double(string) - 0.5) * 34))
     }
 
+    /// TR36 and the owner's song of only audio files: the Tab screen adds a
+    /// tab track, and writes on it at once.
+    @MainActor
+    func testASongOfOnlyAudioGetsATabTrackToWriteOn() {
+        launch(["-demo", "-demo-only-audio", "-screen", "tab"])
+        XCTAssertTrue(app.staticTexts["This song has no tab tracks yet. Add one to write on it here."]
+            .waitForExistence(timeout: 8))
+        tap("add-tab-track")
+        XCTAssertTrue(appears("fretboard"), "the new track's tab, at once")
+        XCTAssertTrue(app.navigationBars["Track 1"].waitForExistence(timeout: 8))
+        fret(3, string: 2).tap()
+        XCTAssertTrue(waitFor("bar-1", "string 2 fret 3"), "the fretboard writes on it")
+    }
+
     @MainActor
     func testAFretboardTapWritesAndASecondTakesItOff() {
         XCTAssertTrue(appears("bar-1"))

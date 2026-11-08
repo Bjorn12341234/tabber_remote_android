@@ -121,6 +121,35 @@ final class TracksScreenUITests: SpakUITestCase {
         XCTAssertLessThanOrEqual(start.maxX, app.frame.maxX, "within the screen")
     }
 
+    /// TR36: "+ Add Track" under the last track asks what kind, as Tabber
+    /// Studio's chooser does. A tab track comes in after the last tab or MIDI
+    /// track, selected, with Undo for a moment; an audio track goes last, and
+    /// the computer turns from Tab to Arrange to show it.
+    @MainActor
+    func testAddATrackOfEachKind() {
+        reveal("add-track")
+        tap("add-track")
+        let tab = app.buttons["Tab track"]
+        XCTAssertTrue(tab.waitForExistence(timeout: 8), "the chooser asks what kind")
+        XCTAssertTrue(app.buttons["MIDI track"].exists && app.buttons["Audio track"].exists)
+        tab.tap()
+        XCTAssertTrue(waitSelected("track-Track 4"), "the new tab track comes selected")
+        XCTAssertTrue(app.staticTexts["Track 4 added"].waitForExistence(timeout: 8))
+        XCTAssertLessThan(element("track-Track 4").frame.minY, element("track-Lead guitar").frame.minY,
+                          "before the audio tracks, as the computer lists them")
+        tap("undo-delete")
+        XCTAssertTrue(gone("track-Track 4"), "Undo takes it back")
+        XCTAssertTrue(waitSelectedSegment(app.segmentedControls["view-editor"], "Tab"))
+        reveal("add-track")
+        tap("add-track")
+        let audio = app.buttons["Audio track"]
+        XCTAssertTrue(audio.waitForExistence(timeout: 8))
+        audio.tap()
+        XCTAssertTrue(appears("track-Audio 3"))
+        XCTAssertTrue(waitSelectedSegment(app.segmentedControls["view-editor"], "Arrange"),
+                      "the computer turns from Tab to Arrange to show the new audio track")
+    }
+
     @MainActor
     func waitSelectedSegment(_ control: XCUIElement, _ title: String) -> Bool {
         let predicate = NSPredicate(format: "selected == true")

@@ -17,6 +17,7 @@ enum Studio {
     static let bg3 = rgb(0x30, 0x30, 0x4A)       // buttons
     static let bgOn = rgb(0x3D, 0x3D, 0x5C)      // a toggle that is on
     static let edge = Color.white.opacity(0.06)
+    static let dashes = rgb(0x36, 0x36, 0x43)    // "+ Add Track"'s outline: 12% of text1 into bg1, as Studio mixes it
     static let editor = rgb(0x22, 0x22, 0x3B)    // the tab editor's paper
     static let staffLine = rgb(0x5C, 0x5C, 0x7C)
     static let barLine = rgb(0x6E, 0x6E, 0x90)
@@ -185,6 +186,33 @@ struct HoldButton<Label: View>: View {
             .accessibilityAddTraits(.isButton)
             .accessibilityAction { tap() }
     }
+}
+
+/// Tabber Studio's "+ Add Track" (its track list, UR4b): a dashed outline
+/// right under the last track, its words in the muted text and never the
+/// accent; a neutral chip while pressed, as on hover there.
+struct GhostButtonStyle: ButtonStyle {
+    @Environment(\.isEnabled) private var enabled
+
+    func makeBody(configuration: Configuration) -> some View {
+        let shape = RoundedRectangle(cornerRadius: Studio.radiusControl, style: .continuous)
+        configuration.label
+            .font(.body)
+            .multilineTextAlignment(.center)
+            .fixedSize(horizontal: false, vertical: true)
+            .foregroundStyle(configuration.isPressed ? Studio.text1 : Studio.text2)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 6)
+            .frame(maxWidth: .infinity, minHeight: 44)
+            .background(configuration.isPressed ? Studio.bg3 : .clear, in: shape)
+            .overlay(shape.strokeBorder(Studio.dashes, style: StrokeStyle(lineWidth: 1, dash: [4, 3])))
+            .opacity(enabled ? 1 : 0.4)
+            .contentShape(.rect)
+    }
+}
+
+extension ButtonStyle where Self == GhostButtonStyle {
+    static var studioGhost: GhostButtonStyle { GhostButtonStyle() }
 }
 
 extension ButtonStyle where Self == StudioButtonStyle {

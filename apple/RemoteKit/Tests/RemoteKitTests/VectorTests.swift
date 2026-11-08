@@ -141,6 +141,7 @@ struct ExchangeVectorTests {
                 case "transport": try roundTrip(TransportState.self, value)
                 case "record": try roundTrip(RecordState.self, value)
                 case "tracks": try roundTrip([Track].self, value)
+                case "track": try roundTrip(Track.self, value)
                 case "markers": try roundTrip([Marker].self, value)
                 case "marker": try roundTrip(Marker.self, value)
                 case "takes": try roundTrip([Take].self, value)

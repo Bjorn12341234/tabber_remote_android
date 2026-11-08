@@ -104,10 +104,11 @@ final class AppModel {
         isDemo = true
         demoSpeaks = speaks
         book = nil
-        // Screenshots: `-demo-name "Björn's Mac Studio"` names the demo computer as a real one is named.
+        // Screenshots: `-demo-name "Björn's Mac Studio"` names the demo computer as a real one is named;
+        // tests: `-demo-only-audio` starts with a song of only audio tracks.
         let arguments = ProcessInfo.processInfo.arguments
         let name = arguments.firstIndex(of: "-demo-name").flatMap { arguments.dropFirst($0 + 1).first } ?? DemoHost.name
-        let host = DemoHost(speaks: speaks, computerName: name)
+        let host = DemoHost(speaks: speaks, computerName: name, onlyAudio: arguments.contains("-demo-only-audio"))
         attach(RemoteSession(credentials: .demo, app: Self.app) { _ in await host.connect() })
     }
 
@@ -343,7 +344,8 @@ final class AppModel {
         }
     }
 
-    /// After a discard: Undo for five seconds, naming the step it undoes (spec 9).
+    /// After a discard or a new track: Undo for five seconds, naming the step
+    /// it undoes (spec 9).
     private(set) var undoOffer: UndoOffer?
 
     struct UndoOffer: Equatable {
@@ -360,18 +362,22 @@ final class AppModel {
         act("delete-\(take.id)", "takes.discard", ["take_id": .string(take.id)], feel: .discard) { [weak self] result in
             guard let self else { return }
             if self.lastTake?.id == take.id { self.lastTake = nil }
-            if let step = result["undo"]?["undo"]?["id"]?.stringValue {
-                let offer = UndoOffer(stepID: step, text: "\(take.name) deleted", until: .now + 5)
-                self.undoOffer = offer
-                Task { @MainActor [weak self] in
-                    try? await Task.sleep(for: .seconds(5))
-                    if self?.undoOffer == offer { self?.undoOffer = nil }
-                }
-            }
+            self.offerUndo(result, "\(take.name) deleted")
         }
     }
 
-    func undoDiscard() {
+    /// Undo for five seconds, for the step a verb's result names.
+    private func offerUndo(_ result: JSONValue, _ text: String) {
+        guard let step = result["undo"]?["undo"]?["id"]?.stringValue else { return }
+        let offer = UndoOffer(stepID: step, text: text, until: .now + 5)
+        undoOffer = offer
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .seconds(5))
+            if self?.undoOffer == offer { self?.undoOffer = nil }
+        }
+    }
+
+    func undoOffered() {
         guard let offer = undoOffer else { return }
         undoOffer = nil
         act("undo", "edit.undo", ["expect": .string(offer.stepID)], feel: .goAgain)
@@ -389,6 +395,22 @@ final class AppModel {
 
     func arm(_ track: Track) {
         act("arm-\(track.id)", "tracks.arm", ["track_id": .string(track.id), "armed": .bool(!track.armed)])
+    }
+
+    /// Tabber Studio's "+ Add Track", on a computer that offers it to phones (tracks.add/1).
+    var addTrackAvailable: Bool { state.capabilities.contains("tracks.add/1") }
+
+    /// The track just added from this phone, for the list to show it.
+    private(set) var addedTrackID: String?
+
+    /// A tab, MIDI or audio track, as the chooser after "+ Add Track" makes
+    /// each on the computer; Undo for five seconds after.
+    func addTrack(_ kind: NewTrackKind) {
+        act("add-track", "tracks.add", ["kind": .string(kind.rawValue)]) { [weak self] result in
+            guard let self, let value = result["track"], let track = try? JSONCoding.decode(Track.self, from: value) else { return }
+            self.addedTrackID = track.id
+            self.offerUndo(result, "\(track.name) added")
+        }
     }
 
     func strip(_ id: String) -> Strip? { state.mixer?.strips.first { $0.id == id } }

@@ -3,8 +3,8 @@ import SwiftUI
 
 /// The song's tracks, as Tabber Studio's Tracks panel shows them: tap a track
 /// to choose it (the Tab screen writes on it), S to hear it alone, M to
-/// silence it, ○ to record on it. Below them, the takes, each one tap from
-/// deletion.
+/// silence it, ○ to record on it; "+ Add Track" under the last one. Below
+/// them, the takes, each one tap from deletion.
 struct TracksScreen: View {
     @Bindable var model: AppModel
     @Environment(\.dynamicTypeSize) private var textSize
@@ -12,43 +12,57 @@ struct TracksScreen: View {
     var body: some View {
         NavigationStack {
             Connected(model: model) {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 16) {
-                        if textSize.isAccessibilitySize {
-                            controls             // at the largest text they would fill the screen, so they scroll
-                        }
-                        if showHint {
-                            Text("To record, tap ○ on a track, then ● below.")
-                                .font(.subheadline)
-                                .foregroundStyle(Studio.text2)
-                                .fixedSize(horizontal: false, vertical: true)
-                                .accessibilityIdentifier("record-hint")
-                        }
-                        VStack(spacing: 8) {
-                            ForEach(Array(model.state.tracks.enumerated()), id: \.element.id) { index, track in
-                                TrackCard(model: model, track: track, index: index)
+                ScrollViewReader { list in
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 16) {
+                            if textSize.isAccessibilitySize {
+                                controls             // at the largest text they would fill the screen, so they scroll
                             }
+                            if showHint {
+                                Text("To record, tap ○ on a track, then ● below.")
+                                    .font(.subheadline)
+                                    .foregroundStyle(Studio.text2)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                    .accessibilityIdentifier("record-hint")
+                            }
+                            VStack(spacing: 8) {
+                                ForEach(Array(model.state.tracks.enumerated()), id: \.element.id) { index, track in
+                                    TrackCard(model: model, track: track, index: index)
+                                        .id(track.id)
+                                }
+                                if model.addTrackAvailable {
+                                    AddTrackButton(model: model)
+                                }
+                            }
+                            TakesSection(model: model)
                         }
-                        TakesSection(model: model)
+                        .padding(.horizontal, 16)
+                        .padding(.top, 4)
+                        .padding(.bottom, 24)
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.top, 4)
-                    .padding(.bottom, 24)
-                }
-                // The owner: "the arrange and the stuff up top should stay up top
-                // even when you scroll down if there is a lot of tracks."
-                .safeAreaInset(edge: .top, spacing: 0) {
-                    if !textSize.isAccessibilitySize {
-                        controls
-                            .padding(.horizontal, 16)
-                            .padding(.top, 4)
-                            .padding(.bottom, 12)
-                            .background(Studio.bg1)
+                    // A track added from here is in view, however long the list.
+                    .onChange(of: model.addedTrackID) { _, added in
+                        guard let added else { return }
+                        withAnimation { list.scrollTo(added, anchor: .center) }
+                    }
+                    // The owner: "the arrange and the stuff up top should stay up top
+                    // even when you scroll down if there is a lot of tracks."
+                    .safeAreaInset(edge: .top, spacing: 0) {
+                        if !textSize.isAccessibilitySize {
+                            controls
+                                .padding(.horizontal, 16)
+                                .padding(.top, 4)
+                                .padding(.bottom, 12)
+                                .background(Studio.bg1)
+                        }
                     }
                 }
             }
             .background(Studio.bg1)
             .navigationTitle(model.state.project.title.isEmpty ? "Tracks" : model.state.project.title)
+            // In the bar, as on the other screens: a large title over the pinned
+            // controls vanished after a visit to another tab (iOS 26).
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .topBarTrailing) { ComputerChip(model: model) } }
             .takeSlot(model: model)
         }
@@ -158,6 +172,31 @@ struct TrackCard: View {
         var words = "\(track.name), \(track.armed ? "armed for recording" : subtitle)"
         if !audible { words += ", not heard" }
         return words
+    }
+}
+
+/// Tabber Studio's "+ Add Track" under the last track, and its chooser: a
+/// tab, MIDI or audio track, each as the computer makes it.
+struct AddTrackButton: View {
+    @Bindable var model: AppModel
+    @State private var choosing = false
+
+    var body: some View {
+        Button("+ Add Track") { choosing = true }
+            .buttonStyle(.studioGhost)
+            // Not during a take: in Tabber Studio a new track clears the record arms.
+            .disabled(model.pending.contains("add-track") || model.state.record.recording)
+            .accessibilityLabel("Add Track")
+            .accessibilityHint("Adds a tab, MIDI or audio track to the song on the computer.")
+            .accessibilityIdentifier("add-track")
+            .confirmationDialog("What kind of track do you want to add?", isPresented: $choosing,
+                                titleVisibility: .visible) {
+                Button("Tab track") { model.addTrack(.tab) }
+                Button("MIDI track") { model.addTrack(.midi) }
+                Button("Audio track") { model.addTrack(.audio) }
+                Button("Cancel", role: .cancel) {}
+            }
+            .tint(Studio.text1)        // choices in plain words, as Studio's chooser has them: teal is for what is selected
     }
 }
 

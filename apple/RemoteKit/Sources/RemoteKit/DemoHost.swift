@@ -82,6 +82,7 @@ public actor DemoHost {
     private var tabCursors: [String: TabCursor] = [:]
     private var tabDuration = NoteValue(value: 4)
     private var tabRevision = 1
+    private var trackCounter = 0
 
     /// Tests: drop the connection after doing the next request, before answering.
     public var dropBeforeNextAnswer = false
@@ -95,7 +96,10 @@ public actor DemoHost {
     /// app's bars fit a real computer's name.
     public let computerName: String
 
-    public init(speaks: [String] = RemoteClient.protocolVersions, computerName: String = DemoHost.name) {
+    /// `onlyAudio` starts with a song of only audio tracks, as one made from
+    /// audio files is: no tab to write on until a tab track is added.
+    public init(speaks: [String] = RemoteClient.protocolVersions, computerName: String = DemoHost.name,
+                onlyAudio: Bool = false) {
         self.computerName = computerName
         self.speaks = speaks
         // Tabber Studio's own track colours (core/models.py TRACK_COLORS), in its strip order.
@@ -121,6 +125,11 @@ public actor DemoHost {
         sendLevels = ["demo-lead>demo-bus-reverb": (0.25, false), "demo-vocals>demo-bus-reverb": (0.5, false)]
         faders = ["demo-guitar": (0.7, -0.3), "demo-bass": (0.62, 0), "demo-drums": (0.66, 0),
                   "demo-lead": (0.7, 0.32), "demo-vocals": (0.74, 0), "demo-bus-reverb": (0.52, 0), "master": (0.7, 0)]
+        if onlyAudio {
+            song.tracks.removeAll { $0.kind == .midi }
+            song.tracks[0].selected = true
+            song.tabs = [:]
+        }
     }
 
     public func setDropBeforeNextAnswer(_ value: Bool) { dropBeforeNextAnswer = value }
@@ -214,11 +223,11 @@ public actor DemoHost {
             }
             connection.challenge = Data((0..<32).map { _ in UInt8.random(in: 0...255) })
             return ["host": ["id": .string(Self.hostID), "name": .string(computerName), "app_version": "demo"],
-                    "protocol_version": "1.5",
+                    "protocol_version": "1.6",
                     "capabilities": ["transport/1", "record/1", "tempo_scale/1", "tracks/1", "tracks.monitor/1",
                                      "markers/1", "takes/1", "takes.discard/1", "takes.go_again/1", "undo/1",
                                      "save/1", "meters/1", "mixer/1", "tab/1", "routing/1", "chat/1", "view/1",
-                                     "trainer/1"],
+                                     "trainer/1", "tracks.add/1"],
                     "limits": ["max_frame_bytes": 65536, "requests_per_second": 20, "burst": 40,
                                "heartbeat_ms": 2000, "heartbeat_misses": 3, "connections_per_device": 2],
                     "challenge": .string(Base64URL.encode(connection.challenge))]
@@ -332,6 +341,15 @@ public actor DemoHost {
             }
             song.tracks[index].monitor = MonitorMode(rawValue: p["mode"]?.stringValue ?? "auto") ?? .auto
             return ["tracks": try JSONCoding.value(song.tracks)]
+        case "tracks.add":
+            guard let kind = p["kind"]?.stringValue.flatMap(NewTrackKind.init(rawValue:)) else {
+                throw DemoErrors.make("invalid_params", ["field": "kind"])
+            }
+            // A new track clears the record arms in Tabber Studio, which would end the take.
+            if recordingStart != nil { throw DemoErrors.make("already_recording", ["record": try JSONCoding.value(record())]) }
+            let track = addTrack(kind)
+            return ["track": try JSONCoding.value(track), "tracks": try JSONCoding.value(song.tracks),
+                    "undo": try JSONCoding.value(undoState())]
         case "markers.go", "markers.loop":
             let id = p["marker_id"]?.stringValue ?? ""
             guard let marker = song.markers.first(where: { $0.id == id }) else {
@@ -738,6 +756,53 @@ public actor DemoHost {
         tabCursors[id] = doc.clamp(cursor)
     }
 
+    // MARK: adding tracks
+
+    /// Tabber Studio's track colours (core/models.py TRACK_COLORS), in its order.
+    static let palette = ["#50A0DC", "#64BE64", "#DCAA3C", "#AA64D2", "#9A86D6", "#DC5050",
+                          "#DC8246", "#96BE3C", "#C864A0", "#648CC8", "#BEA064", "#D2C850"]
+
+    /// "+ Add Track" as Tabber Studio makes each kind (ui/track_creation_controller.py):
+    /// the first colour no track has; a tab or MIDI track after the last of
+    /// those, before the audio, and selected; an audio track last, with the
+    /// computer turning from Tab to Arrange to show it. One undo step each.
+    private func addTrack(_ kind: NewTrackKind) -> Track {
+        trackCounter += 1
+        let sequenced = song.tracks.filter { $0.kind == .midi }.count
+        let color = Self.palette.first { c in !song.tracks.contains { $0.color == c } }
+            ?? Self.palette[song.tracks.count % Self.palette.count]
+        let id = "demo-new-\(trackCounter)"
+        let track: Track
+        switch kind {
+        case .tab:
+            track = Track(id: id, name: "Track \(sequenced + 1)", kind: .midi, armed: false, monitor: .auto, selected: true,
+                          color: color, instrument: "Acoustic Guitar (steel)", tuning: DemoTab.standard)
+        case .midi:
+            track = Track(id: id, name: "MIDI Track \(sequenced + 1)", kind: .midi, armed: false, monitor: .auto,
+                          selected: true, color: color, instrument: "Acoustic Grand Piano")
+        case .audio:
+            track = Track(id: id, name: "Audio \(song.tracks.count - sequenced + 1)", kind: .audio, armed: false,
+                          monitor: .auto, selected: false, color: color)
+        }
+        let bars = song.tabs.values.map(\.bars.count).max() ?? 16
+        faders[id] = (0.7, 0)                                   // its mixer strip, at Studio's default
+        edit(kind == .audio ? "Add audio track: \(track.name)" : "Add track: \(track.name)") { song in
+            if kind == .audio {
+                song.tracks.append(track)
+                return
+            }
+            for i in song.tracks.indices { song.tracks[i].selected = false }
+            song.tracks.insert(track, at: sequenced)
+            if kind == .tab {
+                let rest = [TabBeat(duration: NoteValue(value: 4), rest: true, notes: [])]
+                song.tabs[id] = DemoTab(tuning: DemoTab.standard, bars: Array(repeating: rest, count: bars))
+            }
+        }
+        if kind == .audio, !view.split, view.editor == "tab" { view.editor = "arrange" }
+        if kind == .tab { tabRevision += 1 }
+        return track
+    }
+
     // MARK: the session
 
     private func edit(_ label: String, _ change: (inout Song) -> Void) {
@@ -1003,6 +1068,7 @@ public enum DemoErrors {
         "unknown_strip": (1032, "That strip is gone from the mixer."),
         "no_tab": (1033, "Choose a tab track to write on first."),
         "needs_loop": (1039, "Turn Loop on first: the trainer speeds up each time the loop comes round."),
+        "track_limit": (1040, "This song has as many tracks as Tabber Studio can play."),
     ]
 
     static func make(_ reason: String, _ data: [String: JSONValue] = [:]) -> RemoteError {

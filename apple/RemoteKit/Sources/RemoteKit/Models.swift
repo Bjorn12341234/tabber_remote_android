@@ -89,6 +89,10 @@ public struct RecordState: Codable, Sendable, Hashable {
 }
 
 public enum TrackKind: String, Codable, Sendable { case audio, midi }
+
+/// What Tabber Studio's "+ Add Track" chooser makes (tracks.add/1): a tab
+/// track arrives as a MIDI track with a tuning; a MIDI track has none.
+public enum NewTrackKind: String, CaseIterable, Sendable { case tab, midi, audio }
 public enum MonitorMode: String, Codable, Sendable { case off, auto, on }
 
 public struct Track: Codable, Sendable, Hashable, Identifiable {
