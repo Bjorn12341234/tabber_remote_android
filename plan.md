@@ -2365,6 +2365,53 @@ what was measured, and what changed in the plan.
   - **Owed:** on the iPhone against 0.3.23, add a tab track to an all-audio
     song and write on it; and loop a part with the Trainer on (TR35).
 
+- **TR37 under way 2026-11-08: release safety (Studio 42207a1e).**
+  - **Both releases searched for the owner's own secrets:**
+    - a script read the 16 secret values on this Mac (the DeepSeek key in
+      Studio's preferences, the remote's certificate and private key, and
+      Studio's development `api_key.md`) and printed only where each came
+      from and how many files held it, never a value;
+    - none is in the installed 0.3.23 app (1,798 files), in its unpacked
+      Python code (2,722 files) or in the iPhone package as Apple received
+      it (10 files).
+  - **Scanned by pattern** for key shapes, private keys, the owner's email,
+    name and home folder, the build's paths and home addresses:
+    - the iPhone package is signed "Apple Distribution: Viga Works AB" and
+      holds none of them; the local archive's development signature names
+      the owner, but that copy is never sent;
+    - the crash-symbols file holds the build's folder paths; it goes to
+      Apple for crash reports and is not part of the app people download;
+    - Studio's frozen Python code had the owner's home folder in the
+      chat's plug-in paths: fixed, and a test now fails on any home-folder
+      path in the packages the app bundles (`compat/`'s developer scripts
+      with the owner's paths are never bundled);
+    - harmless and public: the samples download link is on the owner's
+      GitHub account, a docstring says "Bjorn's call", and the licences
+      name the owner.
+  - **Each user's own AI key:** Studio reads a key from the user's
+    preferences or environment; the development `api_key.md` is skipped by
+    a shipped app (`test_frozen_ignores_ai_md`), and neither app holds a
+    key.
+  - **The remote cannot be used to get in:**
+    - a seeded fuzz run against a headless Studio, with every provider's
+      key set to a marker: 43 malformed frames and raw method names before
+      pairing, an oversized and a binary frame, and 647 hostile requests
+      after pairing over 44 of the 48 verbs;
+    - every answer is from the error table or a result its schema allows,
+      never internal_error; no frame holds the AI key, the host's private
+      key, the home folder or a file's contents; no file a payload names is
+      created; the host still serves a phone after;
+    - the chat's own verbs are covered by TR29's adversarial tests, which
+      pass at the release's commit.
+  - **For the owner to decide:**
+    - "Report a problem" in Studio mails the owner's own Gmail: keep it, or
+      use a support address;
+    - the licences' copyright line names the owner: keep it, or Viga Works
+      AB;
+    - Studio keeps AI keys in its preferences file, which any program the
+      user runs can read; the macOS Keychain would keep them locked;
+    - the release's samples download from the owner's GitHub account.
+
 ## Sources
 
 Collected 2026-11-06.
