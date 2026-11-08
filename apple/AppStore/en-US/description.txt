@@ -1,6 +1,6 @@
 Tabber Spak is a remote control for Tabber Studio. It works only together with Tabber Studio running on your Mac.
 
-Tabber Studio is a free music app for the Mac, a DAW built for guitarists: write in tab or notation, record audio and MIDI, use your plug-ins and mix the finished song. It works on its own, and you don't need Tabber Spak to use it. Tabber Spak lets you run it from your iPhone, with your instrument in your hands and the computer on the desk.
+Tabber Studio is a music app for the Mac, a DAW built for guitarists. Write in tab or notation, record audio and MIDI, use your plugins and mix the finished song. It works on its own, and you don't need Tabber Spak to use it. Tabber Spak lets you run it from your iPhone, with your instrument in your hands and the computer on the desk.
 
 Record from across the room
 - Play, pause and record on the armed tracks, with Count-in, the metronome and Loop.
