@@ -99,4 +99,40 @@ final class ScreenshotUITests: SpakUITestCase {
         for _ in 0..<8 where !element("response-again").isHittable { app.swipeUp() }
         try shoot("computer-largest-text")
     }
+
+    /// The Speed Trainer at the largest text: its fields wrap rather than clip.
+    @MainActor
+    func testTheTrainerAtTheLargestText() throws {
+        app = XCUIApplication()
+        app.launchArguments = ["-demo", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
+        app.launch()
+        XCTAssertTrue(waitFor("connection", "Demo Studio"))
+        tap("loop")
+        tap("trainer")
+        try shoot("trainer-largest-text")
+    }
+
+    /// Every screen's bar with a real computer's long name: nothing runs into
+    /// anything (the owner, 2026-11-08: the Mixer's buttons ran together).
+    @MainActor
+    func testTheBarsWithALongComputerName() throws {
+        app = XCUIApplication()
+        app.launchArguments = ["-demo", "-demo-name", "Björn's Mac Studio"]
+        app.launch()
+        XCTAssertTrue(element("connection").waitForExistence(timeout: 8))
+        RunLoop.current.run(until: Date().addingTimeInterval(3))
+        print("CHIP:", element("connection").label, "|", element("connection").debugDescription.prefix(400))
+        try shoot("bar-1-tracks")
+        for (tab, name) in [("Tab", "bar-2-tab"), ("Mixer", "bar-3-mixer"), ("Tuner", "bar-5-tuner"), ("Chat", "bar-6-chat")] {
+            app.tabBars.buttons[tab].tap()
+            RunLoop.current.run(until: Date().addingTimeInterval(1.5))
+            try shoot(name)
+            if tab == "Mixer" {
+                app.segmentedControls["mixer-page"].buttons["Routing"].tap()
+                RunLoop.current.run(until: Date().addingTimeInterval(1.5))
+                try shoot("bar-4-routing")
+                app.segmentedControls["mixer-page"].buttons["Mixer"].tap()
+            }
+        }
+    }
 }

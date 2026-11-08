@@ -9,7 +9,7 @@ final class AccessibilityUITests: XCTestCase {
     }
 
     @MainActor
-    func audit(_ app: XCUIApplication, _ screen: String, scrolls: Bool = false) throws {
+    func audit(_ app: XCUIApplication, _ screen: String, scrolls: Bool = false, within region: CGRect? = nil) throws {
         // A list longer than the screen runs on under the transport and the
         // tab bar, as iOS lists do; the text resting there reads as low
         // contrast wherever the list stops. Only that is left out: contrast
@@ -23,6 +23,8 @@ final class AccessibilityUITests: XCTestCase {
             barTop = (card.exists ? min(card.frame.minY, play.frame.minY) : play.frame.minY) - 16
         }
         try app.performAccessibilityAudit { issue in
+            // A second look at part of a screen: the rest had its own audit just before.
+            if let region, !(issue.element.map { region.intersects($0.frame) } ?? false) { return true }
             // The sheet's Done is iOS's own toolbar button, whose largest sizes iOS caps.
             if issue.auditType == .dynamicType, issue.element?.identifier == "done" { return true }
             // The audit flags rows at the foot of the long Computer sheet: "Leave the
@@ -60,6 +62,13 @@ final class AccessibilityUITests: XCTestCase {
         let connected = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label CONTAINS 'Demo Studio'"), object: connection)
         XCTAssertEqual(XCTWaiter().wait(for: [connected], timeout: 8), .completed)
         try audit(app, "Tracks")
+        element(app, "loop").tap()                          // Loop on shows the Speed Trainer
+        XCTAssertTrue(element(app, "trainer").waitForExistence(timeout: 8))
+        element(app, "trainer").tap()
+        let toggles = element(app, "loop").frame, trainer = element(app, "trainer-row").frame
+        try audit(app, "Tracks with the trainer",
+                  within: CGRect(x: 0, y: toggles.minY - 8, width: app.frame.width, height: trainer.maxY - toggles.minY + 16))
+        element(app, "loop").tap()
         element(app, "arm-Vocals").tap()
         element(app, "record").tap()
         let recording = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label CONTAINS 'Recording'"), object: element(app, "readout"))
@@ -77,8 +86,13 @@ final class AccessibilityUITests: XCTestCase {
         app.tabBars.buttons["Mixer"].tap()
         XCTAssertTrue(element(app, "fader-Guitar").waitForExistence(timeout: 8))
         try audit(app, "Mixer")
-        app.segmentedControls["mixer-page"].buttons["Routing"].tap()
-        XCTAssertTrue(element(app, "route-Vocals").waitForExistence(timeout: 8))
+        // Right after the Mixer's audit puts the text size back, a tap can land
+        // while the screen lays out again; tap again if the page did not turn.
+        for _ in 0..<3 where !element(app, "route-Vocals").exists {
+            app.segmentedControls["mixer-page"].buttons["Routing"].tap()
+            _ = element(app, "route-Vocals").waitForExistence(timeout: 4)
+        }
+        XCTAssertTrue(element(app, "route-Vocals").exists)
         try audit(app, "Routing", scrolls: true)
         app.segmentedControls["mixer-page"].buttons["Mixer"].tap()
         app.tabBars.buttons["Tuner"].tap()

@@ -42,6 +42,12 @@ class SpakUITestCase: XCTestCase {
         XCTFail("\(id) never became tappable")
     }
 
+    /// Scroll the screen until the control is in view, as a thumb would.
+    @MainActor
+    func reveal(_ id: String) {
+        for _ in 0..<4 where !element(id).isHittable { app.swipeUp() }
+    }
+
     /// Wait until the element's label or value says this.
     @MainActor
     func waitFor(_ id: String, _ text: String, timeout: TimeInterval = 8) -> Bool {

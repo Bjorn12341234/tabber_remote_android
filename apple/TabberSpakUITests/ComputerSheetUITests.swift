@@ -34,10 +34,4 @@ final class ComputerSheetUITests: SpakUITestCase {
         XCTAssertGreaterThan(element("response-again").frame.height, 70, "Start again grows")
         XCTAssertGreaterThan(element("response-note").frame.height, 120, "the note wraps over more lines")
     }
-
-    /// The section sits under the sheet's actions; scroll it into view.
-    @MainActor
-    func reveal(_ id: String) {
-        for _ in 0..<4 where !element(id).isHittable { app.swipeUp() }
-    }
 }

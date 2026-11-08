@@ -26,15 +26,17 @@ struct TransportBar: View {
             .accessibilityLabel(playing || recording ? "Stop" : "Go to the start")
             .accessibilityIdentifier(id("stop"))
 
+            // Tabber Studio's Play is Play / Pause: ❚❚ while playing stops right
+            // there, and Play goes on from where it stopped.
             Button(action: model.playOrStop) {
-                Image(systemName: "play.fill")
+                Image(systemName: playing ? "pause.fill" : "play.fill")
                     .font(.system(size: 19))
                     .foregroundStyle(playing && !recording ? Studio.accent : Studio.text1)
                     .frame(width: 44, height: 44)
                     .contentShape(.rect)
             }
             .opacity(model.pending.contains("play") ? 0.5 : 1)
-            .accessibilityLabel(playing ? "Stop" : "Play")
+            .accessibilityLabel(playing ? "Pause" : "Play")
             .accessibilityAddTraits(playing ? .isSelected : [])
             .accessibilityIdentifier(id("play"))
 

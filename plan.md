@@ -997,6 +997,19 @@ chat, all before the stage freeze on 19 November (The demo cut).
 |---|---|---|---|
 | TR33 | Take lanes for passes (decision 20), before the stage freeze: a linear pass over an earlier one on the same track joins it in take lanes, as loop recording does. The newest plays; the take loop's Delete and Go again work on lanes; the phone's takes list shows which take plays | Studio, this repo | Headless: three passes over one bar give three lanes, only the newest audible, each one undo step; Undo and Redo keep the lanes; loop recording is unchanged (its tests stay green); S1 on a device |
 
+### Asked for 2026-11-08
+
+The owner chose practice speed as the first stretch item ("Practice speed
+first"), while the iPhone runs are still owed, then asked for tracks: "if
+it's an all audio file song, then the app should be able to add tracks. or
+actually add tracks, midi or tab or audio tracks at will to a project. so
+that's something to do."
+
+| # | Sprint | Where | Gate |
+|---|---|---|---|
+| TR35 | Practice speed: Tabber Studio's Speed Trainer from the phone (S6), `trainer/1`; Loop set from anywhere shows and stops the trainer as a click does | spec, Studio, this repo | Vectors; the phone sets the computer's own Trainer button and fields, read back from the bar and the engine; refused with Loop off; Loop off turns it off; UI tests and the accessibility audit, the largest text included |
+| TR36 | Add tracks from the phone: a tab, MIDI or audio track, as Tabber Studio's "+ Add Track" makes each | spec, Studio, this repo | Headless: each kind equals "+ Add Track"'s, one undo step that Undo on the phone takes back; in an all-audio song, a tab track added from the phone takes tab at once; UI tests against DemoHost |
+
 ### M2, the Lock Screen and the Action Button (1.1)
 
 | # | Sprint | Where | Gate |
@@ -2147,6 +2160,106 @@ what was measured, and what changed in the plan.
     Wi-Fi:
     - about 30 taps with AirDrop off, then a screenshot of the sheet;
     - Start again, about 30 taps with AirDrop on, then another.
+
+- **TR3's stress test, 2026-11-08: playback passes, on the installed Studio
+  0.3.21 (the owner: "yes, run it now").**
+  - **The run:** `tools/remote_feed_stress.py --minutes 10 --play`, from
+    00:07 to 00:17 on the Mac Studio:
+    - two software phones paired through the local Control API, following
+      every M1 topic at full rate;
+    - the bundled example "First notes" (a synth with reverb) looping its
+      four bars at 104 BPM;
+    - the owner's iPhone stayed paired.
+  - **Result:**
+    - each phone: meters 20 a second, position 10 a second, no gap in
+      `seq`;
+    - the engine: 103,457 callbacks, 0 xruns, 0 deadline misses;
+    - PASS: zero dropouts.
+  - **Afterwards:** the phones revoked (only the owner's iPhone stays),
+    Loop off, an empty song open again, as before the run.
+  - **Still owed: the recording half** of the gate, which needs an armed
+    input.
+
+- **TR35 ✅ 2026-11-08: practice speed (protocol 1.5, 967ad84; Studio
+  4df3af1c, 0.3.22; TestFlight build 11).** The owner chose it as the first
+  stretch item. The plan's S6, "loop the solo at 70% speed and step the
+  speed up", is Tabber Studio's own Speed Trainer.
+  - **`trainer/1`:**
+    - `trainer.state`, `trainer.set` (any of enabled, start, step and
+      target) and the `trainer` topic, which sends each step as the loop
+      comes round;
+    - Studio's own controls: the phone sets the transport bar's Trainer
+      button and fields, and the bar sends them on as after an edit there;
+    - a changed field starts the ramp again from the start, as an edit in
+      Studio's fields does;
+    - with Loop off it is refused (`needs_loop`, 1039); not an undo step.
+  - **Found in Studio and fixed:**
+    - Loop set by the Control API, which is how the phone sets it, checked
+      Studio's Loop button but skipped what a click does;
+    - so the trainer stayed hidden, and a song slowed by the trainer kept
+      playing slowly after Loop went off;
+    - now Loop set from anywhere goes through `TransportBar.show_loop`, as
+      a click does.
+  - **On the phone:**
+    - with Loop on, a Trainer row under Loop, Count-in and Metro, in
+      Studio's order: Trainer, start + step → target, then the speed now;
+    - the fields are menus in Studio's monospaced figures;
+    - at the accessibility text sizes each field gets a line of its own,
+      named, and the toggles stack instead of breaking words.
+  - **Gate met:**
+    - Studio: `test_tr35_trainer.py` (3), the remote suite (96 pass), and
+      the loop and transport tests;
+    - RemoteKit 42: the demo steps up each time its loop comes round;
+    - UI tests: the trainer, and its largest-text layout;
+    - the accessibility audit passes with the trainer showing.
+  - **Fixed on the way:** Studio's rate-limit refusal test failed since take
+    lanes, because it sent one request at a time and the bucket refilled
+    whenever a request took over about 5 ms. It now floods with sixty cheap
+    reads at once. The Bonjour test still fails while the installed Studio
+    runs: environmental, as before.
+  - **Owed:** on the iPhone against Studio 0.3.22: loop a part, Trainer on at
+    70%, and hear it speed up.
+
+- **The owner's notes from the iPhone, 2026-11-08 (TestFlight build 11):**
+  - **"play button when pressed isn't going into a pause button and the
+    other way around":**
+    - Studio's Play is Play / Pause, ▶ that turns into ❚❚ while playing;
+    - the phone's did the same thing but always drew ▶;
+    - it now shows ❚❚ while playing and says "Pause" to VoiceOver.
+  - **"count in didn't do anything, no difference when pressing count in
+    and then play":**
+    - Studio's Count-in is a recording count-in (its tooltip: "bars of
+      click before capture starts"), and Play never counts in;
+    - the phone does the same, so nothing was broken;
+    - asked whether Play should count in too, the owner kept it for
+      recording ("No, keep it for recording");
+    - so the phone says it once, the first time Count-in is turned on
+      ("Count-in counts one bar in before recording (●). Play starts at
+      once, as in Tabber Studio."), and VoiceOver hears it as the button's
+      hint.
+  - **"the arrange and the stuff up top should stay up top even when you
+    scroll down if there is a lot of tracks":**
+    - the Tracks screen's view buttons, toggles and Speed Trainer are now
+      pinned above the tracks;
+    - at the accessibility text sizes they scroll with the list, since
+      there they would fill the screen.
+  - **"in mixer the buttons for mixer, undo ... and routing and bjorns mac
+    studio are going into each other":**
+    - the Mixer / Routing switch had a fixed width in the bar, beside Undo
+      and the computer's name;
+    - it now sits under the bar, full width and pinned;
+    - the computer's name is capped at 150 points, so a long name never
+      runs into the bar's other buttons;
+    - a screenshot test (`-demo-name`) checks every screen's bar with a long
+      name on the iPhone SE.
+  - **Tests:**
+    - the full UI suite, 30 tests;
+    - the Routing test now scrolls its Vocals row into view under the
+      pinned switch;
+    - the accessibility walk taps Routing again if the page did not turn,
+      since a tap right after the Mixer's audit can land mid-layout (twice
+      in five runs; never in the Routing tests);
+    - the walk then passes twice in a row.
 
 ## Sources
 

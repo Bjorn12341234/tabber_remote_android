@@ -37,8 +37,23 @@ struct MixerScreen: View {
                     }
                 }
             }
+            // Mixer or Routing, under the bar and always in view: in the bar it
+            // ran into Undo and the computer's name (the owner, 2026-11-08).
+            .safeAreaInset(edge: .top, spacing: 0) {
+                if model.routingAvailable, model.mixerAvailable, model.isConnected {
+                    Picker("View", selection: $page) {
+                        Text(Page.mixer.rawValue).tag(Page.mixer)
+                        Text(Page.routing.rawValue).tag(Page.routing)
+                    }
+                    .pickerStyle(.segmented)
+                    .accessibilityIdentifier("mixer-page")
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                    .background(Studio.bg1)
+                }
+            }
             .background(Studio.bg1)
-            .navigationTitle(model.routingAvailable ? "" : "Mixer")
+            .navigationTitle(model.routingAvailable ? "" : "Mixer")    // the switch under the bar says which
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
@@ -46,17 +61,6 @@ struct MixerScreen: View {
                         .disabled(model.state.undo.undo == nil || !model.mixerAvailable)
                         .accessibilityLabel(model.state.undo.undo.map { "Undo \($0.label)" } ?? "Undo")
                         .accessibilityIdentifier("undo")
-                }
-                if model.routingAvailable {
-                    ToolbarItem(placement: .principal) {
-                        Picker("View", selection: $page) {
-                            Text(Page.mixer.rawValue).tag(Page.mixer)
-                            Text(Page.routing.rawValue).tag(Page.routing)
-                        }
-                        .pickerStyle(.segmented)
-                        .frame(width: 200)
-                        .accessibilityIdentifier("mixer-page")
-                    }
                 }
                 ToolbarItem(placement: .topBarTrailing) { ComputerChip(model: model) }
             }

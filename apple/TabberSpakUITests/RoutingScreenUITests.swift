@@ -13,6 +13,7 @@ final class RoutingScreenUITests: SpakUITestCase {
     @MainActor
     func testAnOutputMovesToABusAndBack() {
         XCTAssertTrue(waitFor("output-Vocals", "Master"))
+        reveal("output-Vocals")                  // under the pinned Mixer / Routing switch
         tap("output-Vocals")
         app.buttons["Reverb"].firstMatch.tap()
         XCTAssertTrue(waitFor("output-Vocals", "Reverb"), "the computer confirms the new output")

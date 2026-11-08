@@ -74,6 +74,10 @@ public actor DemoHost {
     /// What the demo computer shows (view/1), and the editor Split goes back to.
     private var view = ViewState(editor: "tab", split: false)
     private var preSplit = "tab"
+    /// The Speed Trainer (trainer/1); its speed is the demo's tempo scale.
+    private var trainer = TrainerState()
+    /// Where the last tick was, to see the loop come round.
+    private var lastBeat = 0.0
     /// The Tab view's cursor on each tab track, and the duration a new note gets.
     private var tabCursors: [String: TabCursor] = [:]
     private var tabDuration = NoteValue(value: 4)
@@ -87,7 +91,12 @@ public actor DemoHost {
     /// shows the app's Update cards (TR6).
     public let speaks: [String]
 
-    public init(speaks: [String] = ["1.4"]) {
+    /// The name the demo computer gives itself; a longer one checks how the
+    /// app's bars fit a real computer's name.
+    public let computerName: String
+
+    public init(speaks: [String] = RemoteClient.protocolVersions, computerName: String = DemoHost.name) {
+        self.computerName = computerName
         self.speaks = speaks
         // Tabber Studio's own track colours (core/models.py TRACK_COLORS), in its strip order.
         song = Song(
@@ -204,11 +213,12 @@ public actor DemoHost {
                 throw DemoErrors.make("unsupported_version", ["host_versions": .array(speaks.map { .string($0) })])
             }
             connection.challenge = Data((0..<32).map { _ in UInt8.random(in: 0...255) })
-            return ["host": ["id": .string(Self.hostID), "name": .string(Self.name), "app_version": "demo"],
-                    "protocol_version": "1.4",
+            return ["host": ["id": .string(Self.hostID), "name": .string(computerName), "app_version": "demo"],
+                    "protocol_version": "1.5",
                     "capabilities": ["transport/1", "record/1", "tempo_scale/1", "tracks/1", "tracks.monitor/1",
                                      "markers/1", "takes/1", "takes.discard/1", "takes.go_again/1", "undo/1",
-                                     "save/1", "meters/1", "mixer/1", "tab/1", "routing/1", "chat/1", "view/1"],
+                                     "save/1", "meters/1", "mixer/1", "tab/1", "routing/1", "chat/1", "view/1",
+                                     "trainer/1"],
                     "limits": ["max_frame_bytes": 65536, "requests_per_second": 20, "burst": 40,
                                "heartbeat_ms": 2000, "heartbeat_misses": 3, "connections_per_device": 2],
                     "challenge": .string(Base64URL.encode(connection.challenge))]
@@ -218,7 +228,7 @@ public actor DemoHost {
             }
             connection.authed = true
             return ["device_id": .string(RemoteCrypto.deviceID(publicKeyDER: der)),
-                    "host": ["id": .string(Self.hostID), "name": .string(Self.name)]]
+                    "host": ["id": .string(Self.hostID), "name": .string(computerName)]]
         case "auth":
             connection.authed = true
             return ["device": ["id": p["device_id"] ?? "", "name": "Demo iPhone"]]
@@ -283,6 +293,11 @@ public actor DemoHost {
                                  end: try JSONCoding.decode(BarBeat.self, from: end))
             } else {
                 loop.enabled = enabled
+            }
+            if !enabled {                                   // as a click on Loop: the trainer goes off
+                anchorBeat = currentBeat(); anchorTime = .now
+                trainer.enabled = false
+                scale = 1.0
             }
             return ["transport": try JSONCoding.value(transport())]
         case "transport.set_click":
@@ -415,6 +430,20 @@ public actor DemoHost {
                 }
             }
             return ["mixer": try JSONCoding.value(mixerState()), "undo": try JSONCoding.value(undoState())]
+        case "trainer.state":
+            return ["trainer": try JSONCoding.value(trainerState())]
+        case "trainer.set":
+            let enabled = p["enabled"]?.boolValue ?? trainer.enabled
+            if enabled && !loop.enabled {
+                throw DemoErrors.make("needs_loop", ["trainer": try JSONCoding.value(trainerState())])
+            }
+            if let v = p["start"]?.intValue { trainer.start = max(25, min(200, v)) }
+            if let v = p["step"]?.intValue { trainer.step = max(1, min(50, v)) }
+            if let v = p["target"]?.intValue { trainer.target = max(25, min(200, v)) }
+            trainer.enabled = enabled
+            anchorBeat = currentBeat(); anchorTime = .now
+            scale = enabled ? Double(trainer.start) / 100 : 1.0     // a changed field starts again, as in Studio
+            return ["trainer": try JSONCoding.value(trainerState())]
         case "view.state":
             return ["view": try JSONCoding.value(view)]
         case "view.set":
@@ -737,6 +766,25 @@ public actor DemoHost {
         return max(0, beat)
     }
 
+    private func trainerState() -> TrainerState {
+        TrainerState(enabled: trainer.enabled, start: trainer.start, step: trainer.step, target: trainer.target,
+                     speed: Int((scale * 100).rounded()))
+    }
+
+    /// Each time the loop comes round, the trainer steps up toward its
+    /// target, as Tabber Studio's engine does on its loop's wrap.
+    private func stepTrainerOnWrap() {
+        let beat = currentBeat()
+        defer { lastBeat = beat }
+        guard trainer.enabled, loop.enabled, let start = loop.start, let end = loop.end else { return }
+        let a = Double((start.bar - 1) * 4 + start.beat - 1), b = Double((end.bar - 1) * 4 + end.beat - 1)
+        guard beat < lastBeat, lastBeat >= b - 1, beat < a + 1 else { return }
+        let before = topicData()
+        anchorBeat = beat; anchorTime = .now
+        scale = min(scale + Double(trainer.step) / 100, Double(trainer.target) / 100)
+        broadcastChanges(from: before)
+    }
+
     private func position(_ beat: Double) -> Position {
         Position(bar: Int(beat / 4) + 1, beat: Int(beat.truncatingRemainder(dividingBy: 4)) + 1,
                  seconds: (beat * 60.0 / tempo * 1000).rounded() / 1000)
@@ -835,6 +883,7 @@ public actor DemoHost {
         data["routing"] = try? JSONCoding.value(routingState())
         data["chat"] = try? JSONCoding.value(chat)
         data["view"] = try? JSONCoding.value(view)
+        data["trainer"] = try? JSONCoding.value(trainerState())
         return data
     }
 
@@ -851,13 +900,15 @@ public actor DemoHost {
         case "routing": return (try? JSONCoding.value(routingState())) ?? .null
         case "chat": return (try? JSONCoding.value(chat)) ?? .null
         case "view": return (try? JSONCoding.value(view)) ?? .null
+        case "trainer": return (try? JSONCoding.value(trainerState())) ?? .null
         default: return (try? JSONCoding.value(song.project)) ?? .null
         }
     }
 
     private func broadcastChanges(from before: [String: JSONValue]) {
         let after = topicData()
-        for topic in ["transport", "record", "tracks", "markers", "takes", "undo", "project", "mixer", "tab", "routing", "chat", "view"]
+        for topic in ["transport", "record", "tracks", "markers", "takes", "undo", "project", "mixer", "tab", "routing", "chat", "view",
+                      "trainer"]
         where before[topic] != after[topic] {
             emit(topic, full(topic))
         }
@@ -893,6 +944,7 @@ public actor DemoHost {
             })])
             return true
         }
+        stepTrainerOnWrap()
         let before = lastSent["counting"]
         let counting: JSONValue = .bool(transport().countingIn)
         if before != counting { lastSent["counting"] = counting; emit("transport", full("transport")) }
@@ -950,6 +1002,7 @@ public enum DemoErrors {
         "nothing_to_redo": (1029, "There is nothing to redo."),
         "unknown_strip": (1032, "That strip is gone from the mixer."),
         "no_tab": (1033, "Choose a tab track to write on first."),
+        "needs_loop": (1039, "Turn Loop on first: the trainer speeds up each time the loop comes round."),
     ]
 
     static func make(_ reason: String, _ data: [String: JSONValue] = [:]) -> RemoteError {

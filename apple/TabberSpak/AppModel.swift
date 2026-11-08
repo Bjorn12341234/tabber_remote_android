@@ -104,7 +104,10 @@ final class AppModel {
         isDemo = true
         demoSpeaks = speaks
         book = nil
-        let host = DemoHost(speaks: speaks)
+        // Screenshots: `-demo-name "Björn's Mac Studio"` names the demo computer as a real one is named.
+        let arguments = ProcessInfo.processInfo.arguments
+        let name = arguments.firstIndex(of: "-demo-name").flatMap { arguments.dropFirst($0 + 1).first } ?? DemoHost.name
+        let host = DemoHost(speaks: speaks, computerName: name)
         attach(RemoteSession(credentials: .demo, app: Self.app) { _ in await host.connect() })
     }
 
@@ -443,6 +446,21 @@ final class AppModel {
         act("view-split", "view.set", ["split": .bool(!(state.view?.split ?? false))])
     }
 
+    /// Tabber Studio's Speed Trainer, on a computer that offers it to phones (trainer/1).
+    var trainerAvailable: Bool { state.capabilities.contains("trainer/1") }
+
+    /// The Trainer button, as in Tabber Studio's transport bar (S6: loop the
+    /// solo at 70% and step the speed up).
+    func toggleTrainer() {
+        act("trainer", "trainer.set", ["enabled": .bool(!(state.trainer?.enabled ?? false))])
+    }
+
+    /// One of the trainer's fields: "start", "step" or "target", in percent.
+    /// A changed field starts the ramp again from the start, as in Studio.
+    func setTrainer(_ field: String, _ percent: Int) {
+        act("trainer-\(field)", "trainer.set", [field: .number(Double(percent))])
+    }
+
     /// One step of a held Previous or Next (the owner: "pressing and holding
     /// previous and next in tab ... should fast forward"): the next beat
     /// written, or once held a while the next bar, adding none. False at the
@@ -557,7 +575,20 @@ final class AppModel {
 
     func toggleCountIn() {
         guard let transport = state.transport else { return }
-        act("count-in", "transport.set_count_in", ["bars": .number(transport.countInBars > 0 ? 0 : 1)])
+        let on = transport.countInBars == 0
+        act("count-in", "transport.set_count_in", ["bars": .number(on ? 1 : 0)]) { [weak self] _ in
+            if on { self?.tellCountInIsForRecording() }
+        }
+    }
+
+    /// Once: Count-in is Tabber Studio's recording count-in, so Play starts at
+    /// once (the owner, 2026-11-08: "no difference when pressing count in and
+    /// then play"; asked, the owner kept it for recording).
+    private func tellCountInIsForRecording() {
+        let key = "toldCountInIsForRecording"
+        guard !isDemo, !UserDefaults.standard.bool(forKey: key) else { return }
+        UserDefaults.standard.set(true, forKey: key)
+        problem = "Count-in counts one bar in before recording (●). Play starts at once, as in Tabber Studio."
     }
 
     func toggleClick() {

@@ -7,16 +7,16 @@ import SwiftUI
 /// deletion.
 struct TracksScreen: View {
     @Bindable var model: AppModel
+    @Environment(\.dynamicTypeSize) private var textSize
 
     var body: some View {
         NavigationStack {
             Connected(model: model) {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {
-                        if model.viewAvailable {
-                            ViewButtons(model: model)
+                        if textSize.isAccessibilitySize {
+                            controls             // at the largest text they would fill the screen, so they scroll
                         }
-                        RecordOptions(model: model)
                         if showHint {
                             Text("To record, tap ○ on a track, then ● below.")
                                 .font(.subheadline)
@@ -35,11 +35,38 @@ struct TracksScreen: View {
                     .padding(.top, 4)
                     .padding(.bottom, 24)
                 }
+                // The owner: "the arrange and the stuff up top should stay up top
+                // even when you scroll down if there is a lot of tracks."
+                .safeAreaInset(edge: .top, spacing: 0) {
+                    if !textSize.isAccessibilitySize {
+                        controls
+                            .padding(.horizontal, 16)
+                            .padding(.top, 4)
+                            .padding(.bottom, 12)
+                            .background(Studio.bg1)
+                    }
+                }
             }
             .background(Studio.bg1)
             .navigationTitle(model.state.project.title.isEmpty ? "Tracks" : model.state.project.title)
             .toolbar { ToolbarItem(placement: .topBarTrailing) { ComputerChip(model: model) } }
             .takeSlot(model: model)
+        }
+    }
+
+    /// What stays at the top: the computer's view, then Studio's transport
+    /// toggles, and the Speed Trainer while Loop is on.
+    private var controls: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            if model.viewAvailable {
+                ViewButtons(model: model)
+            }
+            VStack(alignment: .leading, spacing: 8) {
+                RecordOptions(model: model)
+                if model.trainerAvailable, model.state.transport?.loop.enabled == true {
+                    TrainerRow(model: model)
+                }
+            }
         }
     }
 
@@ -186,18 +213,133 @@ struct RecordOptions: View {
     @Bindable var model: AppModel
 
     var body: some View {
-        let transport = model.state.transport
-        HStack(spacing: 4) {
-            ToggleChip(title: "Loop", isOn: transport?.loop.enabled ?? false, action: model.toggleLoop)
-                .accessibilityIdentifier("loop")
-            ToggleChip(title: "Count-in", isOn: (transport?.countInBars ?? 0) > 0,
-                       spoken: (transport?.countInBars ?? 0) > 0 ? "Count-in, one bar" : "Count-in", action: model.toggleCountIn)
-                .accessibilityIdentifier("count-in")
-            ToggleChip(title: "Metro", isOn: transport?.click ?? false, spoken: "Metronome", action: model.toggleClick)
-                .accessibilityIdentifier("click")
+        // Side by side when they fit; stacked at the largest text, so no word breaks.
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 4) { chips }
+            VStack(spacing: 4) { chips }
         }
         .padding(3)
         .studioWell(radius: Studio.radiusControl + 3)
+    }
+
+    @ViewBuilder private var chips: some View {
+        let transport = model.state.transport
+        ToggleChip(title: "Loop", isOn: transport?.loop.enabled ?? false, action: model.toggleLoop)
+            .accessibilityIdentifier("loop")
+        ToggleChip(title: "Count-in", isOn: (transport?.countInBars ?? 0) > 0,
+                   spoken: (transport?.countInBars ?? 0) > 0 ? "Count-in, one bar" : "Count-in", action: model.toggleCountIn)
+            .accessibilityHint("Counts one bar in before recording.")
+            .accessibilityIdentifier("count-in")
+        ToggleChip(title: "Metro", isOn: transport?.click ?? false, spoken: "Metronome", action: model.toggleClick)
+            .accessibilityIdentifier("click")
+    }
+}
+
+/// Tabber Studio's Speed Trainer, shown as there only while Loop is on (the
+/// plan's S6: loop the solo at 70% and step the speed up). The Trainer
+/// button, the start speed, the step added each time the loop comes round
+/// and the target, then the speed now, in Studio's order and its monospaced
+/// figures.
+struct TrainerRow: View {
+    @Bindable var model: AppModel
+
+    @Environment(\.dynamicTypeSize) private var textSize
+
+    var body: some View {
+        let trainer = model.state.trainer ?? TrainerState()
+        // The button and the speed now, then the fields in Studio's order; at
+        // the accessibility text sizes, each field on a line of its own, named.
+        VStack(alignment: .leading, spacing: 6) {
+            top(trainer)
+            if textSize.isAccessibilitySize {
+                named("Start", field("start", spoken: "Start speed", trainer.start, TrainerState.starts))
+                named("Faster each loop by", field("step", spoken: "Faster each loop by", trainer.step, TrainerState.steps))
+                named("Up to", field("target", spoken: "Target speed", trainer.target, TrainerState.targets))
+            } else {
+                fields(trainer)
+            }
+        }
+        .padding(3)
+        .studioWell(radius: Studio.radiusControl + 3)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("trainer-row")
+    }
+
+    private func top(_ trainer: TrainerState) -> some View {
+        HStack(spacing: 6) {
+            button(trainer)
+            Spacer(minLength: 0)
+            speed(trainer)
+        }
+    }
+
+    private func named(_ title: String, _ field: some View) -> some View {
+        HStack(spacing: 8) {
+            Text(title)
+                .font(.subheadline)
+                .foregroundStyle(Studio.text2)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityHidden(true)
+            Spacer(minLength: 0)
+            field
+        }
+        .padding(.leading, 8)
+    }
+
+    private func button(_ trainer: TrainerState) -> some View {
+        ToggleChip(title: "Trainer", isOn: trainer.enabled, spoken: "Speed Trainer", action: model.toggleTrainer)
+            .fixedSize()
+            .accessibilityIdentifier("trainer")
+    }
+
+    private func fields(_ trainer: TrainerState) -> some View {
+        HStack(spacing: 4) {
+            field("start", spoken: "Start speed", trainer.start, TrainerState.starts)
+            sign("plus")
+            field("step", spoken: "Faster each loop by", trainer.step, TrainerState.steps)
+            sign("arrow.right")
+            field("target", spoken: "Target speed", trainer.target, TrainerState.targets)
+        }
+    }
+
+    /// Studio's "+" and "→" between the fields, as symbols that grow with the text.
+    private func sign(_ symbol: String) -> some View {
+        Image(systemName: symbol)
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(Studio.text2)
+            .accessibilityHidden(true)
+    }
+
+    private func field(_ name: String, spoken: String, _ value: Int, _ base: [Int]) -> some View {
+        Menu {
+            Picker(spoken, selection: Binding(get: { value }, set: { model.setTrainer(name, $0) })) {
+                ForEach(TrainerState.choices(base, with: value), id: \.self) { Text("\($0)%").tag($0) }
+            }
+        } label: {
+            Text("\(value)%")
+                .font(Studio.counter(.subheadline))
+                .foregroundStyle(Studio.text1)
+                .fixedSize()
+                .accessibilityIdentifier("trainer-\(name)-value")   // the same in every layout
+                .padding(.horizontal, 10)
+                .frame(minHeight: 44)
+                .background(Studio.bg3, in: RoundedRectangle(cornerRadius: Studio.radiusControl, style: .continuous))
+                .contentShape(.rect)
+        }
+        .accessibilityLabel(spoken)
+        .accessibilityValue("\(value) percent")
+        .accessibilityIdentifier("trainer-\(name)")
+    }
+
+    private func speed(_ trainer: TrainerState) -> some View {
+        Text("\(trainer.speed)%")
+            .font(Studio.counter(.subheadline, weight: .bold))
+            .foregroundStyle(trainer.enabled ? Studio.text1 : Studio.text2)
+            .padding(.trailing, 8)
+            .fixedSize()
+            .accessibilityLabel("Speed now")
+            .accessibilityValue("\(trainer.speed) percent")
+            .accessibilityIdentifier("trainer-speed")
     }
 }
 
@@ -272,6 +414,8 @@ struct ComputerChip: View {
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(Studio.text1)
                     .lineLimit(1)
+                    .truncationMode(.tail)
+                    .frame(maxWidth: 150, alignment: .leading)   // a long name never runs into the bar's other buttons
             }
         }
         .accessibilityLabel("\(model.computerName), \(words)")

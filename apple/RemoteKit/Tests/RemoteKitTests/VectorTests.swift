@@ -154,6 +154,7 @@ struct ExchangeVectorTests {
                 case "routing": try roundTrip(RoutingState.self, value)
                 case "chat": try roundTrip(ChatState.self, value)
                 case "view": try roundTrip(ViewState.self, value)
+                case "trainer": try roundTrip(TrainerState.self, value)
                 default: Issue.record("unknown result field \(key) of \(method)")
                 }
             }
@@ -177,6 +178,7 @@ struct ExchangeVectorTests {
         case "routing": try roundTrip(RoutingState.self, data)
         case "chat": try roundTrip(ChatState.self, data)
         case "view": try roundTrip(ViewState.self, data)
+        case "trainer": try roundTrip(TrainerState.self, data)
         default: Issue.record("unknown topic \(topic)")
         }
     }

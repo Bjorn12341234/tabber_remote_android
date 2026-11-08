@@ -334,4 +334,31 @@ struct DemoHostTests {
         _ = try await eventually(session) { $0.tracks.first(where: \.selected)?.id == "demo-vocals" && $0.tab == nil }
         await #expect(throws: RemoteError.self) { try await session.perform("tab.put", ["string": 1, "fret": 0]) }
     }
+
+    /// S6 on the demo computer: Loop first, then the trainer steps up each
+    /// time the loop comes round, and Loop off turns it off.
+    @Test func theSpeedTrainerStepsUpEachTimeTheLoopComesRound() async throws {
+        let session = session(DemoHost())
+        let start = try await connected(session)
+        #expect(start.trainer == TrainerState())
+        await #expect(throws: RemoteError.self) {
+            try await session.perform("trainer.set", ["enabled": true, "start": 150])
+        }
+        _ = try await session.perform("transport.set_loop", ["enabled": true, "start": ["bar": 1, "beat": 1],
+                                                             "end": ["bar": 1, "beat": 2]])
+        let on = try await session.perform("trainer.set", ["enabled": true, "start": 150, "step": 10, "target": 170])
+        #expect(try JSONCoding.decode(TrainerState.self, from: on["trainer"]!)
+                == TrainerState(enabled: true, start: 150, step: 10, target: 170, speed: 150))
+        _ = try await session.perform("transport.play")
+        let faster = try await eventually(session) { $0.trainer?.speed == 170 }
+        #expect(faster.transport?.tempoScale == 1.7, "two loops on, at the target")
+        let again = try await session.perform("trainer.set", ["target": 160])
+        #expect(try JSONCoding.decode(TrainerState.self, from: again["trainer"]!).speed == 150,
+                "a changed field starts the ramp again")
+        _ = try await session.perform("transport.set_loop", ["enabled": false])
+        let off = try await eventually(session) { $0.trainer?.enabled == false }
+        #expect(off.trainer?.speed == 100 && off.transport?.tempoScale == 1.0)
+        _ = try await session.perform("transport.stop")
+        await session.stop()
+    }
 }

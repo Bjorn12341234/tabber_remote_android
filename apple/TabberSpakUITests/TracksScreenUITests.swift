@@ -49,6 +49,13 @@ final class TracksScreenUITests: SpakUITestCase {
 
     @MainActor
     func testPlayStopAndBackToTheStart() {
+        XCTAssertTrue(waitFor("play", "Play"))
+        tap("play")
+        XCTAssertTrue(waitSelected("play"))
+        XCTAssertTrue(waitFor("play", "Pause"), "Play turns into Pause while playing, as in Tabber Studio")
+        tap("play")
+        XCTAssertTrue(waitSelected("play", false))
+        XCTAssertTrue(waitFor("play", "Play"), "and back")
         tap("play")
         XCTAssertTrue(waitSelected("play"))
         tap("stop")
@@ -73,6 +80,45 @@ final class TracksScreenUITests: SpakUITestCase {
         XCTAssertTrue(waitSelectedSegment(editors, "Arrange"), "Split off goes back to Arrange")
         editors.buttons["Piano Roll"].tap()
         XCTAssertTrue(waitSelectedSegment(editors, "Piano Roll"))
+    }
+
+    /// S6: the Speed Trainer shows only with Loop on, as in Tabber Studio;
+    /// a field's menu sets it, and Loop off turns it off.
+    @MainActor
+    func testTheSpeedTrainerShowsWithLoop() {
+        XCTAssertTrue(gone("trainer"), "no trainer while Loop is off")
+        tap("loop")
+        XCTAssertTrue(appears("trainer"), "Loop on shows the trainer")
+        XCTAssertTrue(waitFor("trainer-speed", "100"))
+        tap("trainer")
+        XCTAssertTrue(waitSelected("trainer"), "the trainer is on")
+        XCTAssertTrue(waitFor("trainer-speed", "50"), "it starts at the start speed, 50% in the demo")
+        tap("trainer-start")
+        let seventy = app.buttons["70%"]
+        XCTAssertTrue(seventy.waitForExistence(timeout: 8))
+        seventy.tap()
+        XCTAssertTrue(waitFor("trainer-start", "70"))
+        XCTAssertTrue(waitFor("trainer-speed", "70"), "a changed start starts the ramp again")
+        tap("loop")
+        XCTAssertTrue(gone("trainer"), "Loop off hides the trainer")
+        tap("loop")
+        XCTAssertTrue(appears("trainer"))
+        XCTAssertTrue(waitSelected("trainer", false), "and Loop off turned it off")
+    }
+
+    /// At the largest text the toggles stack and the trainer's fields grow,
+    /// one to a line, within the screen.
+    @MainActor
+    func testTheTogglesAndTrainerAtTheLargestText() {
+        launch(["-demo", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"])
+        tap("loop")
+        tap("trainer")
+        XCTAssertTrue(waitSelected("trainer"))
+        XCTAssertGreaterThan(element("count-in").frame.minY, element("loop").frame.maxY - 1, "stacked, not side by side")
+        let start = element("trainer-start").frame, step = element("trainer-step").frame
+        XCTAssertGreaterThan(start.height, 50, "the field grows with the text (44 points at the default size)")
+        XCTAssertGreaterThan(step.minY, start.maxY - 1, "one field to a line")
+        XCTAssertLessThanOrEqual(start.maxX, app.frame.maxX, "within the screen")
     }
 
     @MainActor
