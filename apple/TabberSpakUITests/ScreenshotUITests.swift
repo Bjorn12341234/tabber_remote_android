@@ -65,8 +65,13 @@ final class ScreenshotUITests: SpakUITestCase {
         sleep(2)
         try shoot("9-mixer")
         tap("play")
-        app.segmentedControls["mixer-page"].buttons["Routing"].tap()
-        XCTAssertTrue(element("route-Vocals").waitForExistence(timeout: 8))
+        // A tap right after Pause can land while the screen lays out again
+        // (as after the accessibility audit): tap again if the page did not turn.
+        for _ in 0..<3 where !element("route-Vocals").exists {
+            app.segmentedControls["mixer-page"].buttons["Routing"].tap()
+            _ = element("route-Vocals").waitForExistence(timeout: 4)
+        }
+        XCTAssertTrue(element("route-Vocals").exists)
         sleep(1)
         try shoot("9b-routing")
         app.segmentedControls["mixer-page"].buttons["Mixer"].tap()

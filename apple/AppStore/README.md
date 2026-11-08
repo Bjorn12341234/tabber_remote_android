@@ -18,7 +18,7 @@ What App Store Connect asks for, ready to paste. App: "Tabber Spak"
 | App Privacy | Data Not Collected |
 | Export compliance | Uses only exempt encryption (`ITSAppUsesNonExemptEncryption` is NO): the system's TLS and signatures |
 | Review notes | `review_notes.txt`; no sign-in is needed |
-| Screenshots | `ScreenshotUITests` in demo mode, at the sizes App Store Connect asks for |
+| Screenshots | 6.9-inch, 1320 × 2868: /Volumes/Data/tabber_remote/appstore-screenshots/6.9-inch, made by `ScreenshotUITests` in demo mode on the iPhone 17 Pro Max simulator (2026-11-08) |
 
 The owner presses Submit for Review. Once Apple approves, the App Store link
 and a QR code to it go on the Tabber website and in Tabber Studio's
