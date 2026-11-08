@@ -2242,6 +2242,7 @@ what was measured, and what changed in the plan.
       rel0322/download;
     - it installs once the owner quits Studio; until then the phone talks
       1.4 to 0.3.21, and only the trainer waits for 0.3.22.
+    - Superseded by 0.3.23, which was installed instead (TR36).
   - **TestFlight build 11** was uploaded 2026-11-08, 07:26, with no
     warnings. The Mac slept for about six hours during the upload's
     archive step, and the upload finished when it woke.
@@ -2337,8 +2338,32 @@ what was measured, and what changed in the plan.
   - **Once, under load:** the Play / Pause test missed a pause while Studio's
     release build ran beside it; it passed three times in a row after, and
     in the full suite.
+  - **Studio 0.3.23 (a923849c), built 2026-11-08 and installed:**
+    - practice speed (0.3.22, never installed) and adding tracks, in one
+      install;
+    - built and checked as 0.3.22 was: the certified engine abc7bd5e, byte
+      for byte once unsigned; signed, notarized and stapled;
+    - the frozen-app smoke test passes, its hello now required to list
+      `tracks.add/1`;
+    - parked at /Volumes/Data/tabber_work/rel0323/, the DMG in
+      rel0323/download;
+    - the owner had quit Studio, so it is installed in /Applications, with
+      0.3.18 kept as the fallback; 0.3.21 went to the Trash, and its DMG is
+      in rel0321;
+    - opened and checked: the remote listens on 9474 on every address, and
+      a hello on the loopback and on the Tailscale address
+      (100.114.215.101) gets 0.3.23, protocol 1.6 and `tracks.add/1`.
+  - **TestFlight build 12** was uploaded 2026-11-08 at about 15:20, with the
+    Mac kept awake this time (`caffeinate`).
+  - **TR37 begun:** a read-only scan of the 0.3.22 and 0.3.23 apps, by
+    pattern, prints file names only. Neither holds a key-shaped string, a
+    private key, the owner's email, a home-folder path or the build's
+    scratch path. The owner's name is only in six licence files, as the
+    copyright holder ("Copyright (c) 2026 Bjorn Winqvist and Tabber Synth
+    contributors"); whether those name Viga Works AB instead is the
+    owner's call.
   - **Owed:** on the iPhone against 0.3.23, add a tab track to an all-audio
-    song and write on it.
+    song and write on it; and loop a part with the Trainer on (TR35).
 
 ## Sources
 
