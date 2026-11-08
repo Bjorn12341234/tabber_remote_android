@@ -2219,6 +2219,18 @@ what was measured, and what changed in the plan.
     runs: environmental, as before.
   - **Owed:** on the iPhone against Studio 0.3.22: loop a part, Trainer on at
     70%, and hear it speed up.
+  - **Studio 0.3.22 (1eddcce6), built 2026-11-08 and parked, not installed:**
+    - built and checked as 0.3.18 was: the certified engine abc7bd5e,
+      byte for byte once unsigned; signed, notarized and stapled;
+    - the frozen-app smoke test passes, its hello now required to list
+      `view/1` and `trainer/1`;
+    - the app is at /Volumes/Data/tabber_work/rel0322/, and the DMG is in
+      rel0322/download;
+    - it installs once the owner quits Studio; until then the phone talks
+      1.4 to 0.3.21, and only the trainer waits for 0.3.22.
+  - **TestFlight build 11** was uploaded 2026-11-08, 07:26, with no
+    warnings. The Mac slept for about six hours during the upload's
+    archive step, and the upload finished when it woke.
 
 - **The owner's notes from the iPhone, 2026-11-08 (TestFlight build 11):**
   - **"play button when pressed isn't going into a pause button and the
