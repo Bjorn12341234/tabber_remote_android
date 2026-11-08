@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tabber.studio/schemas/remote/1/methods/view.show_part.json",
+  "title": "view.show_part",
+  "x-capability": "view.part/1",
+  "x-changes": true,
+  "$defs": {
+    "params": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "$ref": "../common.json#/$defs/key"
+        },
+        "track_id": {
+          "$ref": "../common.json#/$defs/id"
+        },
+        "as": {
+          "enum": [
+            "midi_tab",
+            "notation"
+          ]
+        }
+      },
+      "required": [
+        "key",
+        "track_id",
+        "as"
+      ],
+      "additionalProperties": false
+    },
+    "result": {
+      "type": "object",
+      "properties": {
+        "view": {
+          "$ref": "../common.json#/$defs/view"
+        }
+      },
+      "required": [
+        "view"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

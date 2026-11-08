@@ -1077,6 +1077,17 @@
         },
         "split": {
           "type": "boolean"
+        },
+        "part": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/view_part"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The chosen MIDI track as the Tab editor shows it (view.part/1); null when it shows none."
         }
       },
       "required": [
@@ -1123,6 +1134,32 @@
         "step",
         "target",
         "speed"
+      ],
+      "additionalProperties": false
+    },
+    "view_part": {
+      "type": "object",
+      "properties": {
+        "track_id": {
+          "$ref": "#/$defs/id"
+        },
+        "shows": {
+          "enum": [
+            "card",
+            "midi_tab",
+            "notation"
+          ],
+          "description": "The MIDI part card, MIDI tab or standard notation."
+        },
+        "midi_tab": {
+          "type": "boolean",
+          "description": "Whether the track can show MIDI tab: a melodic MIDI track."
+        }
+      },
+      "required": [
+        "track_id",
+        "shows",
+        "midi_tab"
       ],
       "additionalProperties": false
     }

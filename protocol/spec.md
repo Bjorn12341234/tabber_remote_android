@@ -254,7 +254,7 @@ whether Tabber Studio is busy:
 ## 7. Versions and capabilities
 
 - **The protocol version** is `major.minor`. `hello` lists what the remote
-  speaks (`"protocol_versions": ["1.6"]`, one entry per major, the highest
+  speaks (`"protocol_versions": ["1.7"]`, one entry per major, the highest
   minor it knows); the host answers with the version it chose: the major
   both speak, and the lower of the two minors. It lists only that version's
   capabilities, refuses the verbs of any other with `not_supported` and
@@ -328,6 +328,13 @@ shows Add Track only when the host lists it:
 | Capability | Gives |
 |---|---|
 | `tracks.add/1` | `tracks.add` |
+
+Version 1.7 adds one capability. A 1.7 remote works with any 1.x host and
+shows a MIDI part's choice only when the host lists it:
+
+| Capability | Gives |
+|---|---|
+| `view.part/1` | `view.show_part`, and `part` in `view` |
 
 ## 8. Snapshot and events
 
@@ -655,10 +662,21 @@ buttons switch it: Arrange, Tab or Piano Roll, and Split beside them.
 |---|---|---|---|
 | `view.state` | none | `view` | the view buttons |
 | `view.set` | `key`, `editor` (`arrange`, `tab` or `piano_roll`, optional), `split` (optional) | `view` | Arrange, Tab or Piano Roll; Split (F8) |
+| `view.show_part` | `key`, `track_id`, `as` (`midi_tab` or `notation`) | `view` | the "MIDI part" card's Show MIDI tab and Show standard notation (view.part/1) |
 
 - **`editor`** is the editor on screen. In Split it is the one beside
   Arrange, Tab or Piano Roll.
 - **`split`** turns Split on, or off again back to the editor shown before.
+- **`part`** (view.part/1) is the chosen track when the Tab editor shows a
+  MIDI track, else null. In place of a staff, Tabber Studio first shows the
+  "MIDI part" card: Show standard notation, and for a melodic MIDI track
+  Show MIDI tab. `shows` is `card` while the card waits, then `midi_tab` or
+  `notation`; `midi_tab` says whether the track can show MIDI tab (drums
+  cannot).
+- **`view.show_part`** presses the card's button on the computer, so the
+  computer is never left waiting on it. When the computer does not show
+  that track's card, or `as` is `midi_tab` for a track that cannot show
+  it, it is refused with `stale_target` and the current `view`.
 - A view change is not an undo step, there or here.
 
 ### Practice speed (trainer/1)

@@ -24,7 +24,7 @@
     {"code": 1023, "reason": "unknown_track", "message": "That track is gone from the song.", "data": ["tracks"]},
     {"code": 1024, "reason": "unknown_take", "message": "That take is gone from the song.", "data": ["takes"]},
     {"code": 1025, "reason": "unknown_marker", "message": "That marker is gone from the song.", "data": ["markers"]},
-    {"code": 1026, "reason": "stale_target", "message": "This changed on the computer. The phone now shows the new state.", "data": ["transport", "record", "tracks", "markers", "takes", "undo"]},
+    {"code": 1026, "reason": "stale_target", "message": "This changed on the computer. The phone now shows the new state.", "data": ["transport", "record", "tracks", "markers", "takes", "undo", "view"]},
     {"code": 1027, "reason": "undo_mismatch", "message": "The computer's newest change is a different one. Undo it there, or try again.", "data": ["undo"]},
     {"code": 1028, "reason": "nothing_to_undo", "message": "There is nothing to undo.", "data": ["undo"]},
     {"code": 1029, "reason": "nothing_to_redo", "message": "There is nothing to redo.", "data": ["undo"]},
@@ -56,6 +56,7 @@
     "routing": {"$ref": "common.json#/$defs/routing"},
     "chat": {"$ref": "common.json#/$defs/chat"},
     "trainer": {"$ref": "common.json#/$defs/trainer"},
+    "view": {"$ref": "common.json#/$defs/view"},
     "limit": {"type": "integer", "minimum": 1, "description": "The most tracks Tabber Studio plays."},
     "path": {"type": "array", "minItems": 2, "maxItems": 64, "items": {"type": "string", "maxLength": 200},
              "description": "The loop the route would close, by name, from the source back to it."}
