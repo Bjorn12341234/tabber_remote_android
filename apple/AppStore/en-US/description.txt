@@ -1,0 +1,26 @@
+Tabber Spak is the remote for Tabber Studio, the music app for the Mac. Leave the computer on the desk and run the session from your iPhone, with your instrument in your hands.
+
+Record from across the room
+- Play, pause and record on the armed tracks, with Count-in, the metronome and Loop.
+- After each take, keep it, delete it (Undo brings it back) or go again from where it started.
+- Every take is listed, and the newest one plays where takes overlap, as on the computer.
+
+Tracks and tab
+- Choose a track, hear it alone, mute it and arm it for recording.
+- Add a tab, MIDI or audio track, as Tabber Studio's own Add Track makes it.
+- Write tab on the chosen track with a fretboard or a piano, one undo step per note.
+
+Mix
+- Tabber Studio's own faders, pan, solo, mute and meters, for every track, bus and the master.
+- Choose where each track sends its sound: its output and its sends.
+
+Practise
+- The Speed Trainer: loop a part slowly and let it speed up each time the loop comes round.
+- A tuner that listens to your instrument.
+
+Ask
+- Ask Tabber Studio's chat for a change, typed or spoken. The phone shows the plan, and nothing changes until you tap Execute. The AI runs on your computer, with your own key.
+
+Tabber Spak needs Tabber Studio on a Mac, from the Tabber website. Pair the phone once by scanning the code the computer shows. It talks only to the computers you pair it with, over an encrypted connection on your own network. Tabber Spak collects no data.
+
+Try the demo to see every screen without a computer.

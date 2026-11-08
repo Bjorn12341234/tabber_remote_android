@@ -1,0 +1,11 @@
+Tabber Spak is a remote control for Tabber Studio, a music app for macOS from https://tabber.tourbuddy.se. In everyday use it connects only to a Mac running Tabber Studio on the same network, after pairing with a code that Mac shows.
+
+To review without a Mac, tap "Try the demo" on the first screen. The demo runs a simulated Tabber Studio inside the app, so every screen works:
+- Tracks: play, pause, record a take (tap the circle on a track, then the red record button), keep or delete it, add a track with "+ Add Track".
+- Tab: write notes with the fretboard or the piano.
+- Mixer and Routing: faders, pan, solo, mute, outputs and sends.
+- Tuner: listens through the microphone (allow it to see the needle move).
+- Chat: unlocks with Face ID or the passcode; type "Mute the drums" and tap Execute.
+To leave the demo, tap the computer's name at the top right, then "Leave the demo".
+
+No account or login. The app collects no data. It uses the local network to find and talk to the paired Mac (Bonjour type _tabber-remote._tcp), the camera only to scan the pairing code, the microphone only for the tuner (nothing is recorded or sent), and Face ID only to open Chat.
