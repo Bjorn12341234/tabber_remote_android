@@ -2428,6 +2428,20 @@ what was measured, and what changed in the plan.
     - Studio c3d4f29c and 0.3.24 (ead45c36); the release script uses the
       copied inputs, and its verifier is the proof that no file names the
       owner.
+  - **Studio 0.3.24 (ead45c36), built 2026-11-08 and installed:**
+    - the release verifier passed with no private match, the owner's name
+      included; signed, notarized and stapled; the certified engine abc7bd5e
+      byte for byte once unsigned; the frozen-app smoke test passes;
+    - the frozen app's own `core.keychain` wrote, read, changed and deleted
+      an item on a throwaway service in the real Keychain;
+    - scanned again: no key shape, private key, email, name or home path in
+      the app or its unpacked code, and none of the owner's 16 secrets;
+    - parked at /Volumes/Data/tabber_work/rel0324/, the DMG in
+      rel0324/download; installed in /Applications with 0.3.18 kept as the
+      fallback (0.3.23 to the Trash, its DMG in rel0323); the remote answers
+      1.6 with `tracks.add/1` on the loopback and on Tailscale;
+    - the owner's DeepSeek key moves to the Keychain the first time the
+      chat reads it; until then it is still in the preferences.
   - **Left as they are, public:** the samples download, and the Synth's
     source record, point at the owner's GitHub account.
   - **Found on the way, not ours:** in Studio's `tests/core`, the warp and
