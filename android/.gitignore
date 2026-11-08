@@ -1,0 +1,13 @@
+# Gradle's and Android Studio's output, and the SDK path Android Studio writes
+.gradle/
+.kotlin/
+build/
+*/build/
+local.properties
+.idea/
+*.iml
+captures/
+# Signing keys never enter the repository (android/README.md)
+*.jks
+*.keystore
+shots/
