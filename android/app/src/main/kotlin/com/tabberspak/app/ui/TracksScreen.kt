@@ -106,9 +106,12 @@ fun TracksScreen(model: AppModel) {
     }
 }
 
-/** The screen's frame: its title, the computer's name at the top right, the take slot at the bottom. */
+/**
+ * The screen's frame: its title, the computer's name at the top right, the take slot at the bottom
+ * (not on the Tuner, as on the iPhone).
+ */
 @Composable
-fun ScreenScaffold(model: AppModel, title: String, content: @Composable () -> Unit) {
+fun ScreenScaffold(model: AppModel, title: String, takeSlot: Boolean = true, content: @Composable () -> Unit) {
     Column(Modifier.fillMaxSize().background(Studio.bg1).statusBarsPadding()) {
         Row(
             Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
@@ -121,7 +124,7 @@ fun ScreenScaffold(model: AppModel, title: String, content: @Composable () -> Un
             ComputerChip(model)
         }
         Box(Modifier.weight(1f)) { content() }
-        TakeSlot(model)
+        if (takeSlot) TakeSlot(model)
     }
 }
 

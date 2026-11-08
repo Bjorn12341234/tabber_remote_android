@@ -3,6 +3,11 @@
 
     <!-- The computer on the same network (principle 2: nothing leaves the user's own network). -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Tabber Tuner hears the instrument while its screen is open; nothing is recorded, and the
+         sound never leaves the phone (plan: TR32). Asked for when the tuner is first used. -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- The tuner is one screen of the remote: a phone or tablet without a microphone still gets the app. -->
+    <uses-feature android:name="android.hardware.microphone" android:required="false" />
 
     <application
         android:name=".SpakApplication"
