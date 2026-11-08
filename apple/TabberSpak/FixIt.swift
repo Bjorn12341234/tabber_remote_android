@@ -65,7 +65,7 @@ struct FixItView: View {
         case .updateSpak:
             "Tabber Studio on \(computer) is newer than this Tabber Spak. Update Tabber Spak from the App Store or TestFlight."
         case .forgotten:
-            "It was removed in Tabber Studio's Settings › Remote. Pair again to use it."
+            "It was removed in Tabber Studio's Preferences › Remote. Pair again to use it."
         case .otherComputer:
             "The computer at this address is not the one this iPhone paired with. Pair again with the right one."
         }
@@ -73,7 +73,7 @@ struct FixItView: View {
 
     private var checks: [String] {
         guard trouble == .unreachable else { return [] }
-        return ["Tabber Studio is open, with Settings › Remote turned on. If Settings has no Remote page, update Tabber Studio.",
+        return ["Tabber Studio is open, with Preferences › Remote turned on. If Preferences has no Remote page, update Tabber Studio.",
                 "This iPhone is on the same Wi-Fi as the computer. Away from it, Tailscale is on, on both, with the same account.",
                 "The Wi-Fi isn't a guest or venue network. Those keep devices apart, so bring your own router.",
                 "No VPN but Tailscale is on. Another VPN can keep this iPhone from the computer."]

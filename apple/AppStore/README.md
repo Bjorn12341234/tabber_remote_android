@@ -23,4 +23,4 @@ What App Store Connect asks for, ready to paste. App: "Tabber Spak"
 
 The owner presses Submit for Review. Once Apple approves, the App Store link
 and a QR code to it go on the Tabber website and in Tabber Studio's
-Settings > Remote.
+Preferences > Remote.

@@ -2647,7 +2647,25 @@ what was measured, and what changed in the plan.
     every age-rating feature No, Free, Music.
   - **Next:** after approval, the App Store link on the Spak page (and
     `publish-spak.sh` again), and the link and a QR code in Studio's
-    Settings > Remote. Before release: the website offers Studio 0.3.27.
+    Preferences > Remote. Before release: the website offers Studio 0.3.27.
+  - **The website, the same evening.** The owner: "i dont see any
+    placeholder for spak with coming soon" and "the latest tabber studio
+    build is not uploaded", then, of the website session's uncommitted
+    redesign, "commit th shit". It is committed as it is live (Studio
+    b19c2aa2, all ten pages byte for byte). On it (8867c9ba): the macOS
+    download moves to 0.3.27, with a release entry in English, Swedish and
+    Faroese (the Faroese is Claude's, unchecked by a native speaker), and
+    every homepage gets a Tabber Spak section and header link: coming soon
+    to the App Store, free, Tabber Studio works without it.
+    `docs/website/deploy/publish-site.sh macos-0.3.27 --download
+    Tabber-Studio-0.3.27-macOS-arm64.dmg` publishes it; the classifier
+    refused it to this session, so the owner runs it.
+  - **Studio's Remote page is in Preferences, not Settings:** Qt's macOS
+    menu item is "Preferences..." and the dialog's title is Preferences.
+    The phone said "Settings › Remote" in four places (Welcome, FixIt), so
+    did the Spak pages and the App Store privacy text; all now say
+    Preferences. Build 16, in review, still says Settings; the next build
+    carries the fix.
 
 ## Sources
 

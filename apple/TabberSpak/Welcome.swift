@@ -27,7 +27,7 @@ struct WelcomeView: View {
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.top, 6)
                 VStack(alignment: .leading, spacing: 16) {
-                    step(1, "On your computer, open Tabber Studio's Settings › Remote and turn it on.")
+                    step(1, "On your computer, open Tabber Studio's Preferences › Remote and turn it on.")
                     step(2, "Click Pair iPhone. A code appears.")
                     step(3, "Scan the code with this iPhone.")
                 }
@@ -233,7 +233,7 @@ struct ScannerSheet: View {
     }
 
     private var hint: String {
-        "In Tabber Studio on \(model.scanTarget ?? "your computer"): Settings › Remote, then Pair iPhone. Point the camera at the code."
+        "In Tabber Studio on \(model.scanTarget ?? "your computer"): Preferences › Remote, then Pair iPhone. Point the camera at the code."
     }
 
     @ViewBuilder private var paste: some View {
