@@ -2477,6 +2477,15 @@ what was measured, and what changed in the plan.
     with drums, the card's accessibility audit, and the full UI suite (39,
     the accessibility walk then twice in a row with the Piano tap retried
     after an audit, as Routing's is).
+  - **Studio 0.3.25 (dbf292b7), built 2026-11-08 and installed:** the
+    release verifier passed (no private match); signed, notarized and
+    stapled; the certified engine byte for byte; the smoke test now requires
+    `view.part/1`; no key shape, name, email, home path or owner's secret in
+    the app or its code; parked at /Volumes/Data/tabber_work/rel0325/;
+    installed with 0.3.18 kept as the fallback (0.3.24 to the Trash, its
+    DMG in rel0324); the remote answers 1.7 with `tracks.add/1` and
+    `view.part/1` on the loopback and on Tailscale.
+  - **TestFlight build 13** was uploaded 2026-11-08 at about 17:25.
   - **Owed:** on the iPhone, add a MIDI track while the computer shows Tab,
     and answer the card from the phone.
   - **Left as they are, public:** the samples download, and the Synth's
