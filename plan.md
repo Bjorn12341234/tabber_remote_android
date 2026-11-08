@@ -2517,6 +2517,23 @@ what was measured, and what changed in the plan.
   - **Gate met:** Studio `test_tr40_midi_tab.py` (2) and the remote suite
     (111); RemoteKit 45 with the demo's MIDI tab; the card's UI test writes
     a fret on the MIDI tab; the full UI suite (40).
+  - **Studio 0.3.26 (c443c7da), built 2026-11-08 and installed:** the
+    release verifier passed; signed, notarized and stapled; the certified
+    engine byte for byte; the smoke test requires `tab.midi/1`; no key shape,
+    name, email, home path or owner's secret in it; parked at
+    /Volumes/Data/tabber_work/rel0326/ (its DMG named for the website,
+    Tabber-Studio-0.3.26-macOS-arm64.dmg); installed with 0.3.18 kept as the
+    fallback; the remote answers 1.8 on the loopback and on Tailscale.
+  - **TestFlight build 14** was uploaded 2026-11-08 at about 18:15.
+  - **On the website (the owner, 2026-11-08: "After the redesign lands"):**
+    the site still offers 0.3.16. Another session's work on the site sits
+    uncommitted in Studio's repo since before this session: Swedish and
+    Faroese pages, a homepage built from templates with 16 new screenshots,
+    and release pages built per language. 0.3.26's DMG goes to the server
+    unlinked now, and onto the releases page and the download button once
+    that work is committed. The server refused SSH from this Mac twice at
+    about 18:20 (it shuts out quick reconnects), while the site answered;
+    the upload is to be tried again later.
   - **Owed:** on the iPhone, answer a MIDI track's card with Show MIDI tab
     and write a riff on it.
   - **Left as they are, public:** the samples download, and the Synth's
