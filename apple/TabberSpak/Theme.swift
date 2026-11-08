@@ -192,6 +192,8 @@ struct HoldButton<Label: View>: View {
 /// right under the last track, its words in the muted text and never the
 /// accent; a neutral chip while pressed, as on hover there.
 struct GhostButtonStyle: ButtonStyle {
+    /// Full width under a list, or just its words, as the mixer's "+ Bus".
+    var wide = true
     @Environment(\.isEnabled) private var enabled
 
     func makeBody(configuration: Configuration) -> some View {
@@ -203,7 +205,7 @@ struct GhostButtonStyle: ButtonStyle {
             .foregroundStyle(configuration.isPressed ? Studio.text1 : Studio.text2)
             .padding(.horizontal, 16)
             .padding(.vertical, 6)
-            .frame(maxWidth: .infinity, minHeight: 44)
+            .frame(maxWidth: wide ? .infinity : nil, minHeight: 44)
             .background(configuration.isPressed ? Studio.bg3 : .clear, in: shape)
             .overlay(shape.strokeBorder(Studio.dashes, style: StrokeStyle(lineWidth: 1, dash: [4, 3])))
             .opacity(enabled ? 1 : 0.4)
@@ -213,6 +215,7 @@ struct GhostButtonStyle: ButtonStyle {
 
 extension ButtonStyle where Self == GhostButtonStyle {
     static var studioGhost: GhostButtonStyle { GhostButtonStyle() }
+    static var studioGhostCompact: GhostButtonStyle { GhostButtonStyle(wide: false) }
 }
 
 extension ButtonStyle where Self == StudioButtonStyle {

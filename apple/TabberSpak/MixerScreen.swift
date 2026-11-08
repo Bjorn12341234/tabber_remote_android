@@ -23,30 +23,45 @@ struct MixerScreen: View {
                     }
                 } else if let mixer = model.state.mixer {
                     GeometryReader { proxy in
-                        ScrollView(.horizontal) {
-                            HStack(alignment: .top, spacing: 8) {
-                                ForEach(Array(mixer.strips.enumerated()), id: \.element.id) { index, strip in
-                                    StripView(model: model, strip: strip, scale: mixer.scale, unity: mixer.unity, index: index)
+                        ScrollViewReader { strips in
+                            ScrollView(.horizontal) {
+                                HStack(alignment: .top, spacing: 8) {
+                                    ForEach(Array(mixer.strips.enumerated()), id: \.element.id) { index, strip in
+                                        StripView(model: model, strip: strip, scale: mixer.scale, unity: mixer.unity, index: index)
+                                            .id(strip.id)
+                                    }
                                 }
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 12)
+                                .frame(height: proxy.size.height)
                             }
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 12)
-                            .frame(height: proxy.size.height)
+                            .scrollIndicators(.hidden)
+                            // A bus added from here comes into view.
+                            .onChange(of: model.addedBusID) { _, added in
+                                guard let added else { return }
+                                withAnimation { strips.scrollTo(added, anchor: .center) }
+                            }
                         }
-                        .scrollIndicators(.hidden)
                     }
                 }
             }
             // Mixer or Routing, under the bar and always in view: in the bar it
             // ran into Undo and the computer's name (the owner, 2026-11-08).
             .safeAreaInset(edge: .top, spacing: 0) {
-                if model.routingAvailable, model.mixerAvailable, model.isConnected {
-                    Picker("View", selection: $page) {
-                        Text(Page.mixer.rawValue).tag(Page.mixer)
-                        Text(Page.routing.rawValue).tag(Page.routing)
+                if model.mixerAvailable, model.isConnected, model.routingAvailable || model.addBusAvailable {
+                    HStack(spacing: 8) {
+                        if model.routingAvailable {
+                            Picker("View", selection: $page) {
+                                Text(Page.mixer.rawValue).tag(Page.mixer)
+                                Text(Page.routing.rawValue).tag(Page.routing)
+                            }
+                            .pickerStyle(.segmented)
+                            .accessibilityIdentifier("mixer-page")
+                        }
+                        if model.addBusAvailable {
+                            AddBusButton(model: model)       // the mixer header's own "+ Bus"
+                        }
                     }
-                    .pickerStyle(.segmented)
-                    .accessibilityIdentifier("mixer-page")
                     .padding(.horizontal, 16)
                     .padding(.vertical, 8)
                     .background(Studio.bg1)
@@ -68,6 +83,36 @@ struct MixerScreen: View {
             .onAppear { model.watchMixerMeters(true) }
             .onDisappear { model.watchMixerMeters(false) }
         }
+    }
+}
+
+/// Tabber Studio's mixer "+ Bus" and its New Bus dialog: name the bus, and it
+/// joins the mixer and the routing at once (not an undo step, as there).
+struct AddBusButton: View {
+    @Bindable var model: AppModel
+    @State private var naming = false
+    @State private var name = ""
+
+    var body: some View {
+        Button("+ Bus") {
+            name = ""
+            naming = true
+        }
+        .buttonStyle(.studioGhostCompact)
+        .disabled(model.pending.contains("add-bus"))
+        .accessibilityLabel("Add Bus")
+        .accessibilityHint("Adds a bus to the mixer on the computer.")
+        .accessibilityIdentifier("add-bus")
+        .alert("New Bus", isPresented: $naming) {
+            TextField("Bus name", text: $name)
+                .accessibilityIdentifier("bus-name")
+            Button("Add Bus") { model.addBus(name) }
+                .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty)
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Bus name:")
+        }
+        .tint(Studio.text1)        // plain words, as Studio's dialog: teal is for what is selected
     }
 }
 

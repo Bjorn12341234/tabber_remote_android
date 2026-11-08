@@ -5,6 +5,21 @@ final class MixerScreenUITests: SpakUITestCase {
     @MainActor
     override func setUp() async throws { launch(["-demo", "-screen", "mixer"]) }
 
+    /// TR41: the mixer header's "+ Bus" asks for the bus's name, as Tabber
+    /// Studio's New Bus does, and the bus joins the mixer at once.
+    @MainActor
+    func testAddBusAsksForItsName() {
+        tap("add-bus")
+        let alert = app.alerts["New Bus"]
+        XCTAssertTrue(alert.waitForExistence(timeout: 8), "New Bus asks for a name")
+        let field = alert.textFields.firstMatch
+        XCTAssertTrue(field.waitForExistence(timeout: 4))
+        XCTAssertFalse(alert.buttons["Add Bus"].isEnabled, "not without one")
+        field.typeText("Delay")
+        alert.buttons["Add Bus"].tap()
+        XCTAssertTrue(appears("fader-Delay"), "the bus joins the mixer")
+    }
+
     @MainActor
     func testSoloMuteAndTheFader() {
         tap("strip-solo-Lead guitar")

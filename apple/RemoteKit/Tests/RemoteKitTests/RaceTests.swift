@@ -77,6 +77,9 @@ struct RaceTests {
             Issue.record("never connected")
             return
         }
-        #expect(ContinuousClock.now - started < .seconds(1), "without waiting out the dead address")
+        // Waiting out the dead address would take the hello's whole timeout. The
+        // bound is that timeout, not a second: with the suite's tests running side
+        // by side on a busy Mac this took 1.0 to 1.2 s, and alone 0.08 s.
+        #expect(ContinuousClock.now - started < RemoteSession.connectTimeout, "without waiting out the dead address")
     }
 }

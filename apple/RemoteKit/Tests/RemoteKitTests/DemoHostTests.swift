@@ -445,4 +445,22 @@ struct DemoHostTests {
         await #expect(throws: RemoteError.self) { try await session.perform("tab.put", ["string": 1, "fret": 0]) }
         await session.stop()
     }
+
+    /// TR41 on the demo computer: + Bus named as typed, before the master, in
+    /// the mixer and the routing, and no undo step.
+    @Test func addBusIsNamedAsTypedAndNoUndoStep() async throws {
+        let session = session(DemoHost())
+        let start = try await connected(session)
+        let added = try await session.perform("mixer.add_bus", ["name": " Delay "])
+        let strip = try JSONCoding.decode(Strip.self, from: added["strip"]!)
+        #expect(strip.name == "Delay" && strip.isBus)
+        let after = try await eventually(session) { $0.mixer?.strips.contains { $0.id == strip.id } == true }
+        #expect(after.mixer?.strips.last?.isMaster == true, "the new bus comes before the master")
+        #expect(after.undo == start.undo, "no undo step")
+        _ = try await session.perform("routing.state")
+        let routed = try await eventually(session) { $0.routing?.sources.contains { $0.stripID == strip.id } == true }
+        #expect(routed.routing != nil)
+        await #expect(throws: RemoteError.self) { try await session.perform("mixer.add_bus", ["name": "   "]) }
+        await session.stop()
+    }
 }

@@ -468,6 +468,21 @@ final class AppModel {
         act("view-split", "view.set", ["split": .bool(!(state.view?.split ?? false))])
     }
 
+    /// Tabber Studio's mixer "+ Bus", on a computer that offers it to phones (mixer.add_bus/1).
+    var addBusAvailable: Bool { state.capabilities.contains("mixer.add_bus/1") }
+
+    /// The bus just added from this phone, for the mixer to show it.
+    private(set) var addedBusID: String?
+
+    /// "+ Bus" with the name typed in its New Bus dialog (the owner,
+    /// 2026-11-08: "i still miss add bus").
+    func addBus(_ name: String) {
+        act("add-bus", "mixer.add_bus", ["name": .string(name)]) { [weak self] result in
+            guard let value = result["strip"], let strip = try? JSONCoding.decode(Strip.self, from: value) else { return }
+            self?.addedBusID = strip.id
+        }
+    }
+
     /// Tabber Studio's "MIDI part" card, on a computer that offers it to phones (view.part/1).
     var partAvailable: Bool { state.capabilities.contains("view.part/1") }
 

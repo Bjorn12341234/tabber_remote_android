@@ -141,6 +141,24 @@ final class ScreenshotUITests: SpakUITestCase {
         try shoot("tr39-3-midi-tab")
     }
 
+    /// TR41: the Mixer's "+ Bus", its New Bus dialog, and the new bus's strip.
+    @MainActor
+    func testAddBus() throws {
+        launch(["-demo", "-screen", "mixer"])
+        XCTAssertTrue(appears("add-bus"))
+        sleep(1)
+        try shoot("tr41-1-mixer")
+        tap("add-bus")
+        let alert = app.alerts["New Bus"]
+        XCTAssertTrue(alert.waitForExistence(timeout: 8))
+        alert.textFields.firstMatch.typeText("Delay")
+        try shoot("tr41-2-new-bus")
+        alert.buttons["Add Bus"].tap()
+        XCTAssertTrue(appears("fader-Delay"))
+        sleep(1)
+        try shoot("tr41-3-delay")
+    }
+
     @MainActor
     func testTheComputerSheetAtTheLargestText() throws {
         app = XCUIApplication()

@@ -63,7 +63,8 @@ public actor DemoHost {
     private let epoch = ContinuousClock.now
     /// Fader travel and pan for every strip: direct writes, as in Tabber Studio.
     private var faders: [String: (volume: Double, pan: Double)] = [:]
-    private let buses: [(id: String, name: String)] = [("demo-bus-reverb", "Reverb")]
+    private var buses: [(id: String, name: String)] = [("demo-bus-reverb", "Reverb")]
+    private var busCounter = 0
     /// Each send's level and Pre-fader: direct writes, as the mixer's send controls.
     private var sendLevels: [String: (level: Double, pre: Bool)] = [:]
     /// The chat (chat/1), answered by a few scripted words in place of the AI.
@@ -228,11 +229,12 @@ public actor DemoHost {
             }
             connection.challenge = Data((0..<32).map { _ in UInt8.random(in: 0...255) })
             return ["host": ["id": .string(Self.hostID), "name": .string(computerName), "app_version": "demo"],
-                    "protocol_version": "1.8",
+                    "protocol_version": "1.9",
                     "capabilities": ["transport/1", "record/1", "tempo_scale/1", "tracks/1", "tracks.monitor/1",
                                      "markers/1", "takes/1", "takes.discard/1", "takes.go_again/1", "undo/1",
                                      "save/1", "meters/1", "mixer/1", "tab/1", "routing/1", "chat/1", "view/1",
-                                     "trainer/1", "tracks.add/1", "view.part/1", "tab.midi/1"],
+                                     "trainer/1", "tracks.add/1", "view.part/1", "tab.midi/1",
+                                     "mixer.add_bus/1"],
                     "limits": ["max_frame_bytes": 65536, "requests_per_second": 20, "burst": 40,
                                "heartbeat_ms": 2000, "heartbeat_misses": 3, "connections_per_device": 2],
                     "challenge": .string(Base64URL.encode(connection.challenge))]
@@ -453,6 +455,16 @@ public actor DemoHost {
                 }
             }
             return ["mixer": try JSONCoding.value(mixerState()), "undo": try JSONCoding.value(undoState())]
+        case "mixer.add_bus":
+            // The mixer's "+ Bus" once its New Bus dialog has a name: trimmed,
+            // not only spaces; no undo step, as in Tabber Studio.
+            let name = (p["name"]?.stringValue ?? "").trimmingCharacters(in: .whitespaces)
+            guard !name.isEmpty else { throw DemoErrors.make("invalid_params", ["field": "name"]) }
+            busCounter += 1
+            let id = "demo-bus-\(busCounter)"
+            buses.append((id, name))
+            faders[id] = (0.7, 0)
+            return ["strip": try JSONCoding.value(strip(id)!), "mixer": try JSONCoding.value(mixerState())]
         case "trainer.state":
             return ["trainer": try JSONCoding.value(trainerState())]
         case "trainer.set":
