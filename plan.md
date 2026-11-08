@@ -779,7 +779,8 @@ From the freeze to the summit: rehearsal and fixes only.
 - the 6-digit fallback, several computers, and every fix-it card except "Can't
   reach your computer" and "Update Tabber Studio"
 - Settings
-- App Store submission (languages wait for the owner, decision 17)
+- App Store submission (languages wait for the owner, decision 17): moved
+  before the demo by the owner on 2026-11-08, as TR37 and TR38
 
 **Stretch,** only if every demo gate is green by 19 November:
 - the Action Button starts and stops a recording (TR10)
@@ -1005,10 +1006,23 @@ it's an all audio file song, then the app should be able to add tracks. or
 actually add tracks, midi or tab or audio tracks at will to a project. so
 that's something to do."
 
+Then the App Store, sooner than "after the demo": "we need to app store for
+tabber spak too soon right? because later when we have gone through
+security checks, that the app can't be used for hacking and that tabber
+studio doesn't expose the user's data... and that all my api keys are safe
+and no trace of anything from my computer in the release... like my
+personal info or my api keys... they have to use their own api keys...
+when it's all safe... then we should have a link to app store and the
+app." So TR37 checks both releases, and TR38 submits and links. Submitted
+by about 14 November, App Review has time to finish before the 19 November
+freeze, so visitors at Pustervik can install Tabber Spak from the App Store.
+
 | # | Sprint | Where | Gate |
 |---|---|---|---|
 | TR35 | Practice speed: Tabber Studio's Speed Trainer from the phone (S6), `trainer/1`; Loop set from anywhere shows and stops the trainer as a click does | spec, Studio, this repo | Vectors; the phone sets the computer's own Trainer button and fields, read back from the bar and the engine; refused with Loop off; Loop off turns it off; UI tests and the accessibility audit, the largest text included |
 | TR36 | Add tracks from the phone: a tab, MIDI or audio track, as Tabber Studio's "+ Add Track" makes each | spec, Studio, this repo | Headless: each kind equals "+ Add Track"'s, one undo step that Undo on the phone takes back; in an all-audio song, a tab track added from the phone takes tab at once; UI tests against DemoHost |
+| TR37 | Release safety, before the App Store: nothing of the owner's in either release, each user's own AI key, and a remote that can do only its vocabulary | Studio, this repo | The IPA and the Studio app and DMG hold no API key, token, private key, name, email, home path or file from this Mac: scanned byte by byte for key shapes and, on this Mac, for the owner's own values without printing them; a fresh Studio has no AI key and the chat asks for the user's own; a protocol fuzz run against a headless Studio finds no crash and no way to a file, setting, script or key; the TR29 adversarial tests pass on the release build |
+| TR38 | Tabber Spak on the App Store, then its link on the Tabber website and in Studio's Preferences > Remote | this repo, App Store Connect, website, Studio | Version 1.0 in App Store Connect: description, keywords, screenshots, the privacy label (Data Not Collected), privacy and support URLs, export compliance, review notes that explain demo mode; the owner presses Submit for Review; once approved, the App Store link and a QR code to it on the website and in Preferences > Remote |
 
 ### M2, the Lock Screen and the Action Button (1.1)
 
@@ -2272,6 +2286,59 @@ what was measured, and what changed in the plan.
       since a tap right after the Mixer's audit can land mid-layout (twice
       in five runs; never in the Routing tests);
     - the walk then passes twice in a row.
+
+- **TR36 ✅ 2026-11-08: add tracks from the phone (protocol 1.6, 10c107d;
+  Studio d3ee7c9b and 1b2d007f, 0.3.23 a923849c; TestFlight build 12).** The owner: "add tracks,
+  midi or tab or audio tracks at will to a project", first of all to a song
+  of only audio files.
+  - **`tracks.add/1`:**
+    - `tracks.add` with kind tab, midi or audio takes the routes Studio's
+      "+ Add Track" chooser takes (`ui/track_creation_controller.py`);
+    - a tab track gets what the New Track dialog starts with, accepted as it
+      opens, so nothing opens on the computer;
+    - one undo step with Studio's own label ("Add track: Track 1"), which
+      Undo on the phone takes back;
+    - refused while recording (`already_recording`): a new track clears the
+      record arms and would end the take;
+    - a song at Studio's track limit is refused with `track_limit` (1040).
+  - **Found in Studio and fixed:**
+    - "+ Add Track" and its Audio track, from the Tab view, meant to show
+      Arrange ("so the user sees the new track");
+    - since the editors became a three-way cycle, it went on to the Piano
+      Roll, which shows no audio;
+    - it now goes to Arrange, from the phone too.
+  - **On the phone:**
+    - "+ Add Track" under the last track, a dashed ghost button as in
+      Studio's track list;
+    - it opens Studio's chooser in plain words: "What kind of track do you
+      want to add?", Tab track, MIDI track, Audio track;
+    - the new track comes into view, and "Track 1 added" offers Undo for
+      five seconds, as a deleted take does;
+    - the Tab screen of a song with no tab track offers "+ Add Tab Track",
+      and writes on the new track at once;
+    - greyed out during a take.
+  - **Also fixed:**
+    - the Tracks screen's large title vanished after a visit to another tab
+      (since build 11's pinned controls, iOS 26);
+    - the title now sits in the bar, as on the other screens.
+  - **Gate met:**
+    - Studio, `test_tr36_add_tracks.py` (5): each kind equals the track the
+      computer's own "+ Add Track" makes (name, colour, instrument, strings,
+      tuning, bars) and is one undo step the phone's Undo takes back, with
+      nothing opening; in the all-audio song the tab track takes tab at
+      once; the limit, recording and 1.5 refusals;
+    - Studio, the remote suite (102 pass) and 147 track and view
+      tests;
+    - RemoteKit 43, with the demo's add, undo and refusals;
+    - UI tests: each kind from Tracks, and the all-audio song on the Tab
+      screen; the accessibility audit of the empty Tab screen; the full
+      suite, 38, and 5 screenshot tests skipped as
+      designed tests.
+  - **Once, under load:** the Play / Pause test missed a pause while Studio's
+    release build ran beside it; it passed three times in a row after, and
+    in the full suite.
+  - **Owed:** on the iPhone against 0.3.23, add a tab track to an all-audio
+    song and write on it.
 
 ## Sources
 
