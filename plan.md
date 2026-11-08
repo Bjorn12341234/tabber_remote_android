@@ -1024,6 +1024,20 @@ freeze, so visitors at Pustervik can install Tabber Spak from the App Store.
 | TR37 | Release safety, before the App Store: nothing of the owner's in either release, each user's own AI key, and a remote that can do only its vocabulary | Studio, this repo | The IPA and the Studio app and DMG hold no API key, token, private key, name, email, home path or file from this Mac: scanned byte by byte for key shapes and, on this Mac, for the owner's own values without printing them; a fresh Studio has no AI key and the chat asks for the user's own; a protocol fuzz run against a headless Studio finds no crash and no way to a file, setting, script or key; the TR29 adversarial tests pass on the release build |
 | TR38 | Tabber Spak on the App Store, then its link on the Tabber website and in Studio's Preferences > Remote | this repo, App Store Connect, website, Studio | Version 1.0 in App Store Connect: description, keywords, screenshots, the privacy label (Data Not Collected), privacy and support URLs, export compliance, review notes that explain demo mode; the owner presses Submit for Review; once approved, the App Store link and a QR code to it on the website and in Preferences > Remote |
 
+The owner, after trying build 12 with 0.3.24 ("wow! the app is great now,
+good job"): "i still miss add bus, the routing flow thing, and tabbing in
+midi tracks. when adding a midi track, in tab mode, tabber asks for show
+midi or show notation right... can we make that selection from the app
+too? just so it's not stuck on that screen in tab mode on a midi track and
+you have to go to the computer and click on it manually on the computer?"
+
+| # | Sprint | Where | Gate |
+|---|---|---|---|
+| TR39 | A MIDI track in the Tab view: Studio's own "MIDI part" card on the phone, "Show MIDI tab" and "Show standard notation" doing there what they do on the computer, so the computer is never left on the card | spec, Studio, this repo | Headless: each choice shows on the computer as a click on the card does, read back; the phone shows the card whenever the computer does; UI tests against DemoHost |
+| TR40 | Tab on MIDI tracks: with MIDI tab shown, the phone's fretboard and piano write on a MIDI track as Studio's MIDI Tab does, each edit one undo step | spec, Studio, this repo | Headless: a fret from the phone is the note Studio's MIDI Tab writes, at the same string and fret, one undo step; the instrument is untouched; UI tests |
+| TR41 | Add Bus from the phone, as the mixer's "+ Bus" makes it | spec, Studio, this repo | Headless: the bus equals "+ Bus"'s, one undo step; it shows in the phone's Mixer and Routing at once; UI tests |
+| TR42 | The routing Flow view on the phone: Studio's Flow tab, tracks through buses to the master | this repo, Studio if a read is missing | The phone draws what Studio's Flow tab draws for the same song, checked against Studio's own flow model; readable at the largest text; UI tests and the accessibility audit |
+
 ### M2, the Lock Screen and the Action Button (1.1)
 
 | # | Sprint | Where | Gate |
