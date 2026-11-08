@@ -136,9 +136,9 @@ final class ScreenshotUITests: SpakUITestCase {
         sleep(1)
         try shoot("tr39-2-midi-card")
         tap("show-midi-tab")
-        XCTAssertTrue(waitFor("part-shows", "as MIDI tab"))
+        XCTAssertTrue(appears("fretboard"))
         sleep(1)
-        try shoot("tr39-3-answered")
+        try shoot("tr39-3-midi-tab")
     }
 
     @MainActor

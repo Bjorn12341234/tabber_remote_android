@@ -27,9 +27,10 @@ final class TabScreenUITests: SpakUITestCase {
         XCTAssertTrue(waitFor("bar-1", "string 2 fret 3"), "the fretboard writes on it")
     }
 
-    /// TR39: a MIDI track chosen while the computer shows Tab waits on Tabber
-    /// Studio's "MIDI part" card; the phone answers it, so the computer is
-    /// never left waiting. Drums offer only standard notation.
+    /// TR39 and TR40: a MIDI track chosen while the computer shows Tab waits on
+    /// Tabber Studio's "MIDI part" card; the phone answers it, so the computer
+    /// is never left waiting, and then writes on the MIDI tab. Drums offer
+    /// only standard notation.
     @MainActor
     func testTheMidiPartCardFromThePhone() {
         app.tabBars.buttons["Tracks"].tap()
@@ -43,8 +44,10 @@ final class TabScreenUITests: SpakUITestCase {
         XCTAssertTrue(appears("midi-part"), "the computer's card, on the phone")
         XCTAssertTrue(appears("show-notation") && appears("show-midi-tab"))
         tap("show-midi-tab")
-        XCTAssertTrue(waitFor("part-shows", "as MIDI tab"), "the computer shows MIDI tab")
-        XCTAssertTrue(gone("show-midi-tab"), "and the card is answered")
+        XCTAssertTrue(appears("fretboard"), "the computer shows MIDI tab, and the phone writes on it")
+        XCTAssertTrue(app.navigationBars["MIDI Track 4"].waitForExistence(timeout: 8))
+        fret(3, string: 2).tap()
+        XCTAssertTrue(waitFor("bar-1", "string 2 fret 3"), "a fret on the MIDI track's tab")
         app.tabBars.buttons["Tracks"].tap()
         tap("track-Drums")
         XCTAssertTrue(waitSelected("track-Drums"))

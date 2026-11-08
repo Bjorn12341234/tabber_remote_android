@@ -28,7 +28,12 @@ public struct NoteValue: Codable, Sendable, Hashable {
 public struct TabNote: Codable, Sendable, Hashable {
     public var string: Int
     public var fret: Int
-    public init(string: Int, fret: Int) { self.string = string; self.fret = fret }
+    /// MIDI tab only (tab.midi/1): below its open string or past the last
+    /// fret, drawn where Tabber Studio draws it; the fret can be negative.
+    public var virtual: Bool?
+    public init(string: Int, fret: Int, virtual: Bool? = nil) {
+        self.string = string; self.fret = fret; self.virtual = virtual
+    }
 }
 
 public struct TabBeat: Codable, Sendable, Hashable {
@@ -73,17 +78,22 @@ public struct TabState: Codable, Sendable, Hashable {
     public var barCount: Int
     /// The cursor's bar and its neighbours.
     public var bars: [TabBar]
+    /// A melodic MIDI track's MIDI tab (tab.midi/1); nil from hosts before it.
+    public var midi: Bool?
 
     enum CodingKeys: String, CodingKey {
-        case revision, tuning, drum, cursor, duration, bars
+        case revision, tuning, drum, cursor, duration, bars, midi
         case trackID = "track_id", barCount = "bar_count"
     }
 
     public init(trackID: String, revision: Int, tuning: [Int], drum: Bool, cursor: TabCursor, duration: NoteValue,
-                barCount: Int, bars: [TabBar]) {
+                barCount: Int, bars: [TabBar], midi: Bool? = nil) {
         self.trackID = trackID; self.revision = revision; self.tuning = tuning; self.drum = drum
-        self.cursor = cursor; self.duration = duration; self.barCount = barCount; self.bars = bars
+        self.cursor = cursor; self.duration = duration; self.barCount = barCount; self.bars = bars; self.midi = midi
     }
+
+    /// Whether this is a MIDI track's MIDI tab rather than a tab track's tab.
+    public var isMidiTab: Bool { midi ?? false }
 
     public var strings: Int { tuning.count }
     public var cursorBar: TabBar? { bars.first { $0.bar == cursor.bar } }

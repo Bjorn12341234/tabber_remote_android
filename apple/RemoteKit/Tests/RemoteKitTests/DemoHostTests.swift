@@ -425,4 +425,24 @@ struct DemoHostTests {
         #expect(arrange.view?.part == nil, "Arrange shows no card")
         await session.stop()
     }
+
+    /// TR40 on the demo computer: a MIDI track shown as MIDI tab is written as
+    /// tab, while the Tab editor shows it.
+    @Test func aMidiTracksMidiTabIsWrittenWhileTheTabEditorShowsIt() async throws {
+        let session = session(DemoHost())
+        _ = try await connected(session)
+        let added = try JSONCoding.decode(Track.self, from: try await session.perform("tracks.add", ["kind": "midi"])["track"]!)
+        #expect(try await eventually(session) { $0.view?.part?.trackID == added.id }.tab == nil, "the card first: no tab yet")
+        _ = try await session.perform("view.show_part", ["track_id": .string(added.id), "as": "midi_tab"])
+        let shown = try await eventually(session) { $0.tab?.trackID == added.id }
+        #expect(shown.tab?.isMidiTab == true && shown.tab?.tuning == DemoTab.standard)
+        let put = try await session.perform("tab.put", ["string": 2, "fret": 3])
+        let tab = try JSONCoding.decode(TabState.self, from: put["tab"]!)
+        #expect(tab.cursorBar?.beats.first?.notes == [TabNote(string: 2, fret: 3)])
+        _ = try await session.perform("view.set", ["editor": "arrange"])
+        let off = try await eventually(session) { $0.view?.editor == "arrange" && $0.tab == nil }
+        #expect(off.tab == nil, "no MIDI tab off the Tab editor")
+        await #expect(throws: RemoteError.self) { try await session.perform("tab.put", ["string": 1, "fret": 0]) }
+        await session.stop()
+    }
 }

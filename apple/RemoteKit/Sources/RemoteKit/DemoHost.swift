@@ -228,11 +228,11 @@ public actor DemoHost {
             }
             connection.challenge = Data((0..<32).map { _ in UInt8.random(in: 0...255) })
             return ["host": ["id": .string(Self.hostID), "name": .string(computerName), "app_version": "demo"],
-                    "protocol_version": "1.7",
+                    "protocol_version": "1.8",
                     "capabilities": ["transport/1", "record/1", "tempo_scale/1", "tracks/1", "tracks.monitor/1",
                                      "markers/1", "takes/1", "takes.discard/1", "takes.go_again/1", "undo/1",
                                      "save/1", "meters/1", "mixer/1", "tab/1", "routing/1", "chat/1", "view/1",
-                                     "trainer/1", "tracks.add/1", "view.part/1"],
+                                     "trainer/1", "tracks.add/1", "view.part/1", "tab.midi/1"],
                     "limits": ["max_frame_bytes": 65536, "requests_per_second": 20, "burst": 40,
                                "heartbeat_ms": 2000, "heartbeat_misses": 3, "connections_per_device": 2],
                     "challenge": .string(Base64URL.encode(connection.challenge))]
@@ -494,6 +494,12 @@ public actor DemoHost {
                 throw DemoErrors.make("stale_target", ["view": try JSONCoding.value(viewState())])
             }
             partShows[id] = shows
+            if shows == "midi_tab", song.tabs[id] == nil {        // its MIDI tab, guitar strings as Studio's default
+                let rest = [TabBeat(duration: NoteValue(value: 4), rest: true, notes: [])]
+                song.tabs[id] = DemoTab(tuning: DemoTab.standard,
+                                        bars: Array(repeating: rest, count: song.tabs.values.map(\.bars.count).max() ?? 16))
+                tabRevision += 1
+            }
             return ["view": try JSONCoding.value(viewState())]
         case "chat.state":
             return ["chat": try JSONCoding.value(chat)]
@@ -695,9 +701,11 @@ public actor DemoHost {
         }
     }
 
-    /// The selected track, when it has tab.
+    /// The selected track, when it has tab; a MIDI track's MIDI tab only while
+    /// the Tab editor shows it, as in Tabber Studio (tab.midi/1).
     private func tabTrackID() -> String? {
         guard let track = song.tracks.first(where: \.selected), song.tabs[track.id] != nil else { return nil }
+        if track.tuning == nil, viewState().part?.shows != "midi_tab" { return nil }
         return track.id
     }
 
@@ -709,8 +717,10 @@ public actor DemoHost {
         let beat = doc.beat(at: cursor)
         let shown = beat.map { $0.notes.isEmpty ? NoteValue(value: tabDuration.value, dotted: $0.duration.dotted,
                                                             triplet: $0.duration.triplet) : $0.duration } ?? tabDuration
+        let midi = song.tracks.first { $0.id == id }?.tuning == nil
         let state = TabState(trackID: id, revision: tabRevision, tuning: doc.tuning, drum: false, cursor: cursor,
-                             duration: shown, barCount: doc.bars.count, bars: doc.window(around: cursor))
+                             duration: shown, barCount: doc.bars.count, bars: doc.window(around: cursor),
+                             midi: midi ? true : nil)
         return (try? JSONCoding.value(state)) ?? .null
     }
 
