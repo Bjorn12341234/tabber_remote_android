@@ -254,7 +254,7 @@ whether Tabber Studio is busy:
 ## 7. Versions and capabilities
 
 - **The protocol version** is `major.minor`. `hello` lists what the remote
-  speaks (`"protocol_versions": ["1.8"]`, one entry per major, the highest
+  speaks (`"protocol_versions": ["1.9"]`, one entry per major, the highest
   minor it knows); the host answers with the version it chose: the major
   both speak, and the lower of the two minors. It lists only that version's
   capabilities, refuses the verbs of any other with `not_supported` and
@@ -342,6 +342,13 @@ writes MIDI tab only when the host lists it:
 | Capability | Gives |
 |---|---|
 | `tab.midi/1` | the tab/1 verbs and the `tab` topic on a melodic MIDI track the Tab editor shows as MIDI tab; `midi` in `tab`, and `virtual` on its notes |
+
+Version 1.9 adds one capability. A 1.9 remote works with any 1.x host and
+shows Add Bus only when the host lists it:
+
+| Capability | Gives |
+|---|---|
+| `mixer.add_bus/1` | `mixer.add_bus` |
 
 ## 8. Snapshot and events
 
@@ -532,6 +539,7 @@ whose id is `master`. A track's strip has the track's id.
 | `mixer.set_pan` | `key`, `strip_id`, `pan` (-1 to 1) | `strip` | `mixer.set_pan`, `buses.set_pan` |
 | `mixer.set_mute` | `key`, `strip_id`, `muted` | `mixer`, `undo` | `mixer.set_mute`, `buses.set_mute` |
 | `mixer.set_solo` | `key`, `strip_id`, `soloed` | `mixer`, `undo` | `mixer.set_solo`, `buses.set_solo` |
+| `mixer.add_bus` | `key`, `name` | `strip`, `mixer` | the mixer's "+ Bus" and its New Bus dialog (mixer.add_bus/1) |
 
 - **`volume` is the fader's travel** in the host's own fader law, so the
   phone's fader sits where the computer's does. `volume_db` says what it
@@ -542,6 +550,11 @@ whose id is `master`. A track's strip has the track's id.
 - **A fader drag is many `mixer.set_volume` calls.** The remote sends the
   newest value only, one at a time, within the rate limit.
 - The master has no mute or solo: those are refused with `unknown_strip`.
+- **`mixer.add_bus`** is the mixer's "+ Bus" once its New Bus dialog has a
+  name: the bus Tabber Studio makes, named as typed (spaces around it
+  trimmed, as the dialog does), in the mixer and the routing at once.
+  `strip` is the new bus's strip. A name of only spaces is refused with
+  `invalid_params`. A new bus is not an undo step, there or here.
 
 ### Tab (tab/1)
 

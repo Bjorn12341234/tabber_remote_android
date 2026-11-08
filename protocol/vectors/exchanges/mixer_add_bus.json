@@ -1,0 +1,632 @@
+{
+ "name": "mixer_add_bus",
+ "description": "Add Bus from the phone: a bus named as typed, as Tabber Studio's + Bus makes it, in the mixer at once and no undo step; a name of only spaces is refused (spec 9, mixer.add_bus/1).",
+ "start": "authenticated",
+ "host_state": {
+  "pairing": {
+   "open": false
+  },
+  "paired_devices": [
+   {
+    "device_id": "zsiNWgOpGPu3nnQsDLV1c5EUoLWC_GqaxM6F0p8aU88",
+    "name": "Björn's iPhone",
+    "key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAELmFLfdxxNIkeJNkXdNhfQVal4qrDnl_C1tq3bYJMIbARSFIBJiHBKBXg2n0qXdRgpN7x-2sEbrFmAaCll5zfdw"
+   }
+  ],
+  "capabilities": [
+   "transport/1",
+   "record/1",
+   "tempo_scale/1",
+   "tracks/1",
+   "tracks.monitor/1",
+   "markers/1",
+   "takes/1",
+   "takes.discard/1",
+   "takes.go_again/1",
+   "undo/1",
+   "save/1",
+   "meters/1",
+   "pair.code/1",
+   "mixer/1",
+   "tab/1",
+   "mixer.add_bus/1"
+  ],
+  "snapshot": {
+   "seq": 10,
+   "t": 9000.0,
+   "project": {
+    "title": "My Song",
+    "unsaved": false,
+    "has_file": true
+   },
+   "transport": {
+    "state": "stopped",
+    "position": {
+     "bar": 1,
+     "beat": 1,
+     "seconds": 0.0
+    },
+    "tempo_bpm": 96.0,
+    "tempo_scale": 1.0,
+    "time_signature": {
+     "beats": 4,
+     "unit": 4
+    },
+    "loop": {
+     "enabled": false,
+     "start": null,
+     "end": null
+    },
+    "click": false,
+    "count_in_bars": 0,
+    "counting_in": false
+   },
+   "record": {
+    "recording": false,
+    "started": null,
+    "armed_track_ids": []
+   },
+   "tracks": [
+    {
+     "id": "trk-guitar",
+     "name": "Guitar",
+     "kind": "midi",
+     "armed": false,
+     "monitor": "auto",
+     "selected": true,
+     "color": "#50A0DC",
+     "instrument": "Acoustic Guitar (steel)",
+     "tuning": [
+      64,
+      59,
+      55,
+      50,
+      45,
+      40
+     ]
+    },
+    {
+     "id": "trk-vocals",
+     "name": "Vocals",
+     "kind": "audio",
+     "armed": false,
+     "monitor": "auto",
+     "selected": false,
+     "color": "#DC5050"
+    },
+    {
+     "id": "trk-keys",
+     "name": "Keys",
+     "kind": "midi",
+     "armed": false,
+     "monitor": "auto",
+     "selected": false,
+     "color": "#64BE64",
+     "instrument": "Electric Piano 1"
+    }
+   ],
+   "markers": [
+    {
+     "id": "mrk-intro",
+     "name": "Intro",
+     "bar": 1,
+     "beat": 1
+    },
+    {
+     "id": "mrk-verse",
+     "name": "Verse",
+     "bar": 9,
+     "beat": 1
+    },
+    {
+     "id": "mrk-chorus",
+     "name": "Chorus",
+     "bar": 25,
+     "beat": 1
+    },
+    {
+     "id": "mrk-solo",
+     "name": "Solo",
+     "bar": 41,
+     "beat": 1
+    }
+   ],
+   "takes": [],
+   "undo": {
+    "undo": null,
+    "redo": null
+   }
+  }
+ },
+ "steps": [
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "session.subscribe",
+    "params": {
+     "topics": [
+      "mixer",
+      "undo"
+     ]
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "result": {
+     "seq": 10,
+     "t": 9000.0,
+     "project": {
+      "title": "My Song",
+      "unsaved": false,
+      "has_file": true
+     },
+     "transport": {
+      "state": "stopped",
+      "position": {
+       "bar": 1,
+       "beat": 1,
+       "seconds": 0.0
+      },
+      "tempo_bpm": 96.0,
+      "tempo_scale": 1.0,
+      "time_signature": {
+       "beats": 4,
+       "unit": 4
+      },
+      "loop": {
+       "enabled": false,
+       "start": null,
+       "end": null
+      },
+      "click": false,
+      "count_in_bars": 0,
+      "counting_in": false
+     },
+     "record": {
+      "recording": false,
+      "started": null,
+      "armed_track_ids": []
+     },
+     "tracks": [
+      {
+       "id": "trk-guitar",
+       "name": "Guitar",
+       "kind": "midi",
+       "armed": false,
+       "monitor": "auto",
+       "selected": true,
+       "color": "#50A0DC",
+       "instrument": "Acoustic Guitar (steel)",
+       "tuning": [
+        64,
+        59,
+        55,
+        50,
+        45,
+        40
+       ]
+      },
+      {
+       "id": "trk-vocals",
+       "name": "Vocals",
+       "kind": "audio",
+       "armed": false,
+       "monitor": "auto",
+       "selected": false,
+       "color": "#DC5050"
+      },
+      {
+       "id": "trk-keys",
+       "name": "Keys",
+       "kind": "midi",
+       "armed": false,
+       "monitor": "auto",
+       "selected": false,
+       "color": "#64BE64",
+       "instrument": "Electric Piano 1"
+      }
+     ],
+     "markers": [
+      {
+       "id": "mrk-intro",
+       "name": "Intro",
+       "bar": 1,
+       "beat": 1
+      },
+      {
+       "id": "mrk-verse",
+       "name": "Verse",
+       "bar": 9,
+       "beat": 1
+      },
+      {
+       "id": "mrk-chorus",
+       "name": "Chorus",
+       "bar": 25,
+       "beat": 1
+      },
+      {
+       "id": "mrk-solo",
+       "name": "Solo",
+       "bar": 41,
+       "beat": 1
+      }
+     ],
+     "takes": [],
+     "undo": {
+      "undo": null,
+      "redo": null
+     }
+    }
+   }
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 2,
+    "method": "mixer.state",
+    "params": {}
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 2,
+    "result": {
+     "mixer": {
+      "strips": [
+       {
+        "id": "trk-guitar",
+        "kind": "track",
+        "name": "Guitar",
+        "color": "#50A0DC",
+        "volume": 0.7,
+        "volume_db": 0.0,
+        "pan": -0.3,
+        "pan_label": "L19",
+        "muted": false,
+        "soloed": false
+       },
+       {
+        "id": "trk-vocals",
+        "kind": "track",
+        "name": "Vocals",
+        "color": "#DC5050",
+        "volume": 0.74,
+        "volume_db": 0.3,
+        "pan": 0.0,
+        "pan_label": "C",
+        "muted": false,
+        "soloed": false
+       },
+       {
+        "id": "trk-keys",
+        "kind": "track",
+        "name": "Keys",
+        "color": "#64BE64",
+        "volume": 0.62,
+        "volume_db": -3.2,
+        "pan": 0.0,
+        "pan_label": "C",
+        "muted": false,
+        "soloed": false
+       },
+       {
+        "id": "bus-reverb",
+        "kind": "bus",
+        "name": "Reverb",
+        "color": null,
+        "volume": 0.52,
+        "volume_db": -7.7,
+        "pan": 0.0,
+        "pan_label": "C",
+        "muted": false,
+        "soloed": false
+       },
+       {
+        "id": "master",
+        "kind": "master",
+        "name": "Master",
+        "color": null,
+        "volume": 0.7,
+        "volume_db": 0.0,
+        "pan": 0.0,
+        "pan_label": "C",
+        "muted": false,
+        "soloed": false
+       }
+      ],
+      "scale": [
+       {
+        "db": 0,
+        "volume": 0.7
+       },
+       {
+        "db": -12,
+        "volume": 0.442
+       },
+       {
+        "db": -24,
+        "volume": 0.279
+       },
+       {
+        "db": -48,
+        "volume": 0.111
+       }
+      ]
+     }
+    }
+   }
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 3,
+    "method": "mixer.add_bus",
+    "params": {
+     "key": "0b6c3f1e-7a2d-4e59-9c84-000000001100",
+     "name": " Delay "
+    }
+   },
+   "note": "The phone's + Bus, with the name typed in its New Bus dialog."
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 3,
+    "result": {
+     "strip": {
+      "id": "bus-102",
+      "kind": "bus",
+      "name": "Delay",
+      "color": null,
+      "volume": 0.7,
+      "volume_db": 0.0,
+      "pan": 0.0,
+      "pan_label": "C",
+      "muted": false,
+      "soloed": false
+     },
+     "mixer": {
+      "strips": [
+       {
+        "id": "trk-guitar",
+        "kind": "track",
+        "name": "Guitar",
+        "color": "#50A0DC",
+        "volume": 0.7,
+        "volume_db": 0.0,
+        "pan": -0.3,
+        "pan_label": "L19",
+        "muted": false,
+        "soloed": false
+       },
+       {
+        "id": "trk-vocals",
+        "kind": "track",
+        "name": "Vocals",
+        "color": "#DC5050",
+        "volume": 0.74,
+        "volume_db": 0.3,
+        "pan": 0.0,
+        "pan_label": "C",
+        "muted": false,
+        "soloed": false
+       },
+       {
+        "id": "trk-keys",
+        "kind": "track",
+        "name": "Keys",
+        "color": "#64BE64",
+        "volume": 0.62,
+        "volume_db": -3.2,
+        "pan": 0.0,
+        "pan_label": "C",
+        "muted": false,
+        "soloed": false
+       },
+       {
+        "id": "bus-reverb",
+        "kind": "bus",
+        "name": "Reverb",
+        "color": null,
+        "volume": 0.52,
+        "volume_db": -7.7,
+        "pan": 0.0,
+        "pan_label": "C",
+        "muted": false,
+        "soloed": false
+       },
+       {
+        "id": "bus-102",
+        "kind": "bus",
+        "name": "Delay",
+        "color": null,
+        "volume": 0.7,
+        "volume_db": 0.0,
+        "pan": 0.0,
+        "pan_label": "C",
+        "muted": false,
+        "soloed": false
+       },
+       {
+        "id": "master",
+        "kind": "master",
+        "name": "Master",
+        "color": null,
+        "volume": 0.7,
+        "volume_db": 0.0,
+        "pan": 0.0,
+        "pan_label": "C",
+        "muted": false,
+        "soloed": false
+       }
+      ],
+      "scale": [
+       {
+        "db": 0,
+        "volume": 0.7
+       },
+       {
+        "db": -12,
+        "volume": 0.442
+       },
+       {
+        "db": -24,
+        "volume": 0.279
+       },
+       {
+        "db": -48,
+        "volume": 0.111
+       }
+      ]
+     }
+    }
+   },
+   "note": "Named as typed, trimmed as the dialog trims it; before the master, as the mixer orders buses. No undo step."
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "method": "event",
+    "params": {
+     "topic": "mixer",
+     "seq": 11,
+     "t": 9001.1,
+     "data": {
+      "strips": [
+       {
+        "id": "trk-guitar",
+        "kind": "track",
+        "name": "Guitar",
+        "color": "#50A0DC",
+        "volume": 0.7,
+        "volume_db": 0.0,
+        "pan": -0.3,
+        "pan_label": "L19",
+        "muted": false,
+        "soloed": false
+       },
+       {
+        "id": "trk-vocals",
+        "kind": "track",
+        "name": "Vocals",
+        "color": "#DC5050",
+        "volume": 0.74,
+        "volume_db": 0.3,
+        "pan": 0.0,
+        "pan_label": "C",
+        "muted": false,
+        "soloed": false
+       },
+       {
+        "id": "trk-keys",
+        "kind": "track",
+        "name": "Keys",
+        "color": "#64BE64",
+        "volume": 0.62,
+        "volume_db": -3.2,
+        "pan": 0.0,
+        "pan_label": "C",
+        "muted": false,
+        "soloed": false
+       },
+       {
+        "id": "bus-reverb",
+        "kind": "bus",
+        "name": "Reverb",
+        "color": null,
+        "volume": 0.52,
+        "volume_db": -7.7,
+        "pan": 0.0,
+        "pan_label": "C",
+        "muted": false,
+        "soloed": false
+       },
+       {
+        "id": "bus-102",
+        "kind": "bus",
+        "name": "Delay",
+        "color": null,
+        "volume": 0.7,
+        "volume_db": 0.0,
+        "pan": 0.0,
+        "pan_label": "C",
+        "muted": false,
+        "soloed": false
+       },
+       {
+        "id": "master",
+        "kind": "master",
+        "name": "Master",
+        "color": null,
+        "volume": 0.7,
+        "volume_db": 0.0,
+        "pan": 0.0,
+        "pan_label": "C",
+        "muted": false,
+        "soloed": false
+       }
+      ],
+      "scale": [
+       {
+        "db": 0,
+        "volume": 0.7
+       },
+       {
+        "db": -12,
+        "volume": 0.442
+       },
+       {
+        "db": -24,
+        "volume": 0.279
+       },
+       {
+        "db": -48,
+        "volume": 0.111
+       }
+      ]
+     }
+    }
+   }
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 4,
+    "method": "mixer.add_bus",
+    "params": {
+     "key": "0b6c3f1e-7a2d-4e59-9c84-000000001101",
+     "name": "   "
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 4,
+    "error": {
+     "code": -32602,
+     "message": "The phone sent a request the computer could not use.",
+     "data": {
+      "reason": "invalid_params",
+      "field": "name"
+     }
+    }
+   }
+  }
+ ]
+}

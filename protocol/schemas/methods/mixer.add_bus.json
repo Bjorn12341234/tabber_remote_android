@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tabber.studio/schemas/remote/1/methods/mixer.add_bus.json",
+  "title": "mixer.add_bus",
+  "x-capability": "mixer.add_bus/1",
+  "x-changes": true,
+  "$defs": {
+    "params": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "$ref": "../common.json#/$defs/key"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200,
+          "pattern": "\\S",
+          "description": "The bus's name, as typed in the New Bus dialog; not only spaces."
+        }
+      },
+      "required": [
+        "key",
+        "name"
+      ],
+      "additionalProperties": false
+    },
+    "result": {
+      "type": "object",
+      "properties": {
+        "strip": {
+          "$ref": "../common.json#/$defs/strip"
+        },
+        "mixer": {
+          "$ref": "../common.json#/$defs/mixer"
+        }
+      },
+      "required": [
+        "strip",
+        "mixer"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

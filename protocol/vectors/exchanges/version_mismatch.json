@@ -158,7 +158,7 @@
           "data": {
             "reason": "unsupported_version",
             "host_versions": [
-              "1.8"
+              "1.9"
             ]
           }
         }
