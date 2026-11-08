@@ -159,6 +159,16 @@ final class ScreenshotUITests: SpakUITestCase {
         try shoot("tr41-3-delay")
     }
 
+    /// TR42: the routing Flow, as Studio's Flow tab lays it out.
+    @MainActor
+    func testTheFlow() throws {
+        launch(["-demo", "-screen", "mixer"])
+        app.segmentedControls["mixer-page"].buttons["Flow"].tap()
+        XCTAssertTrue(appears("flow-Master"))
+        sleep(1)
+        try shoot("tr42-1-flow")
+    }
+
     @MainActor
     func testTheComputerSheetAtTheLargestText() throws {
         app = XCUIApplication()

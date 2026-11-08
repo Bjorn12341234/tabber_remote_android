@@ -5,9 +5,9 @@ import SwiftUI
 /// master, each with pan, S and M, a fader on Tabber Studio's scale and its
 /// meter. Double-tap a fader for 0 dB, a pan knob for the centre. Routing is
 /// the Mixer's other view, as Tabber Studio's Routing panel can be a tab
-/// beside its Mixer.
+/// beside its Mixer, and Flow draws it as Studio's Flow tab does.
 struct MixerScreen: View {
-    enum Page: String { case mixer = "Mixer", routing = "Routing" }
+    enum Page: String { case mixer = "Mixer", routing = "Routing", flow = "Flow" }
 
     @Bindable var model: AppModel
     @State private var page = Page.mixer
@@ -20,6 +20,10 @@ struct MixerScreen: View {
                 } else if page == .routing, model.routingAvailable {
                     if let routing = model.state.routing {
                         RoutingView(model: model, routing: routing)
+                    }
+                } else if page == .flow, model.routingAvailable {
+                    if let routing = model.state.routing {
+                        FlowView(model: model, routing: routing)
                     }
                 } else if let mixer = model.state.mixer {
                     GeometryReader { proxy in
@@ -54,6 +58,7 @@ struct MixerScreen: View {
                             Picker("View", selection: $page) {
                                 Text(Page.mixer.rawValue).tag(Page.mixer)
                                 Text(Page.routing.rawValue).tag(Page.routing)
+                                Text(Page.flow.rawValue).tag(Page.flow)
                             }
                             .pickerStyle(.segmented)
                             .accessibilityIdentifier("mixer-page")

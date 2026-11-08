@@ -9,7 +9,8 @@ final class AccessibilityUITests: XCTestCase {
     }
 
     @MainActor
-    func audit(_ app: XCUIApplication, _ screen: String, scrolls: Bool = false, within region: CGRect? = nil) throws {
+    func audit(_ app: XCUIApplication, _ screen: String, scrolls: Bool = false, within region: CGRect? = nil,
+               diagram: CGRect? = nil) throws {
         // A list longer than the screen runs on under the transport and the
         // tab bar, as iOS lists do; the text resting there reads as low
         // contrast wherever the list stops. Only that is left out: contrast
@@ -25,6 +26,10 @@ final class AccessibilityUITests: XCTestCase {
         try app.performAccessibilityAudit { issue in
             // A second look at part of a screen: the rest had its own audit just before.
             if let region, !(issue.element.map { region.intersects($0.frame) } ?? false) { return true }
+            // The routing Flow is a diagram: its words grow with a pinch, not with
+            // the text size, and the Routing page says the same in text that grows.
+            if let diagram, [.dynamicType, .textClipped].contains(issue.auditType),
+               diagram.intersects(issue.element?.frame ?? .zero) { return true }
             // The sheet's Done is iOS's own toolbar button, whose largest sizes iOS caps.
             if issue.auditType == .dynamicType, issue.element?.identifier == "done" { return true }
             // The audit flags rows at the foot of the long Computer sheet: "Leave the
@@ -74,6 +79,18 @@ final class AccessibilityUITests: XCTestCase {
         app.tabBars.buttons["Tab"].tap()
         XCTAssertTrue(element(app, "midi-part").waitForExistence(timeout: 8))
         try audit(app, "Tab, a MIDI part")
+    }
+
+    /// The routing Flow (TR42).
+    @MainActor
+    func testTheFlow() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo", "-reset-input", "-screen", "mixer"]
+        app.launch()
+        XCTAssertTrue(app.segmentedControls["mixer-page"].waitForExistence(timeout: 8))
+        app.segmentedControls["mixer-page"].buttons["Flow"].tap()
+        XCTAssertTrue(element(app, "flow-Master").waitForExistence(timeout: 8))
+        try audit(app, "Flow", diagram: element(app, "flow").frame)
     }
 
     @MainActor
