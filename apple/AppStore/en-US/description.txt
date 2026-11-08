@@ -8,11 +8,11 @@ Record from across the room
 Tracks and tab
 - Choose a track, hear it alone, mute it and arm it for recording.
 - Add a tab, MIDI or audio track, as Tabber Studio's own Add Track makes it.
-- Write tab on the chosen track with a fretboard or a piano, one undo step per note.
+- Write tab with a fretboard or a piano, on a tab track or as MIDI tab on a MIDI track, one undo step per note.
 
 Mix
 - Tabber Studio's own faders, pan, solo, mute and meters, for every track, bus and the master.
-- Choose where each track sends its sound: its output and its sends.
+- Add a bus, choose where each track sends its sound, and see it all as Tabber Studio's Flow.
 
 Practise
 - The Speed Trainer: loop a part slowly and let it speed up each time the loop comes round.
