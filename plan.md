@@ -1037,6 +1037,7 @@ you have to go to the computer and click on it manually on the computer?"
 | TR40 | Tab on MIDI tracks: with MIDI tab shown, the phone's fretboard and piano write on a MIDI track as Studio's MIDI Tab does, each edit one undo step | spec, Studio, this repo | Headless: a fret from the phone is the note Studio's MIDI Tab writes, at the same string and fret, one undo step; the instrument is untouched; UI tests |
 | TR41 | Add Bus from the phone, as the mixer's "+ Bus" makes it: Studio asks for its name first | spec, Studio, this repo | Headless: the bus equals "+ Bus"'s, named as typed; not an undo step there, nor here; it shows in the phone's Mixer and Routing at once; UI tests |
 | TR42 | The routing Flow view on the phone: Studio's Flow tab, tracks through buses to the master | this repo, Studio if a read is missing | The phone draws what Studio's Flow tab draws for the same song, checked against Studio's own flow model; readable at the largest text; UI tests and the accessibility audit |
+| TR43 | Wiring by hand in the phone's Flow, as Studio's Flow does it, and the computer's master fader following the phone | this repo, Studio | UI tests: a track's output to a bus and back, a send made by dragging and taken away from the card's menu, a looping bus refused in Studio's words; the accessibility audit; headless: the master strip follows mixer.set_master_gain and project.set_properties |
 
 ### M2, the Lock Screen and the Action Button (1.1)
 
@@ -2581,6 +2582,38 @@ what was measured, and what changed in the plan.
   - **Not yet:** Studio's Flow also draws sidechains and each card's
     plug-in count; the routing topic carries neither, so they need a
     protocol addition.
+- **TR43 ✅ 2026-11-08: wiring by hand in the Flow, and the master fader
+  (Studio 0.3.28).** The owner: "when i slide the master volume in the app
+  its not changing in tabber studio" and "in flow, i dont seem to be able to
+  move by hand the connections manually".
+  - **The master fader (Studio 9f7e5ca8, 0.3.28 at 5eacd919):**
+    `mixer.set_master_gain` set the song and the engine but left the mixer's
+    master strip where it was, so the computer looked unchanged; the phone,
+    the chat and scripts all use it. `project.set_properties` also missed
+    the engine: it looked for `mw._engine`, which the window does not have.
+    Both now go through `apply_master_gain`: the song and the engine, as the
+    master fader's own handler does, then the strip, without echo. Tests
+    check the strip's fader and label and the engine for both commands.
+  - **Wiring in the Flow (this repo):** drag from a card's teal output port
+    (a handle a thumb wide at any zoom) onto a bus or the Master. On the
+    Master the output goes back there; on a bus a track chooses Output or
+    Send (Studio's plain or Option drag) and a bus moves its output, or is
+    refused as "Reverb would loop: Delay → Reverb → Delay.". Press and hold
+    a card for its menu (output, send to, remove send), which VoiceOver also
+    gets as actions; a hint line under the diagram says how. Each change is
+    one undo step on the computer, through the routing verbs the Routing
+    page uses, so no protocol change.
+  - **Tests:** FlowUITests (three), and the accessibility, mixer, routing
+    and welcome suites: 17 passed.
+  - **Studio 0.3.28 released and installed:** the verifier, the engine byte
+    for byte, the smoke test and the TR37 scans pass; parked at
+    /Volumes/Data/tabber_work/rel0328 (DMG 486,446,958 bytes, SHA-256
+    3f0bb3c7...); installed with 0.3.18 kept and 0.3.27 in the Trash; the
+    remote answers 1.9 with every capability on the loopback and Tailscale.
+    Not on the website, which offers 0.3.27; Spak needs nothing newer.
+  - **Not yet:** tapping a wire to select and delete it, as Studio's Flow
+    does; the card's menu removes a send, and dropping on the Master undoes
+    an output.
 
 - **Studio 0.3.27 (916000de), built 2026-11-08 and installed:** the release
   verifier passed; signed, notarized and stapled; the certified engine byte
