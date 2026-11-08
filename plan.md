@@ -2536,6 +2536,63 @@ what was measured, and what changed in the plan.
     the upload is to be tried again later.
   - **Owed:** on the iPhone, answer a MIDI track's card with Show MIDI tab
     and write a riff on it.
+
+- **TR41 ✅ 2026-11-08: Add Bus from the phone (protocol 1.9, 60d204c;
+  Studio 3ecb8d82, 0.3.27; TestFlight build 15).** The owner: "i still miss
+  add bus".
+  - **`mixer.add_bus/1`:** the mixer's "+ Bus" once its New Bus dialog has
+    a name (`remote_host/mixing.add_bus`): the next bus id as the dock picks
+    it, then the dock's `bus_created`, as the dialog's OK sends it; song,
+    engine, mixer and routing follow. The name is trimmed as the dialog
+    trims it, and must hold more than spaces (the schema says so too, so
+    the vectors' validator agrees with the host). Not an undo step, as in
+    Studio, where only deleting a bus is one.
+  - **On the phone:** the row under the bar holds Mixer, Routing, Flow and,
+    as Studio's mixer header, a compact dashed "+ Bus" that asks for the
+    name in Studio's words ("New Bus", "Bus name:"), its buttons in plain
+    words; the new strip scrolls into view.
+  - **Gate met:** Studio `test_tr41_add_bus.py` (2): the phone's bus equals
+    the computer's own "+ Bus"'s, in the song, mixer and routing at once,
+    with no undo step; RemoteKit 46 with the demo's Add Bus; a UI test and
+    a screenshot test on the iPhone SE.
+  - **Fixed on the way:** RemoteKit's dead-address race test now asks for a
+    connection within the hello's timeout, which is what waiting out the
+    dead address would take, instead of a second: run beside the suite's
+    other tests on a busy Mac it took 1.0 to 1.2 s, alone 0.08 s.
+
+- **TR42 ✅ 2026-11-08: the routing Flow on the phone (this repo only;
+  TestFlight build 15).** The owner: "i still miss ... the routing flow
+  thing".
+  - **Studio's Flow, laid out as its Flow tab lays it out**
+    (`ui/routing_graph_view.py`): the tracks in mixer order in the first
+    column, the buses in columns by cascade depth, the master last and
+    centred on the tracks; routes and sends from output ports to input
+    ports in Studio's teal, a send's level on a pill, the default route to
+    the master dimmed, a muted card dimmed. Drawn from the routing and
+    mixer topics the phone already follows, so no protocol change.
+  - **On the phone:** Flow is the Mixer's third page. It opens fitted to
+    the screen, as Studio's opens fitted to its window; a pinch zooms in, a
+    drag pans and a double tap fits it again. Read only: the Routing page
+    changes it.
+  - **Accessibility:** each card says where it goes, and each send's pill
+    says its source, bus and level; the audit passes, with only its text
+    size checks set aside inside the diagram, whose words grow with a pinch
+    and whose routing the Routing page gives in text that grows.
+  - **Not yet:** Studio's Flow also draws sidechains and each card's
+    plug-in count; the routing topic carries neither, so they need a
+    protocol addition.
+
+- **Studio 0.3.27 (916000de), built 2026-11-08 and installed:** the release
+  verifier passed; signed, notarized and stapled; the certified engine byte
+  for byte; the smoke test requires `mixer.add_bus/1`; no key shape, name,
+  email, home path or owner's secret in it; parked at
+  /Volumes/Data/tabber_work/rel0327/ (its DMG named for the website);
+  installed with 0.3.18 kept as the fallback; the remote answers 1.9 with
+  `tracks.add/1`, `view.part/1`, `tab.midi/1` and `mixer.add_bus/1` on the
+  loopback and on Tailscale.
+- **The website server** refused SSH from this Mac again at about 18:45, a
+  third time, while the site answered: no longer a brief cool-down. The
+  DMG upload waits for the owner to look at the server.
   - **Left as they are, public:** the samples download, and the Synth's
     source record, point at the owner's GitHub account.
   - **Found on the way, not ours:** in Studio's `tests/core`, the warp and
