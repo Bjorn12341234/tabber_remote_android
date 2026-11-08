@@ -2636,6 +2636,18 @@ what was measured, and what changed in the plan.
     website's download, and Spak speaks protocol 1.9 (0.3.27). So the
     website must offer 0.3.27 before Spak is released (Manual release), and
     preferably during review, since the review notes name the website.
+  - **Submitted for review** at 20:35 by the owner: version 1.0 (16),
+    submission 169f27a4-eb29-4dcf-8816-a1dc1298cc4e, Waiting for Review.
+    The Spak pages went live when the owner ran `publish-spak.sh`; both
+    answer 200. App Store Connect's main iPhone screenshot slot is now
+    "iPhone with Dynamic Island (medium display)": 1206 x 2622 or
+    1179 x 2556 only, so it refused the 1320 x 2868 set. The 10 screens
+    went in from `appstore-screenshots/upload-6.3-inch`, scaled from the
+    6.9-inch ones. Answers: Data Not Collected, no third-party content,
+    every age-rating feature No, Free, Music.
+  - **Next:** after approval, the App Store link on the Spak page (and
+    `publish-spak.sh` again), and the link and a QR code in Studio's
+    Settings > Remote. Before release: the website offers Studio 0.3.27.
 
 ## Sources
 
