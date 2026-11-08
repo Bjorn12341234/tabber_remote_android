@@ -2403,14 +2403,41 @@ what was measured, and what changed in the plan.
       created; the host still serves a phone after;
     - the chat's own verbs are covered by TR29's adversarial tests, which
       pass at the release's commit.
-  - **For the owner to decide:**
-    - "Report a problem" in Studio mails the owner's own Gmail: keep it, or
-      use a support address;
-    - the licences' copyright line names the owner: keep it, or Viga Works
-      AB;
-    - Studio keeps AI keys in its preferences file, which any program the
-      user runs can read; the macOS Keychain would keep them locked;
-    - the release's samples download from the owner's GitHub account.
+  - **The owner's decisions (2026-11-08), done:**
+    - **AI keys in the Keychain** ("Use the Keychain"): `core/keychain.py`
+      talks to macOS's Security framework through ctypes, so no package
+      joins the release. A key saved in Studio goes to the login Keychain,
+      one item per provider; a key the preferences held before moves there
+      the first time it is read, the legacy DeepSeek setting included, and
+      the preferences keep no copy. Without a Keychain (other systems) keys
+      stay in the preferences. The remote's secret filter still knows every
+      key. Every Studio test gets an in-memory Keychain, so no test touches
+      the owner's own; one test uses the real Keychain on a service of its
+      own. macOS may ask once whether Tabber Studio may use the key.
+    - **Report a Problem** mails halibothalibot@gmail.com, the address the
+      website gives ("Website's address"); a test allows no other address
+      in the shipped code.
+    - **The licences name Viga Works AB** ("Viga Works AB"): in
+      tabber_synth (8eccf20), tabber_amp (76f479c) and tabber_limiter
+      (ed227aa), and Studio's two vendored copies. The release's pinned
+      inputs were copied with only their notices changed
+      (native-inputs/synth-vw and limiter-vw, rel030/plugin-src-031-vw,
+      rel0314/amp-dd782bd-vw, whose manifest's two digests follow), so no
+      binary is rebuilt. Studio's release verifier no longer lets the
+      owner's name through in any file, notices included.
+    - Studio c3d4f29c and 0.3.24 (ead45c36); the release script uses the
+      copied inputs, and its verifier is the proof that no file names the
+      owner.
+  - **Left as they are, public:** the samples download, and the Synth's
+    source record, point at the owner's GitHub account.
+  - **Found on the way, not ours:** in Studio's `tests/core`, the warp and
+    tempo-retime persistence tests, the mixed-lane interchange report and,
+    in a long run, the metronome toggles fail; they fail at f71481fb too,
+    before this work.
+  - **App Store (TR38) begun:** the texts are in `apple/AppStore/`
+    (e2633e3), and the 6.9-inch screenshots, 12 screens of demo mode, are
+    in /Volumes/Data/tabber_remote/appstore-screenshots/6.9-inch. The
+    privacy page waits for the website, which another session is editing.
 
 ## Sources
 
