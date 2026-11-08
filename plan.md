@@ -2456,6 +2456,29 @@ what was measured, and what changed in the plan.
       1.6 with `tracks.add/1` on the loopback and on Tailscale;
     - the owner's DeepSeek key moves to the Keychain the first time the
       chat reads it; until then it is still in the preferences.
+
+- **TR39 ✅ 2026-11-08: a MIDI part's card from the phone (protocol 1.7,
+  6283639; Studio 4ff0525e, 0.3.25; TestFlight build 13).** The owner:
+  "when adding a midi track, in tab mode, tabber asks for show midi or show
+  notation right... can we make that selection from the app too? just so
+  it's not stuck on that screen".
+  - **`view.part/1`:** the `view` topic gains `part`, the chosen track while
+    the Tab editor (the Tab view or Split's Tab pane) shows a MIDI track:
+    `shows` is `card` while Studio's "MIDI part" card waits, then
+    `midi_tab` or `notation`; `midi_tab` says whether the track can show
+    MIDI tab (not drums). `view.show_part` presses the card's own buttons
+    (`MidiTabEditor.open_view`, `staff_presentation.open_card`); a gone card,
+    or MIDI tab for drums, is refused with `stale_target` and the view. Not
+    an undo step.
+  - **On the phone:** the Tab screen shows the card in Studio's words,
+    Show standard notation and Show MIDI tab, then what the computer shows.
+  - **Gate met:** Studio `test_tr39_midi_part.py` (4) and the remote suite
+    (109); RemoteKit 44 with the demo's card; a UI test from Tracks to Tab
+    with drums, the card's accessibility audit, and the full UI suite (39,
+    the accessibility walk then twice in a row with the Piano tap retried
+    after an audit, as Routing's is).
+  - **Owed:** on the iPhone, add a MIDI track while the computer shows Tab,
+    and answer the card from the phone.
   - **Left as they are, public:** the samples download, and the Synth's
     source record, point at the owner's GitHub account.
   - **Found on the way, not ours:** in Studio's `tests/core`, the warp and
