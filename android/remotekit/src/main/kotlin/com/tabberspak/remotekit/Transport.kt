@@ -35,6 +35,8 @@ sealed class TransportFailure(message: String) : Exception(message) {
     data object WrongKey : TransportFailure("the computer's key does not match")
     data class Closed(val code: Int?) : TransportFailure("the connection closed${code?.let { " ($it)" } ?: ""}")
     data class Unreachable(val why: String) : TransportFailure(why)
+    /** The phone keeps the app off the local network (Android 17's permission). */
+    data object LocalNetworkDenied : TransportFailure("the local network is not allowed")
 }
 
 /**

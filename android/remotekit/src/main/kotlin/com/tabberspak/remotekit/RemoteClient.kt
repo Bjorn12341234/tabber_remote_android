@@ -151,6 +151,33 @@ class RemoteClient(private val transport: RemoteTransport) {
         return call("pair", params, decode = PairResult::from)
     }
 
+    /**
+     * The six digits both screens show for 6-digit pairing (spec 4.4): from the key the computer
+     * showed in TLS ([observedPin]), this phone's key and the hello's challenge.
+     */
+    fun pairingCode(observedPin: String, device: DeviceSigner): String {
+        val challenge = hello?.let { Base64Url.decode(it.challenge) } ?: throw TransportFailure.Unreachable("say hello first")
+        val pinHash = Base64Url.decode(observedPin) ?: throw IllegalArgumentException("not a pin")
+        return RemoteCrypto.pairingCode(pinHash, RemoteCrypto.sha256(device.publicKeyDer), challenge)
+    }
+
+    /**
+     * Pairs without the QR code (spec 4.4): the computer shows the same six digits as
+     * [pairingCode] and answers once someone clicks Allow there, or refuses after 120 seconds
+     * (`pairing_timeout`) or at once (`pairing_declined`). Only on a host with `pair.code/1`.
+     */
+    suspend fun pairWithCode(observedPin: String, device: DeviceSigner, name: String, model: String): PairResult {
+        val challenge = hello?.let { Base64Url.decode(it.challenge) } ?: throw TransportFailure.Unreachable("say hello first")
+        val pinHash = Base64Url.decode(observedPin) ?: throw IllegalArgumentException("not a pin")
+        val message = RemoteCrypto.signedBytes(RemoteCrypto.pairContext, pinHash, challenge)
+        val params = jsonObject {
+            put("mode", "code")
+            put("device", jsonObject { put("name", name); put("model", model); put("key", Base64Url.encode(device.publicKeyDer)) })
+            put("signature", Base64Url.encode(device.sign(message)))
+        }
+        return call("pair", params, timeout = 130.seconds, decode = PairResult::from)
+    }
+
     /** Proves a paired device (spec 4.5). */
     suspend fun authenticate(pin: String, device: DeviceSigner): AuthResult {
         val challenge = hello?.let { Base64Url.decode(it.challenge) } ?: throw TransportFailure.Unreachable("say hello first")

@@ -14,19 +14,24 @@ vectors, never here.
 
 - The Android SDK in `~/Android/Sdk` (platforms 36 and 37, build tools) and Android Studio's JDK
   in `/opt/android-studio/jbr`. Gradle comes with the wrapper.
-- For the interop and pairing checks: a Tabber Studio checkout beside this repository
+- For the interop check: a Tabber Studio checkout beside this repository
   (`../tabber_studio_linux` or `../tabber_studio`) with its venv; it provides the real
   `remote_host`.
+- For the Studio check: Tabber Studio Linux beside this repository, with its packaged app
+  (`dist/Tabber-Studio-latest.AppImage`) and `jackd`. The check runs Tabber Studio on a private
+  JACK server with no sound card, so nothing is heard and no microphone is recorded.
 - A phone with USB debugging, or the emulator: `android/scripts/emulator.sh start`.
 
 ## Commands
 
 ```bash
 cd android
-./gradlew :remotekit:test          # every protocol vector, the crypto and the JSON, on the JVM
+./gradlew :remotekit:test          # every protocol vector, the session, the demo computer, on the JVM
 scripts/interop.sh                 # RemoteKit against Tabber Studio's real host (TLS 1.3, pinned)
 scripts/emulator.sh start          # the test phone, headless and without audio
-scripts/pair-check.sh              # the debug app pairs with the real host on the emulator
+./gradlew :app:connectedDebugAndroidTest    # the screens against the demo computer, and Bonjour
+../../tabber_studio_linux/scripts/with_jack_dummy.sh \
+    ../../tabber_studio_linux/.venv/bin/python scripts/studio-check.py   # S1 and a restart, against the installed Tabber Studio
 ./gradlew :app:assembleDebug       # app-debug.apk: com.tabberspak.app.debug, beside a Play build
 scripts/emulator.sh stop
 ```
@@ -90,8 +95,64 @@ Proposed; the owner schedules them, one per session (plan.md, Rules for every sp
   talks to the host; with no pin the client sees the host's key.
 - **On the emulator** (`scripts/pair-check.sh`, GoPast_Light, Android 16): the debug app took the
   pairing link as the camera would, paired with the real host at 10.0.2.2 with its Keystore key,
-  and said so on screen (`shots/pair-check.png`, not committed).
+  and said so on screen (`shots/pair-check.png`, not committed). TA3 retired the script: the app
+  now pairs as soon as the link arrives, and `scripts/studio-check.py` pairs with the installed
+  Tabber Studio instead of the source tree's host.
 - **Found:** `apple/RemoteKit/Tests/RemoteKitTests/InteropTests.swift` still expects
   `protocol_version` "1.0", but its client now offers only "1.9", and the current host answers
   "1.9". The Kotlin test expects the version the client offers. The Swift test belongs to
   upstream (the Mac); reported to the owner.
+
+### TA2, 2026-11-08
+
+- **The session** (`RemoteSession`, as `apple/RemoteKit`'s): one coroutine thread owns the
+  state and publishes it as a `StateFlow`. It reconnects with backoff, tries at once when the app
+  comes back on screen, names trouble only after 4 seconds of trying (unreachable, the local
+  network refused, a wrong key, which side to update), sends each change with an idempotency
+  key, counts a connection silent for 6 seconds as dead, and asks for a snapshot when an event
+  is missing.
+- **Every address at once** (`RacingTransport`), the remembered addresses with a Bonjour lookup
+  between rounds (`RouteBook`), and `ResponseTimes` for TR7's gate measured on the phone.
+- **Remembered computers** in the app's preferences. **Bonjour** with NsdManager (`Discovery`):
+  the Find screen's list, and a paired computer found again after its address or port changed.
+- **The 6-digit code** (`pair` in mode `code`) for phones whose camera app does not open links.
+- **The demo computer** (`DemoHost`, over `MemoryTransport`): a simulated Tabber Studio for the
+  tests, and for trying the app without one.
+- **Tests:** 77 on the JVM (`./gradlew :remotekit:test`): TA1's 41, the demo computer's 20, the
+  session's 15 (reconnecting, racing, response times) and the event order's 1. 74 pass; the 3
+  interop tests run only under `scripts/interop.sh`, where they pass against the host of Linux
+  Tabber Studio 0.3.27.
+- **On the emulator** (`scripts/studio-check.py`, see TA3): the phone reconnected by itself
+  5.9 seconds after Tabber Studio quit and started again, Tabber Studio's own start included.
+- **Found and fixed:**
+  - The session asked for a new snapshot on every event already in the last one; spec 8.2 says
+    to ignore those. Against the real Tabber Studio the phone lost its connection after arming
+    a track. `EventOrderTests` fails without the fix.
+  - The app ended when Tabber Studio quit. The Bonjour lookup between reconnect rounds handed
+    NsdManager's late callbacks to an executor it had already shut down, and a task rejected on
+    NsdManager's thread ends the app. On a phone on the same Wi-Fi as Tabber Studio, every
+    lookup that found the computer, and every visit to the Find screen, would have ended it the
+    same way. Callbacks now run on NsdManager's own thread, as its overloads without an executor
+    do. `DiscoveryTest` (the phone advertises a Tabber Studio of its own and looks it up three
+    times) ends the app without the fix.
+- **Found upstream** (the iPhone app, reported to the owner):
+  `apple/RemoteKit/Sources/RemoteKit/RemoteSession.swift` line 258 has the same event rule: it
+  asks for a snapshot on any event that is not exactly the next one, stale events included.
+
+### TA3, 2026-11-08
+
+- **Screens** (Compose, Tabber Studio's colours): the welcome (get started, paste a link, the
+  demo), finding the computer, pairing (the link and the 6-digit code), the computer sheet,
+  Tracks (each track's card and arm button, adding a track, the computer's view, loop, count-in
+  and the click, the trainer), the transport that never moves (stop, play, record, the readout),
+  Go to, the take card (keep, delete, go again), Undo for a deleted take, and the problem banner.
+  Tab, Mixer, Tuner and Chat wait for TA4.
+- **UI tests against the demo computer** (`./gradlew :app:connectedDebugAndroidTest` on the
+  emulator): 5 of 5 pass. The song shows; a track is chosen, soloed and muted; the whole take
+  loop (arm, record, stop, delete, Undo, go again); and Bonjour's 2.
+- **S1 against Tabber Studio** (`scripts/studio-check.py`): Linux Tabber Studio 0.3.27 as
+  installed, on a private JACK server with no sound card (its route checked as native JACK
+  before anything else). The phone took the pairing link as the camera would and was connected
+  2.7 seconds later. It armed Vocals, recorded, stopped, deleted the take and brought it back
+  with Undo, each step read back from Tabber Studio over the Control API (1 take, then 0, then
+  1). Then Tabber Studio quit and started again, and the phone reconnected by itself.
