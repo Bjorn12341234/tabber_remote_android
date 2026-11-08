@@ -21,6 +21,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material3.Icon
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -106,18 +109,46 @@ fun TracksScreen(model: AppModel) {
     }
 }
 
-/** The screen's frame: its title, the computer's name at the top right, the take slot at the bottom. */
+/**
+ * The screen's frame: its title, the computer's name at the top right, the take slot at the
+ * bottom. A screen may put a button before the title ([leading], the Tab screen's Undo) and make
+ * the title a menu ([titleChoices], the Tab screen's tracks), as the iPhone's title menu.
+ */
 @Composable
-fun ScreenScaffold(model: AppModel, title: String, content: @Composable () -> Unit) {
+fun ScreenScaffold(
+    model: AppModel,
+    title: String,
+    leading: (@Composable () -> Unit)? = null,
+    titleChoices: List<Pair<String, () -> Unit>> = emptyList(),
+    content: @Composable () -> Unit,
+) {
     Column(Modifier.fillMaxSize().background(Studio.bg1).statusBarsPadding()) {
         Row(
-            Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
+            Modifier.fillMaxWidth().padding(start = if (leading != null) 4.dp else 16.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(
-                title, color = Studio.text1, fontWeight = FontWeight.SemiBold, fontSize = 20.sp, maxLines = 1,
-                overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f).semantics { heading() },
-            )
+            leading?.invoke()
+            Box(Modifier.weight(1f)) {
+                var choosing by remember { mutableStateOf(false) }
+                Row(
+                    Modifier.sizeIn(minHeight = 44.dp)
+                        .then(if (titleChoices.isEmpty()) Modifier else Modifier.clickable(role = Role.Button) { choosing = true }),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        title, color = Studio.text1, fontWeight = FontWeight.SemiBold, fontSize = 20.sp, maxLines = 1,
+                        overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false).semantics { heading() }.testTag("screen-title"),
+                    )
+                    if (titleChoices.isNotEmpty()) {
+                        Icon(Icons.Filled.ArrowDropDown, contentDescription = "Choose a track", tint = Studio.text2)
+                    }
+                }
+                DropdownMenu(expanded = choosing, onDismissRequest = { choosing = false }, containerColor = Studio.bg2) {
+                    for ((name, choose) in titleChoices) {
+                        DropdownMenuItem(text = { Text(name, color = Studio.text1) }, onClick = { choosing = false; choose() })
+                    }
+                }
+            }
             ComputerChip(model)
         }
         Box(Modifier.weight(1f)) { content() }
@@ -160,9 +191,9 @@ private fun TrackCard(model: AppModel, track: Track, index: Int) {
         }
         if (strip != null) {
             LetterButton("S", strip.soloed, Studio.solo, if (strip.soloed) "Stop hearing ${track.name} alone" else "Hear ${track.name} alone",
-                pending = "solo-${track.id}" in model.pending) { model.solo(track.id) }
+                Modifier.testTag("solo-${track.name}"), pending = "solo-${track.id}" in model.pending) { model.solo(track.id) }
             LetterButton("M", strip.muted, Studio.mute, if (strip.muted) "Unmute ${track.name}" else "Mute ${track.name}",
-                pending = "mute-${track.id}" in model.pending) { model.mute(track.id) }
+                Modifier.testTag("mute-${track.name}"), pending = "mute-${track.id}" in model.pending) { model.mute(track.id) }
         }
         Box(Modifier.testTag("arm-${track.name}")) {
             ArmButton(track.armed, if (track.armed) "Stop recording on ${track.name}" else "Record on ${track.name}",
@@ -207,6 +238,7 @@ private fun ViewButtons(model: AppModel) {
                         inactiveContainerColor = Studio.bg0, inactiveContentColor = Studio.text2,
                         activeBorderColor = Studio.edge, inactiveBorderColor = Studio.edge,
                     ),
+                    modifier = Modifier.testTag("view-editor-$label"),
                 ) { Text(label, fontSize = 13.sp, maxLines = 1) }
             }
         }

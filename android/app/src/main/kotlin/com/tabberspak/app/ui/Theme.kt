@@ -195,22 +195,31 @@ fun ToggleChip(title: String, isOn: Boolean, modifier: Modifier = Modifier, spok
     }
 }
 
-/** Studio's S and M buttons: a letter, lit in its colour when on. */
+/** Studio's S and M buttons (and a send's PRE): a word on a small square, lit in its colour when on. */
 @Composable
-fun LetterButton(letter: String, isOn: Boolean, onColor: Color, spoken: String, pending: Boolean = false, onClick: () -> Unit) {
+fun LetterButton(
+    letter: String,
+    isOn: Boolean,
+    onColor: Color,
+    spoken: String,
+    modifier: Modifier = Modifier,
+    pending: Boolean = false,
+    onClick: () -> Unit,
+) {
     Box(
-        Modifier
-            .size(44.dp)
+        modifier
+            .sizeIn(minWidth = 44.dp, minHeight = 44.dp)
             .clickable(role = Role.Switch, onClick = onClick)
             .semantics { contentDescription = spoken; selected = isOn }
             .alpha(if (pending) 0.5f else 1f),
         contentAlignment = Alignment.Center,
     ) {
         Box(
-            Modifier.size(30.dp).clip(RoundedCornerShape(5.dp)).background(if (isOn) onColor else Studio.bg3),
+            Modifier.sizeIn(minWidth = 34.dp, minHeight = 30.dp).clip(RoundedCornerShape(5.dp)).background(if (isOn) onColor else Studio.bg3)
+                .padding(horizontal = 4.dp),
             contentAlignment = Alignment.Center,
         ) {
-            Text(letter, color = if (isOn) Studio.bg0 else Studio.text2, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+            Text(letter, color = if (isOn) Studio.bg0 else Studio.text2, fontWeight = FontWeight.Bold, fontSize = 15.sp, maxLines = 1)
         }
     }
 }
@@ -304,5 +313,26 @@ object Format {
         if (minutes == 0) return s
         val m = if (minutes == 1) "1 minute" else "$minutes minutes"
         return if (rest == 0) m else "$m $s"
+    }
+
+    /** A fader's level: "+0.0", "-12.0", "-∞". */
+    fun db(value: Double?): String {
+        value ?: return "-∞"
+        return (if (value >= 0) "+" else "") + String.format(java.util.Locale.ROOT, "%.1f", value)
+    }
+
+    val noteNames = listOf("C", "C♯", "D", "E♭", "E", "F", "F♯", "G", "G♯", "A", "B♭", "B")
+
+    /** A MIDI note's name: "E2", "C♯4". */
+    fun note(pitch: Int): String = "${noteNames[pitch.mod(12)]}${Math.floorDiv(pitch, 12) - 1}"
+
+    /** A note value in words, for TalkBack. */
+    fun value(value: Int): String = when (value) {
+        1 -> "Whole note"
+        2 -> "Half note"
+        4 -> "Quarter note"
+        8 -> "Eighth note"
+        16 -> "Sixteenth note"
+        else -> "Thirty-second note"
     }
 }

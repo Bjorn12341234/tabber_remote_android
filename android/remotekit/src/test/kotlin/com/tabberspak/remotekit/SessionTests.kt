@@ -232,3 +232,15 @@ class ResponseTimesTests {
         session.close()
     }
 }
+
+/** A remembered computer, as this app keeps it and as the iPhone's launch option writes it. */
+class KnownHostTests {
+    @Test fun routesReadAsTheAppKeepsThemAndAsTheIphoneWritesThem() {
+        val kept = KnownHost("h1", "Studio", "pin", listOf(Route("192.168.8.20", 9474), Route("Studio.local", 50211)))
+        assertEquals("this app's own form round-trips", kept, KnownHost.from(JsonReader(Json.parse(kept.toJson().encode()))))
+        val iphone = """{"id":"h1","name":"Studio","pin":"pin","routes":[{"host":"192.168.8.20","port":9474},{"host":"Studio.local","port":50211}]}"""
+        assertEquals("the iPhone's launch option", kept, KnownHost.from(JsonReader(Json.parse(iphone))))
+        val wrong = """{"id":"h1","name":"Studio","pin":"pin","routes":[{"host":"192.168.8.20"}]}"""
+        assertTrue(runCatching { KnownHost.from(JsonReader(Json.parse(wrong))) }.exceptionOrNull() is JsonShapeException)
+    }
+}

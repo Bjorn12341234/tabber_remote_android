@@ -168,6 +168,7 @@ class AppModel(private val context: Context, private val scope: CoroutineScope =
             prefs.remove("explainedLocalNetwork")
             prefs.remove("tabInput")
             forget()
+            freshScreens()
         }
         extras.getString("known_host")?.let { text ->
             runCatching { KnownHost.from(JsonReader(Json.parse(text))) }.getOrNull()?.let {
@@ -183,9 +184,32 @@ class AppModel(private val context: Context, private val scope: CoroutineScope =
             pairLink != null -> scope.launch { pair(pairLink) }
             extras.getBoolean("demo") -> startDemo()
             extras.getString("demo_speaks") != null -> startDemo(listOf(extras.getString("demo_speaks")!!))
-            extras.getBoolean("reset") -> Unit
+            // A known computer starts its session, after a reset too (the iPhone's -reset -known-host).
             extras.containsKey("known_host") -> known?.let { host -> signer()?.let { start(host, it) } }
+            extras.getBoolean("reset") -> Unit
         }
+    }
+
+    /**
+     * What a fresh install shows, for `reset`. On the iPhone each launch is a new process; here the
+     * model outlives its activity (and the UI tests share one process), so a reset clears what is
+     * on screen too: the Tracks screen, with no sheet, card or message left open from before.
+     */
+    private fun freshScreens() {
+        screen = Screen.TRACKS
+        showingComputer = false
+        choosingPlace = false
+        lastTake = null
+        problem = null
+        undoOffer = null
+        pairing = Pairing.Idle
+        pending = emptySet()
+        addedTrackId = null
+        addedBusId = null
+        wanted.clear()
+        edits.clear()
+        demoName = DemoHost.NAME
+        demoSpeaks = RemoteClient.PROTOCOL_VERSIONS
     }
 
     private fun signer(): DeviceSigner? = runCatching { KeystoreSigner.loadOrCreate() }.getOrNull()
@@ -392,10 +416,9 @@ class AppModel(private val context: Context, private val scope: CoroutineScope =
     /** How long the computer took to answer this phone's taps (the Computer sheet; TR7's gate). */
     fun responseTimes(): ResponseTimes = session?.responseTimes ?: ResponseTimes()
 
-    /** Measure from now on, as for a run with AirDrop on after one with it off. */
-    fun startResponseTimesAgain() {
-        val session = session ?: return
-        scope.launch { session.resetResponseTimes() }
+    /** Measure from now on, as for a run with AirDrop on after one with it off. Returns once the times are forgotten. */
+    suspend fun startResponseTimesAgain() {
+        session?.resetResponseTimes()
     }
 
     /** The computer's name for the screen: as it says, as remembered, or in general words. */

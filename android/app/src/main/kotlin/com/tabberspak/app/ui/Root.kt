@@ -1,5 +1,9 @@
 package com.tabberspak.app.ui
 
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.isImeVisible
 import android.app.Activity
 import android.view.WindowManager
 import androidx.compose.foundation.background
@@ -56,6 +60,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.font.FontWeight
@@ -68,7 +73,7 @@ import kotlinx.coroutines.delay
  * The app: Welcome until a computer is paired (or the demo runs), then Studio's own views as
  * tabs, with the transport above the tab bar in the same place on every screen (principle 5).
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun RootScreen(model: AppModel) {
     val haptics = LocalHapticFeedback.current
@@ -93,7 +98,10 @@ fun RootScreen(model: AppModel) {
         if (model.known == null && !model.isDemo) {
             WelcomeScreen(model)
         } else {
-            Column(Modifier.fillMaxSize()) {
+            // While the keyboard is up (Chat's field), it covers the transport and the tabs, as on
+            // the iPhone, and the field sits right above it.
+            val typing = WindowInsets.isImeVisible
+            Column(Modifier.fillMaxSize().imePadding()) {
                 Box(Modifier.weight(1f)) {
                     when (model.screen) {
                         AppModel.Screen.TRACKS -> TracksScreen(model)
@@ -103,8 +111,10 @@ fun RootScreen(model: AppModel) {
                         AppModel.Screen.CHAT -> ChatScreen(model)
                     }
                 }
-                TransportBar(model)
-                ScreenBar(model)
+                if (!typing) {
+                    TransportBar(model)
+                    ScreenBar(model)
+                }
             }
         }
         when (val pairing = model.pairing) {
@@ -195,7 +205,7 @@ fun TransportBar(model: AppModel) {
         // Tabber Studio's Play is Play / Pause: Pause stops right there, Play goes on from it.
         Box(
             Modifier.size(52.dp).clickable(enabled = connected, role = Role.Button, onClick = model::playOrStop)
-                .semantics { contentDescription = if (bar.playing) "Pause" else "Play" }
+                .semantics { contentDescription = if (bar.playing) "Pause" else "Play"; selected = bar.playing }
                 .alpha(if ("play" in model.pending) 0.5f else 1f).testTag("play"),
             contentAlignment = Alignment.Center,
         ) {

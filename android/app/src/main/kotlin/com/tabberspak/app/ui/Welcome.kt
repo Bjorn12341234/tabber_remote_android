@@ -129,14 +129,14 @@ private fun PasteLink(model: AppModel) {
                     Text("It starts with tabber-remote://pair.", color = Studio.text2)
                     OutlinedTextField(text, { text = it; wrong = false }, singleLine = true, modifier = Modifier.testTag("link-field"),
                         colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Studio.accent))
-                    if (wrong) Text("That is not a Tabber Studio pairing link.", color = Studio.record)
+                    if (wrong) Text("That is not a Tabber Studio pairing link.", color = Studio.record, modifier = Modifier.testTag("not-a-code"))
                 }
             },
             confirmButton = {
                 TextButton(onClick = {
                     val link = PairingLink.parse(text.trim())
                     if (link == null) wrong = true else { open = false; scope.launch { model.pair(link) } }
-                }) { Text("Pair") }
+                }, modifier = Modifier.testTag("pair-link-button")) { Text("Pair") }
             },
             dismissButton = { TextButton(onClick = { open = false }) { Text("Cancel") } },
             containerColor = Studio.bg2,
@@ -247,6 +247,7 @@ fun FixItCard(model: AppModel, trouble: Trouble, computer: String) {
  */
 @Composable
 fun ComputerSheet(model: AppModel) {
+    val scope = rememberCoroutineScope()
     var confirmForget by remember { mutableStateOf(false) }
     var times by remember { mutableStateOf(model.responseTimes()) }
     val link = when (val l = model.state.link) {
@@ -258,7 +259,10 @@ fun ComputerSheet(model: AppModel) {
     }
     Column(Modifier.fillMaxWidth().navigationBarsPadding().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Text("Computer", color = Studio.text1, fontWeight = FontWeight.SemiBold, fontSize = 20.sp, modifier = Modifier.semantics { heading() })
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Computer", color = Studio.text1, fontWeight = FontWeight.SemiBold, fontSize = 20.sp, modifier = Modifier.weight(1f).semantics { heading() })
+            StudioButton("Done", onClick = { model.showingComputer = false }, kind = ButtonKind.QUIET, modifier = Modifier.testTag("done"))
+        }
         Labeled("Computer", model.computerName, "host-name")
         Labeled("State", link, "link-state")
         val route = model.known?.routes?.firstOrNull()
@@ -286,7 +290,8 @@ fun ComputerSheet(model: AppModel) {
             },
             color = Studio.text3, fontSize = 13.sp, modifier = Modifier.testTag("response-note"),
         )
-        StudioButton("Start again", onClick = { model.startResponseTimesAgain(); times = model.responseTimes() }, enabled = times.count > 0,
+        // The sheet reads the times back once they are forgotten, not before.
+        StudioButton("Start again", onClick = { scope.launch { model.startResponseTimesAgain(); times = model.responseTimes() } }, enabled = times.count > 0,
             kind = ButtonKind.QUIET, modifier = Modifier.testTag("response-again"))
         HorizontalDivider(color = Studio.edge)
         Labeled("Tabber Spak", "${model.app.version} (${model.app.build})", "version")

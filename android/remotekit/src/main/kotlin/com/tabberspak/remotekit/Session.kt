@@ -28,7 +28,17 @@ data class KnownHost(val id: String, val name: String, val pin: String, val rout
     }
 
     companion object {
-        fun from(r: JsonReader) = KnownHost(r.string("id"), r.string("name"), r.string("pin"), r.strings("routes").mapNotNull(Route::parse))
+        /**
+         * Routes as "host:port", as this app keeps them, or as {"host", "port"}, as the iPhone's
+         * launch option writes a known computer, so a script can hand both phones the same one.
+         */
+        fun from(r: JsonReader): KnownHost {
+            val routes = (r.json("routes").array ?: throw JsonShapeException("$.routes: expected a list")).mapIndexedNotNull { index, item ->
+                item.string?.let { return@mapIndexedNotNull Route.parse(it) }
+                JsonReader(item, "$.routes[$index]").let { Route(it.string("host"), it.int("port")) }
+            }
+            return KnownHost(r.string("id"), r.string("name"), r.string("pin"), routes)
+        }
     }
 }
 
