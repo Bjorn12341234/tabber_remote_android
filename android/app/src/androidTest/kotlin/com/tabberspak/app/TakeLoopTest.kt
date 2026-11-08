@@ -8,6 +8,7 @@ import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Rule
 import org.junit.Test
@@ -61,6 +62,26 @@ class TakeLoopTest {
             Thread.sleep(800)
             compose.onNodeWithTag("stop").performClick()
             compose.waitForTag("take-card")
+        }
+    }
+
+    /** A take card belongs to its session: leaving the demo and coming back shows none from before. */
+    @Test fun aTakeCardDoesNotOutliveItsSession() {
+        launchDemo().use {
+            compose.waitForTag("arm-Vocals").performClick()
+            compose.waitForNoTag("record-hint")
+            compose.onNodeWithTag("record").performClick()
+            compose.waitUntil(10_000) { compose.onNodeWithTag("readout").fetchSemanticsNode().config.toString().contains("Recording") }
+            Thread.sleep(1200)
+            compose.onNodeWithTag("stop").performClick()
+            compose.waitForTag("take-card")
+            compose.onNodeWithTag("connection").performClick()
+            compose.waitForTag("leave-demo").performScrollTo().performClick()
+            compose.waitForTag("get-started") // no computer to go back to: the welcome
+            compose.onNodeWithTag("demo").performScrollTo().performClick()
+            compose.waitForTag("track-Guitar")
+            Thread.sleep(500)
+            compose.waitForNoTag("take-card") // the old session's take is not offered here
         }
     }
 

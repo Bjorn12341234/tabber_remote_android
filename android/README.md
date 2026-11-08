@@ -27,6 +27,8 @@ vectors, never here.
 ```bash
 cd android
 ./gradlew :remotekit:test          # every protocol vector, the session, the demo computer, on the JVM
+./gradlew :app:testDebugUnitTest   # the tuner's pitch detection and its arithmetic, on the JVM
+./gradlew :app:lintDebug           # Android's own checks: no errors
 scripts/interop.sh                 # RemoteKit against Tabber Studio's real host (TLS 1.3, pinned)
 scripts/emulator.sh start          # the test phone, headless and without audio
 ./gradlew :app:connectedDebugAndroidTest    # the screens against the demo computer, and Bonjour
@@ -156,3 +158,48 @@ Proposed; the owner schedules them, one per session (plan.md, Rules for every sp
   2.7 seconds later. It armed Vocals, recorded, stopped, deleted the take and brought it back
   with Undo, each step read back from Tabber Studio over the Control API (1 take, then 0, then
   1). Then Tabber Studio quit and started again, and the phone reconnected by itself.
+
+### TA4, 2026-11-09
+
+- **Screens**, each in its own file as on the iPhone: Tab (the staff around the cursor, the note
+  values, Dot, Triplet, Rest and Delete, Previous and Next that run on while held, the fretboard
+  and the piano at the iPhone's measures, the MIDI part card, a new tab track for a song of only
+  audio, Undo and the tab tracks in the title's menu); the Mixer (a strip per track, then the buses
+  and the master: pan, S and M, a fader on Tabber Studio's scale with its meter, + Bus); Routing
+  (outputs, with a bus that would loop shown and not offered, sends with PRE, removing one, Undo);
+  Flow (Studio's routing graph, fitted to the screen, pinch to zoom); Chat (opened with the phone's
+  own lock, the plan, Execute, Stop, a key refused in words); and Tabber Tuner (by a helper agent
+  on its own branch, merged: the iPhone's YIN detector and biquad, the microphone through
+  AudioRecord with voice processing off, nothing recorded, the demo's guitar tuned string by
+  string).
+- **Tests:** 37 UI tests on the emulator against the demo computer pass in one run
+  (`./gradlew :app:connectedDebugAndroidTest`): Tab 7, Mixer 2, Routing and Flow 3, Chat 3, Tuner
+  2, and the iPhone's suites for the TA3 screens, ported now: Tracks 8, Welcome 5, the Computer
+  sheet 1, the take loop 4, Bonjour 2. On the JVM: the tuner's 38 (`:app:testDebugUnitTest`) and
+  RemoteKit's 78.
+- **Differences from the iPhone, on purpose:**
+  - The tuner's window grows until it reaches A0 (4096 samples at 44.1 and 48 kHz), so a guitar's
+    low E and a bass read. The iPhone's fixed 1024 samples reach down to about 94 Hz at 48 kHz.
+  - Chat opens with the phone's own lock through BiometricPrompt (a fingerprint, the face, or the
+    PIN, pattern or password), as the iPhone asks for Face ID, Touch ID or the passcode.
+  - Fix-it's Pair again goes back to the welcome and its camera steps: on Android the camera app,
+    not the app, scans the code.
+  - Android lets an app ask for the microphone again after a refusal; the tuner remembers one and
+    shows the way to Settings, as the iPhone does.
+- **Found and fixed**, each by a ported test or by lint:
+  - A launch with `reset` kept what was on screen (the model outlives its activity, and the tests
+    share one process): a Computer sheet left open showed a second fix-it card in the next session.
+  - A known computer did not start its session on a launch with `reset`.
+  - Start again on the Computer sheet read the times back before they were forgotten.
+  - A known computer's routes now read in the iPhone's form as well as the app's own.
+  - A take card outlived its session: after leaving the demo, Keep, Delete and Go again aimed at a
+    take the next computer does not have.
+  - Chat's unlock lacked the `USE_BIOMETRIC` permission (lint): on a phone it would have stopped
+    with a security error the demo never reaches.
+  - Nothing is backed up or carried to a new phone (`data_extraction_rules.xml`): the pairing
+    belongs to this phone's Keystore key, so a new phone pairs again.
+- **Found upstream** (the iPhone app, reported to the owner):
+  - `apple/TabberSpak/Tuner/TunerModel.swift` line 119 gives the detector a 1024-sample window,
+    which cannot read a guitar's low E (82.4 Hz) at 48 kHz.
+  - `apple/TabberSpak/AppModel.swift`: `leaveDemo()` and `forget()` keep `lastTake`, the take card
+    bug above.

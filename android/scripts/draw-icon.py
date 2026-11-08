@@ -12,7 +12,7 @@ Writes, under android/app/src/main/res:
   drawable/ic_launcher_background.xml   Studio's bg_2 down to bg_0
   drawable/ic_launcher_foreground.xml   the base, the lever and its shadow
   drawable/ic_launcher_monochrome.xml   the same shapes in one colour, for themed icons
-  mipmap-anydpi-v26/ic_launcher.xml and ic_launcher_round.xml
+  mipmap-anydpi/ic_launcher.xml and ic_launcher_round.xml (minSdk 29: every Android it runs on has adaptive icons)
 
 Run from anywhere: python3 android/scripts/draw-icon.py
 """
@@ -154,8 +154,8 @@ def main() -> None:
         "drawable/ic_launcher_background.xml": background(),
         "drawable/ic_launcher_foreground.xml": foreground(),
         "drawable/ic_launcher_monochrome.xml": monochrome(),
-        "mipmap-anydpi-v26/ic_launcher.xml": ADAPTIVE,
-        "mipmap-anydpi-v26/ic_launcher_round.xml": ADAPTIVE,
+        "mipmap-anydpi/ic_launcher.xml": ADAPTIVE,
+        "mipmap-anydpi/ic_launcher_round.xml": ADAPTIVE,
     }
     for name, text in files.items():
         path = RES / name

@@ -7,7 +7,6 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -290,7 +289,7 @@ private fun StripView(model: AppModel, strip: Strip, scale: List<ScaleMark>, uni
         ) {
             var start by remember { mutableStateOf(0.0) }
             var moved by remember { mutableStateOf(0f) }
-            BoxWithConstraints(
+            Box(
                 Modifier.weight(1f).heightIn(min = 140.dp).fillMaxWidth()
                     .pointerInput(strip.id) {
                         detectVerticalDragGestures(

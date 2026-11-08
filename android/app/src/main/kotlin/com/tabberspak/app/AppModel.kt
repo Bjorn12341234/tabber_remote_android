@@ -342,6 +342,7 @@ class AppModel(private val context: Context, private val scope: CoroutineScope =
         session?.let { old -> scope.launch { old.stop(); old.close() } }
         demoHost?.close()
         demoHost = null
+        endTakeOffers()
         session = next
         listener = scope.launch {
             next.start()
@@ -406,9 +407,20 @@ class AppModel(private val context: Context, private val scope: CoroutineScope =
         session?.let { old -> scope.launch { old.stop(); old.close() } }
         demoHost?.close()
         demoHost = null
+        endTakeOffers()
         session = null
         state = SessionState()
         bar = TransportSummary()
+    }
+
+    /**
+     * A take card and an Undo offer belong to the session that made them: with another session
+     * (the demo left, a computer forgotten or paired) Keep, Delete, Go again and Undo would aim at
+     * a take or a step the new computer does not have.
+     */
+    private fun endTakeOffers() {
+        lastTake = null
+        undoOffer = null
     }
 
     val isConnected: Boolean get() = state.link is LinkState.Connected
