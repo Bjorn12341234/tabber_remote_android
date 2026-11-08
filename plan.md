@@ -2659,7 +2659,11 @@ what was measured, and what changed in the plan.
     to the App Store, free, Tabber Studio works without it.
     `docs/website/deploy/publish-site.sh macos-0.3.27 --download
     Tabber-Studio-0.3.27-macOS-arm64.dmg` publishes it; the classifier
-    refused it to this session, so the owner runs it.
+    refused it to this session, so the owner ran it at 20:58: the DMG is
+    served by a hard link (same inode as the staged file, 486,344,510
+    bytes), 13 files changed, the replaced ones are in
+    site/backup-before-macos-0.3.27-20261108T195801, and all 13 live files
+    equal the commit. So the automatic App Store release is fine now.
   - **Studio's Remote page is in Preferences, not Settings:** Qt's macOS
     menu item is "Preferences..." and the dialog's title is Preferences.
     The phone said "Settings › Remote" in four places (Welcome, FixIt), so
