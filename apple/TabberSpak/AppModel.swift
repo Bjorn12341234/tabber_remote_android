@@ -168,7 +168,7 @@ final class AppModel {
     /// A pairing that did not work, in words that say what to do (spec 10).
     static func explainPairing(_ error: Error?, name: String) -> String {
         switch error {
-        case let refusal as RemoteError: return refusal.message
+        case let refusal as RemoteError: return refusal.sentence
         case TransportFailure.wrongKey?: return "The computer that answered is not the one that showed this code. Scan the code again."
         case TransportFailure.localNetworkDenied?: return "Tabber Spak may not use the local network. Turn on Local Network in Settings › Tabber Spak, then scan again."
         case TransportFailure.closed(.some(4002))?: return "\(name) runs a newer Tabber Studio. Update Tabber Spak, then scan again."
@@ -772,12 +772,11 @@ final class AppModel {
         }
     }
 
+    /// A refusal in its words: Studio's own reason, or the loop a route would
+    /// close, else the message (`RemoteError.sentence`).
     static func explain(_ error: Error?) -> String {
         switch error {
-        case let failure as RemoteError where failure.reason == "routing_loop":
-            let path = failure.data["path"]?.arrayValue?.compactMap(\.stringValue) ?? []
-            return path.isEmpty ? failure.message : "\(failure.message) \(path.joined(separator: " → "))."
-        case let failure as RemoteError: return failure.message
+        case let failure as RemoteError: return failure.sentence
         case TransportFailure.wrongKey?: return "This is not the computer you paired with."
         case TransportFailure.closed?: return "Tabber Studio closed the connection."
         case .some(let other): return "Could not reach Tabber Studio (\(other.localizedDescription))."

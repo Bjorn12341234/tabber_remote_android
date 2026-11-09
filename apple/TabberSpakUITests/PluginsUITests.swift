@@ -56,4 +56,22 @@ final class PluginsUITests: SpakUITestCase {
         XCTAssertTrue(waitFor("plugin-notice", "Tabber Synth is now the sound source of Guitar."))
         XCTAssertFalse(element("insert-Guitar-Tabber Synth").exists, "an instrument is no insert")
     }
+
+    /// A refusal says why, in Tabber Studio's words (its host_error's
+    /// detail), not only "Tabber Studio could not do that.", which is all
+    /// the phone said until the Android port found it. An instrument on an
+    /// audio track: the browser stays open with the reason, and the Mixer
+    /// says it too once the browser is closed.
+    @MainActor
+    func testARefusalSaysWhyInStudiosWords() {
+        let why = "Insert this instrument on a MIDI/score track."
+        tap("add-plugin-Lead guitar")
+        tap("plugin-Tabber Synth")
+        XCTAssertTrue(waitFor("plugin-refused", why), "Studio's reason, in the browser")
+        XCTAssertFalse(element("plugin-refused").label.contains("could not do that"), "not the general sentence")
+        XCTAssertTrue(app.navigationBars["Insert Plugin"].exists, "the browser stays open")
+        tap("cancel")
+        XCTAssertTrue(waitFor("problem", why), "and on the Mixer")
+        XCTAssertFalse(element("insert-Lead guitar-Tabber Synth").exists, "nothing went in")
+    }
 }

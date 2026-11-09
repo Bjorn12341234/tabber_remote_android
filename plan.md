@@ -570,11 +570,13 @@ Checked on the owner's Mac Studio (M1 Max, macOS 26.6.2) on 2026-11-07.
   (`historia`) builds 56 and 57 went to TestFlight from this Mac on 6 and 7
   November. The current release is Xcode 27.2 (29 October 2026, iOS 27.2 SDK,
   Swift 6.4.2). Xcode 27 needs macOS 26.6 or later, which this Mac has.
-  - **Tabber Spak is built with Xcode 27.2,** installed next to 26.3 as
-    `/Applications/Xcode-27.2.app` (the owner, 2026-11-07, on condition that
-    historia is not affected). The app starts on the current SDK, so it never
-    needs a migration, and the iPhone Duo layout needs the iOS 27.1 SDK or
-    later (Known traps).
+  - **Tabber Spak is to be built with Xcode 27.2,** installed next to 26.3
+    as `/Applications/Xcode-27.2.app` (the owner, 2026-11-07, on condition
+    that historia is not affected). The app starts on the current SDK, so it
+    never needs a migration, and the iPhone Duo layout needs the iOS 27.1
+    SDK or later (Known traps). **Not downloaded yet** (TR9's record;
+    checked again 2026-11-09): until it is, every build and test uses 26.3,
+    which `release-ios.sh` falls back to.
   - **Nothing else changes.** `xcode-select` stays on 26.3, which is what
     historia's `release-ios.sh` and Tabber Studio's `build_engine.sh` use.
     Only this repository's builds set `DEVELOPER_DIR` to 27.2.
@@ -2680,6 +2682,37 @@ what was measured, and what changed in the plan.
     against, which speaks the phone's newest version.
   - RemoteKit 48 and 13 UI tests (tuner, take loop, Computer sheet,
     welcome) pass. On the phone with the next TestFlight build.
+- **Studio's reasons on the phone (2026-11-09), a fifth fault from the
+  Android port.** When Tabber Studio refuses with `host_error`, its remote
+  host says why in `detail`: a plug-in that is gone or cannot go in, a bus
+  or track not added, a tab edit refused. The phone showed only the general
+  "Tabber Studio could not do that.", the demo's refusals too, so TR44's
+  refusal "in Studio's words" never reached the screen.
+  - **Now:** `RemoteError.sentence` in RemoteKit is what the app says: a
+    `host_error`'s `detail` in place of the message, ended with a full stop
+    where Studio's words leave it off ("Insert this instrument on a
+    MIDI/score track."); the message when there is no detail, or only
+    spaces; a `routing_loop` still names its loop. The banner, the Insert
+    Plugin browser and a failed pairing all use it.
+  - **Spec 10 and `errors.json`** say what `detail` is: a sentence a
+    musician can read, in English, never an exception's text, a path or a
+    code, shown in place of the message; the schema refuses a blank one.
+    The field was already there, so no new version. Studio's pinned copy
+    (`tests/remote/protocol`, at cc67548) takes it with the host fix below.
+  - **Tests:** RemoteKit 55, 7 of them new: the mapping, every `host_error`
+    in the vectors, and DemoHost's two refusals through RemoteSession. A
+    new PluginsUITests test puts an instrument on an audio track and finds
+    the reason in the browser and on the Mixer; on the old code it fails.
+    With it, 13 UI tests (plug-ins, mixer, routing, Flow, a refused Record,
+    the browser's audit) and the vector validator pass.
+  - **For the Studio session:** these details are raw text, not words for
+    musicians: `remote_host/plugins.py:153` and `:167` (`str(error)` of
+    Bypass and Remove), `vocabulary.py:203` (a Control API failure's own
+    message, or "failed"), `vocabulary.py:496` (an insert's error, which
+    can be a ValueError's text), `midi_tab.py:93` (a refusal not in its
+    `_WORDS`, as raised) and `protocol.py:142` ("unknown reason ...").
+  - Built with Xcode 26.3: Xcode 27.2 is still not on this Mac (see
+    Development setup). On the phone with the next TestFlight build.
 
 - **Studio 0.3.27 (916000de), built 2026-11-08 and installed:** the release
   verifier passed; signed, notarized and stapled; the certified engine byte

@@ -273,6 +273,31 @@ public struct RemoteError: Error, Sendable, Hashable {
         self.init(code: code, message: message, reason: json["data"]?["reason"]?.stringValue ?? "",
                   data: json["data"] ?? [:])
     }
+
+    /// What the phone says about this refusal (spec 10). A `host_error` with
+    /// a `detail` is Tabber Studio's own reason ("That plug-in is not on the
+    /// computer any more. Open the list again."), shown in place of the
+    /// general "Tabber Studio could not do that."; a `routing_loop` names
+    /// the loop. Anything else is its message.
+    public var sentence: String {
+        switch reason {
+        case "host_error":
+            let detail = data["detail"]?.stringValue?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            return detail.isEmpty ? message : Self.withFullStop(detail)
+        case "routing_loop":
+            let path = data["path"]?.arrayValue?.compactMap(\.stringValue) ?? []
+            return path.isEmpty ? message : "\(message) \(path.joined(separator: " → "))."
+        default:
+            return message
+        }
+    }
+
+    /// The app's sentences end with a full stop, and some of Studio's reasons
+    /// leave it off ("Insert this instrument on a MIDI/score track").
+    static func withFullStop(_ text: String) -> String {
+        let last = text.reversed().first { !"\"')]\u{201D}\u{2019}".contains($0) }
+        return last.map { ".!?…".contains($0) } == true ? text : text + "."
+    }
 }
 
 /// Where a connection stands, for the badge that is always visible (principle 3).

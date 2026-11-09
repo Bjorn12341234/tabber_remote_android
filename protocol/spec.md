@@ -841,6 +841,13 @@ state in `data`, as listed.
 | 1040 | `track_limit` | This song has as many tracks as Tabber Studio can play. | `limit` |
 | 1099 | `host_error` | Tabber Studio could not do that. | `detail` |
 
+**`host_error`** is Tabber Studio refusing for a reason of its own, and
+`detail` says why, in Tabber Studio's words: a sentence a musician can read,
+in English, as `message` is ("That plug-in is not on the computer any more.
+Open the list again."). It is never an exception's text, a path or a code. A
+remote shows `detail` in place of `message`, and `message` when there is no
+`detail`; a host with no such sentence leaves `detail` out.
+
 `schemas/errors.json` holds this table; the validator checks every error in
 every vector against it.
 
