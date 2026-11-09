@@ -112,6 +112,13 @@ class DemoHost(
     private val faders = HashMap<String, Fader>()
     private val buses = mutableListOf(Bus("demo-bus-reverb", "Reverb"))
     private var busCounter = 0
+
+    /** Each strip's INSERTS (plugins/1): the guitar plays through Tabber Amp. */
+    private val inserts = mutableMapOf("demo-guitar" to listOf(Insert("fx-1", "Tabber Amp")))
+    private var insertCounter = 1
+
+    /** Tests: how many session.snapshot requests the demo has answered. */
+    private var servedSnapshots = 0
     /** Each send's level and Pre-fader: direct writes, as the mixer's send controls. */
     private val sendLevels = HashMap<String, SendValue>()
     /** The chat (chat/1), answered by a few scripted words in place of the AI. */
@@ -198,6 +205,23 @@ class DemoHost(
      * the phone was away; new connections work.
      */
     suspend fun goSilent() = withContext(confined) { for (connection in connections) connection.silent = true }
+
+    /** Tests: how many session.snapshot requests the demo has answered. */
+    suspend fun snapshotsServed(): Int = withContext(confined) { servedSnapshots }
+
+    /**
+     * Tests: send every connection again the last event it had, with its seq: an event the phone's
+     * last snapshot or event already holds (spec 8.2).
+     */
+    suspend fun resendLastEvent() = withContext(confined) {
+        for (connection in connections) {
+            if (!connection.authed || connection.seq <= 0) continue
+            send(jsonObject {
+                put("jsonrpc", "2.0"); put("method", "event")
+                put("params", jsonObject { put("topic", "undo"); put("seq", connection.seq); put("t", now()); put("data", undoState().toJson()) })
+            }, connection)
+        }
+    }
 
     /** A new connection; the phone uses the returned end. */
     suspend fun connect(): MemoryTransport = withContext(confined) {
@@ -306,7 +330,7 @@ class DemoHost(
                 connection.challenge = ByteArray(32).also(random::nextBytes)
                 return jsonObject {
                     put("host", jsonObject { put("id", HOST_ID); put("name", computerName); put("app_version", "demo") })
-                    put("protocol_version", "1.9")
+                    put("protocol_version", "1.10")
                     put("capabilities", Json.strings(CAPABILITIES))
                     put("limits", jsonObject {
                         put("max_frame_bytes", 65536); put("requests_per_second", 20); put("burst", 40)
@@ -348,7 +372,10 @@ class DemoHost(
             for (topic in p["topics"]?.array ?: emptyList()) topic.string?.let { connection.topics.remove(it) }
             jsonObject { put("topics", Json.strings(connection.topics.sorted())) }
         }
-        "session.snapshot" -> snapshot(connection.seq)
+        "session.snapshot" -> {
+            servedSnapshots += 1
+            snapshot(connection.seq)
+        }
         "transport.play" -> {
             val from = p["from"]
             val bar = from?.get("bar")?.int
@@ -556,6 +583,49 @@ class DemoHost(
             faders[id] = Fader(0.7, 0.0)
             jsonObject { put("strip", strip(id)!!.toJson()); put("mixer", mixerState().toJson()) }
         }
+        "plugins.catalog" -> {
+            val offset = maxOf(0, p["offset"]?.int ?: 0)
+            val limit = (p["limit"]?.int ?: 200).coerceIn(1, 200)
+            jsonObject {
+                put("plugins", Json.of(PLUGINS.drop(offset).take(limit).map(PluginRow::toJson)))
+                put("total", PLUGINS.size); put("offset", offset)
+            }
+        }
+        "plugins.insert" -> {
+            // The strip's "+ Plugin" and the browser's Insert: at the end of the chain; an
+            // instrument becomes a MIDI track's sound source instead.
+            val id = p["strip_id"]?.string ?: ""
+            if (strip(id) == null) throw DemoErrors.make("unknown_strip", mapOf("mixer" to mixerState().toJson()))
+            val row = PLUGINS.firstOrNull { it.id == p["plugin_id"]?.string }
+                ?: throw DemoErrors.make("host_error", mapOf("detail" to Json.Str("That plug-in is not on the computer any more. Open the list again.")))
+            if (row.isInstrument) {
+                if (song.tracks.firstOrNull { it.id == id }?.kind != TrackKind.MIDI) {
+                    throw DemoErrors.make("host_error", mapOf("detail" to Json.Str("Insert this instrument on a MIDI/score track")))
+                }
+            } else {
+                insertCounter += 1
+                inserts[id] = (inserts[id] ?: emptyList()) + Insert("fx-$insertCounter", row.name)
+            }
+            jsonObject { put("strip", strip(id)!!.toJson()); put("mixer", mixerState().toJson()); put("sound_source", row.isInstrument) }
+        }
+        "plugins.bypass", "plugins.remove", "plugins.open" -> {
+            val id = p["strip_id"]?.string ?: ""
+            if (strip(id) == null) throw DemoErrors.make("unknown_strip", mapOf("mixer" to mixerState().toJson()))
+            val chain = inserts[id] ?: emptyList()
+            val index = chain.indexOfFirst { it.id == p["insert_id"]?.string }
+            if (index < 0) throw DemoErrors.make("stale_target", mapOf("mixer" to mixerState().toJson()))
+            when (method) {
+                "plugins.bypass" -> {
+                    inserts[id] = chain.toMutableList().also { it[index] = it[index].copy(bypassed = p["bypassed"]?.bool ?: false) }
+                    jsonObject { put("strip", strip(id)!!.toJson()) }
+                }
+                "plugins.remove" -> {
+                    inserts[id] = chain.toMutableList().also { it.removeAt(index) }
+                    jsonObject { put("strip", strip(id)!!.toJson()); put("mixer", mixerState().toJson()) }
+                }
+                else -> Json.Obj(emptyMap()) // its window would open on the computer
+            }
+        }
         "trainer.state" -> jsonObject { put("trainer", trainerState().toJson()) }
         "trainer.set" -> {
             val enabled = p["enabled"]?.bool ?: trainer.enabled
@@ -654,7 +724,7 @@ class DemoHost(
         return Strip(
             id, kind, name, color, volume = rounded(fader.volume * 1000) / 1000, volumeDb = db(fader.volume),
             pan = rounded(fader.pan * 1000) / 1000, panLabel = panLabel(fader.pan),
-            muted = id in song.muted, soloed = id in song.soloed,
+            muted = id in song.muted, soloed = id in song.soloed, listedInserts = inserts[id] ?: emptyList(),
         )
     }
 
@@ -1238,12 +1308,23 @@ class DemoHost(
         const val HOST_ID = "5e1f0a2b-3c4d-4e5f-8a6b-7c8d9e0f1a2b"
         const val NAME = "Demo Studio"
 
+        /** The Insert Plugin browser's rows: Tabber's own, then plug-ins the demo computer has. */
+        val PLUGINS = listOf(
+            PluginRow("pl-tabber-amp", "Tabber Amp", "Tabber", "Amp", "effect", "vst3", tabber = true),
+            PluginRow("pl-tabber-eq", "Tabber EQ", "Tabber", "EQ", "effect", "vst3", tabber = true),
+            PluginRow("pl-tabber-compressor", "Tabber Compressor", "Tabber", "Dynamics", "effect", "vst3", tabber = true),
+            PluginRow("pl-tabber-limiter", "Tabber Limiter", "Tabber", "Dynamics", "effect", "native", tabber = true),
+            PluginRow("pl-tabber-synth", "Tabber Synth", "Tabber", "Synthesizer", "instrument", "native", tabber = true),
+            PluginRow("pl-demo-plate", "Plate Reverb", "Demo Audio", "Reverb", "effect", "vst3", tabber = false),
+            PluginRow("pl-demo-echo", "Tape Echo", "Demo Audio", "Delay", "effect", "clap", tabber = false),
+        )
+
         internal val CAPABILITIES = listOf(
             "transport/1", "record/1", "tempo_scale/1", "tracks/1", "tracks.monitor/1",
             "markers/1", "takes/1", "takes.discard/1", "takes.go_again/1", "undo/1",
             "save/1", "meters/1", "mixer/1", "tab/1", "routing/1", "chat/1", "view/1",
             "trainer/1", "tracks.add/1", "view.part/1", "tab.midi/1",
-            "mixer.add_bus/1",
+            "mixer.add_bus/1", "plugins/1",
         )
 
         /** The fader law: 0 dB at 70 % of the travel, +2.1 dB at the top, as Tabber Studio's fader. */

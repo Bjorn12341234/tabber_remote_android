@@ -90,6 +90,8 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     // The accessibility pass (TA5): Google's Accessibility Test Framework on every screen, as the iPhone's audit.
     androidTestImplementation("androidx.compose.ui:ui-test-junit4-accessibility")
+    // The sheets' own windows for that pass.
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
     androidTestImplementation("androidx.test:runner:1.7.0")
     androidTestImplementation("androidx.test.ext:junit:1.3.0")
 }

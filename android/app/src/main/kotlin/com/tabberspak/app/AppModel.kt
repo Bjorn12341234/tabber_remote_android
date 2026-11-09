@@ -21,6 +21,9 @@ import com.tabberspak.remotekit.NewTrackKind
 import com.tabberspak.remotekit.OkHttpTransport
 import com.tabberspak.remotekit.PairingLink
 import com.tabberspak.remotekit.PlayState
+import com.tabberspak.remotekit.PluginRow
+import com.tabberspak.remotekit.PluginPage
+import com.tabberspak.remotekit.Insert
 import com.tabberspak.remotekit.RacingTransport
 import com.tabberspak.remotekit.RemoteClient
 import com.tabberspak.remotekit.RemoteError
@@ -151,10 +154,6 @@ class AppModel(private val context: Context, private val scope: CoroutineScope =
     private var demoOnlyAudio = false
 
     val app = AppInfo(version = BuildConfig.VERSION_NAME, build = BuildConfig.VERSION_CODE.toString())
-
-    init {
-        known?.let { host -> signer()?.let { start(host, it) } }
-    }
 
     /**
      * Launch options for tests, screenshots and scripts, as the iPhone's launch arguments:
@@ -342,7 +341,7 @@ class AppModel(private val context: Context, private val scope: CoroutineScope =
         session?.let { old -> scope.launch { old.stop(); old.close() } }
         demoHost?.close()
         demoHost = null
-        endTakeOffers()
+        forgetComputerState()
         session = next
         listener = scope.launch {
             next.start()
@@ -407,20 +406,23 @@ class AppModel(private val context: Context, private val scope: CoroutineScope =
         session?.let { old -> scope.launch { old.stop(); old.close() } }
         demoHost?.close()
         demoHost = null
-        endTakeOffers()
+        forgetComputerState()
         session = null
         state = SessionState()
         bar = TransportSummary()
     }
 
     /**
-     * A take card and an Undo offer belong to the session that made them: with another session
-     * (the demo left, a computer forgotten or paired) Keep, Delete, Go again and Undo would aim at
-     * a take or a step the new computer does not have.
+     * What belonged to the computer just left (the demo left, a computer forgotten or paired): its
+     * take card and Undo offer, which would aim at a take or a step the next computer does not
+     * have, and its plug-in list, as the iPhone's forgetComputerState.
      */
-    private fun endTakeOffers() {
+    private fun forgetComputerState() {
         lastTake = null
         undoOffer = null
+        catalog = emptyList()
+        loadingPlugin = null
+        pluginNotice = null
     }
 
     val isConnected: Boolean get() = state.link is LinkState.Connected
@@ -691,6 +693,103 @@ class AppModel(private val context: Context, private val scope: CoroutineScope =
     fun removeSend(send: RoutingSend) =
         act("remove-${send.id}", "routing.remove_send", jsonObject { put("strip_id", send.stripId); put("bus_id", send.busId) })
 
+    // Plug-ins (each strip's INSERTS, plugins/1)
+
+    val pluginsAvailable: Boolean get() = "plugins/1" in state.capabilities
+
+    /** The Insert Plugin browser's rows, read when the browser opens. */
+    var catalog by mutableStateOf<List<PluginRow>>(emptyList())
+        private set
+    var catalogLoading by mutableStateOf(false)
+        private set
+
+    /** The plug-in loading on the computer now: its strip's id and its name. */
+    var loadingPlugin by mutableStateOf<Pair<String, String>?>(null)
+        private set
+
+    /** Said for a while once an instrument became a track's sound source. */
+    var pluginNotice by mutableStateOf<String?>(null)
+        private set
+
+    /** The browser's rows, a page at a time, as the computer has them now. */
+    fun loadCatalog() {
+        val session = session ?: return
+        if (catalogLoading) return
+        catalogLoading = true
+        scope.launch {
+            try {
+                val rows = ArrayList<PluginRow>()
+                var offset = 0
+                while (true) {
+                    val page = PluginPage.from(JsonReader(session.perform("plugins.catalog", jsonObject { put("offset", offset); put("limit", 200) })))
+                    rows += page.plugins
+                    offset = page.offset + page.plugins.size
+                    if (page.plugins.isEmpty() || offset >= page.total) break
+                }
+                catalog = rows
+                problem = null
+            } catch (failure: kotlinx.coroutines.CancellationException) {
+                throw failure
+            } catch (failure: Exception) {
+                problem = explain(failure)
+            } finally {
+                catalogLoading = false
+            }
+        }
+    }
+
+    /**
+     * The strip's "+ Plugin" and the browser's Insert. The computer answers once the plug-in has
+     * loaded, which can take a while, and opens its window there, as it does for a click.
+     */
+    fun insertPlugin(row: PluginRow, strip: Strip, done: (Boolean) -> Unit) {
+        val session = session ?: return
+        if (loadingPlugin != null) return
+        loadingPlugin = strip.id to row.name
+        scope.launch {
+            try {
+                val result = session.perform(
+                    "plugins.insert", jsonObject { put("strip_id", strip.id); put("plugin_id", row.id) }, timeout = 185.seconds,
+                )
+                loadingPlugin = null
+                problem = null
+                feedback = Feedback.TAP to feedback.second + 1
+                if (result["sound_source"]?.bool == true) say("${row.name} is now the sound source of ${strip.name}.")
+                done(true)
+            } catch (failure: kotlinx.coroutines.CancellationException) {
+                loadingPlugin = null
+                throw failure
+            } catch (failure: Exception) {
+                loadingPlugin = null
+                problem = explain(failure)
+                feedback = Feedback.FAILURE to feedback.second + 1
+                done(false)
+            }
+        }
+    }
+
+    private fun say(notice: String) {
+        pluginNotice = notice
+        scope.launch {
+            delay(6.seconds)
+            if (pluginNotice == notice) pluginNotice = null
+        }
+    }
+
+    /** A slot's Bypass or Un-bypass. */
+    fun bypassInsert(insert: Insert, strip: Strip) = act(
+        "bypass-${insert.id}", "plugins.bypass",
+        jsonObject { put("strip_id", strip.id); put("insert_id", insert.id); put("bypassed", !insert.bypassed) },
+    )
+
+    /** A slot's Remove. */
+    fun removeInsert(insert: Insert, strip: Strip) =
+        act("remove-${insert.id}", "plugins.remove", jsonObject { put("strip_id", strip.id); put("insert_id", insert.id) })
+
+    /** A slot's Open UI: the plug-in's own window, on the computer. */
+    fun openInsert(insert: Insert, strip: Strip) =
+        act("open-${insert.id}", "plugins.open", jsonObject { put("strip_id", strip.id); put("insert_id", insert.id) })
+
     /** The Mixer's meters, only while it is on screen (plan: TR25). */
     fun watchMixerMeters(on: Boolean) {
         val session = session ?: return
@@ -789,6 +888,12 @@ class AppModel(private val context: Context, private val scope: CoroutineScope =
 
     private fun deviceModel(): String = if (Build.FINGERPRINT.contains("generic") || Build.MODEL.contains("sdk")) "Emulator" else "Android"
 
+    // Last in the class: the session it starts touches the properties above, which Kotlin sets in
+    // the order they are written (a paired phone would otherwise start against unset state).
+    init {
+        known?.let { host -> signer()?.let { start(host, it) } }
+    }
+
     companion object {
         /** A pairing that did not work, in words that say what to do (spec 10). */
         fun explainPairing(error: Throwable?, name: String): String = when {
@@ -803,6 +908,9 @@ class AppModel(private val context: Context, private val scope: CoroutineScope =
                 val path = error.data["path"]?.array?.mapNotNull { it.string } ?: emptyList()
                 if (path.isEmpty()) error.message else "${error.message} ${path.joinToString(" → ")}."
             }
+            // A refusal in Tabber Studio's own words, when it gives them (spec 10: host_error's detail).
+            error is RemoteError && error.reason == "host_error" && !error.data["detail"]?.string.isNullOrBlank() ->
+                error.data["detail"]!!.string!!
             error is RemoteError -> error.message
             error is TransportFailure.WrongKey -> "This is not the computer you paired with."
             error is TransportFailure.Closed -> "Tabber Studio closed the connection."

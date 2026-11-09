@@ -473,7 +473,13 @@ class RemoteSession(
      * Runs a verb on the computer. A change gets a key once, and is resent with it after a drop
      * until the computer answers or [patience] runs out.
      */
-    suspend fun perform(method: String, params: Json = Json.Obj(emptyMap()), patience: Duration = 10.seconds): Json =
+    suspend fun perform(
+        method: String,
+        params: Json = Json.Obj(emptyMap()),
+        patience: Duration = 10.seconds,
+        /** How long the computer may take to answer: a plug-in's insert waits for it to load. */
+        timeout: Duration = 15.seconds,
+    ): Json =
         withContext(confined) {
             val fields = params.obj
             val sent = if (method !in READS && fields != null && "key" !in fields) {
@@ -486,7 +492,7 @@ class RemoteSession(
                 val client = client ?: throw TransportFailure.Unreachable("Tabber Studio is not connected.")
                 try {
                     val began = System.nanoTime()
-                    val result = client.call(method, sent)
+                    val result = client.call(method, sent, timeout)
                     applyResult(result)
                     if (ResponseTimes.counts(method)) times = times.adding((System.nanoTime() - began).nanoseconds)
                     return@withContext result
@@ -506,6 +512,7 @@ class RemoteSession(
     companion object {
         val READS = setOf(
             "takes.list", "session.snapshot", "mixer.state", "tab.state", "routing.state", "chat.state", "view.state", "trainer.state",
+            "plugins.catalog",
         )
         val TOPICS = listOf("transport", "position", "record", "tracks", "markers", "takes", "undo", "project", "meters")
 

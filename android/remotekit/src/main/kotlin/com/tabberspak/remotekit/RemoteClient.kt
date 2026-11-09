@@ -196,7 +196,7 @@ class RemoteClient(private val transport: RemoteTransport) {
     }
 
     companion object {
-        val PROTOCOL_VERSIONS = listOf("1.9")
+        val PROTOCOL_VERSIONS = listOf("1.10")
         private const val HEARTBEAT = "{\"jsonrpc\":\"2.0\",\"method\":\"heartbeat\",\"params\":{}}"
     }
 }

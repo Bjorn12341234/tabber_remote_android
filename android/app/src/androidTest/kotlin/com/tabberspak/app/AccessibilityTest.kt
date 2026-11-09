@@ -1,5 +1,12 @@
 package com.tabberspak.app
 
+import org.hamcrest.Matcher
+import androidx.test.espresso.matcher.ViewMatchers
+import androidx.test.espresso.matcher.RootMatchers
+import androidx.test.espresso.ViewAction
+import androidx.test.espresso.UiController
+import androidx.test.espresso.Espresso
+import android.view.View
 import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
@@ -32,13 +39,30 @@ class AccessibilityTest {
     private fun audit(scenario: ActivityScenario<MainActivity>, screen: String) {
         compose.waitForIdle()
         var results: List<AccessibilityViewCheckResult> = emptyList()
-        scenario.onActivity { activity ->
-            results = AccessibilityValidator()
-                .setCheckPreset(AccessibilityCheckPreset.LATEST)
-                .setRunChecksFromRootView(true)
-                .setThrowExceptionForErrors(false)
-                .checkAndReturnResults(activity.window.decorView)
-        }
+        scenario.onActivity { activity -> results = validator().checkAndReturnResults(activity.window.decorView) }
+        keep(results, screen)
+    }
+
+    /** The same checks on a sheet, which has a window of its own (the Insert Plugin browser). */
+    private fun auditSheet(screen: String) {
+        compose.waitForIdle()
+        var results: List<AccessibilityViewCheckResult> = emptyList()
+        Espresso.onView(ViewMatchers.isRoot()).inRoot(RootMatchers.isDialog()).perform(object : ViewAction {
+            override fun getConstraints(): Matcher<View> = ViewMatchers.isRoot()
+            override fun getDescription() = "the sheet's checks"
+            override fun perform(uiController: UiController, view: View) {
+                results = validator().checkAndReturnResults(view)
+            }
+        })
+        keep(results, screen)
+    }
+
+    private fun validator() = AccessibilityValidator()
+        .setCheckPreset(AccessibilityCheckPreset.LATEST)
+        .setRunChecksFromRootView(true)
+        .setThrowExceptionForErrors(false)
+
+    private fun keep(results: List<AccessibilityViewCheckResult>, screen: String) {
         for (result in results.filter { it.type == AccessibilityCheckResultType.ERROR }) {
             val element = result.element
             val what = listOfNotNull(
@@ -68,6 +92,17 @@ class AccessibilityTest {
             // Searching, or a computer found already (another test's may still be advertised).
             compose.waitUntil(10_000) { compose.node("searching") != null || compose.node("found-computer") != null }
             audit(scenario, "Find my computer")
+            report()
+        }
+    }
+
+    /** The Insert Plugin browser, on a strip's "＋ Plugin" (TR44). */
+    @Test fun theInsertPluginBrowser() {
+        launchDemo("screen" to "mixer").use { scenario ->
+            compose.waitForTag("add-plugin-Guitar").performClick()
+            compose.waitForTag("plugin-Tabber Amp")
+            auditSheet("Insert Plugin")
+            audit(scenario, "Mixer with plug-ins")
             report()
         }
     }
@@ -140,7 +175,12 @@ class AccessibilityTest {
             compose.onNodeWithTag("connection").performClick()
             compose.waitForTag("done")
             compose.onNodeWithTag("response-again").performScrollTo()
-            audit(scenario, "Computer")
+            auditSheet("Computer")
+            compose.onNodeWithTag("done").performClick()
+            compose.waitForNoTag("done")
+            compose.onNodeWithTag("readout").performClick() // Go to: the start or a marker
+            compose.waitUntil(8_000) { compose.onAllNodes(tagStarts("goto-")).fetchSemanticsNodes().isNotEmpty() }
+            auditSheet("Go to")
             report()
         }
     }

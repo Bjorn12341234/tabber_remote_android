@@ -487,4 +487,63 @@ class DemoHostTests {
         refused { session.perform("mixer.add_bus", jsonObject { put("name", "   ") }) }
         session.stop()
     }
+
+    /**
+     * TR44 on the demo computer: the browser's rows, an effect at the end of a strip's chain,
+     * bypassed and removed; an instrument becomes a MIDI track's sound source and is refused on an
+     * audio track; no undo steps.
+     */
+    @Test fun pluginsAreInsertedBypassedAndRemoved() = runBlocking<Unit> {
+        val session = session(DemoHost())
+        val start = connected(session)
+        val page = PluginPage.from(JsonReader(session.perform("plugins.catalog")))
+        assertTrue(page.total == page.plugins.size && page.plugins.first().name == "Tabber Amp")
+        assertEquals("Tabber's own first", page.plugins.filter { it.tabber }.size, page.plugins.takeWhile { it.tabber }.size)
+        val second = PluginPage.from(JsonReader(session.perform("plugins.catalog", jsonObject { put("offset", 2); put("limit", 2) })))
+        assertTrue(second.offset == 2 && second.plugins.map { it.id } == page.plugins.drop(2).take(2).map { it.id })
+        session.perform("mixer.state")
+        val mixer = required(eventually(session) { it.mixer != null }.mixer)
+        assertEquals(listOf("Tabber Amp"), mixer.strips.first { it.id == "demo-guitar" }.inserts.map { it.name })
+        val compressor = page.plugins.first { it.name == "Tabber Compressor" }
+        val added = session.perform("plugins.insert", jsonObject { put("strip_id", "demo-vocals"); put("plugin_id", compressor.id) })
+        val vocals = Strip.from(JsonReader(required(added["strip"])))
+        assertTrue(vocals.inserts.map { it.name } == listOf("Tabber Compressor") && added["sound_source"]?.bool == false)
+        val insert = vocals.inserts[0]
+        val off = session.perform("plugins.bypass", jsonObject { put("strip_id", "demo-vocals"); put("insert_id", insert.id); put("bypassed", true) })
+        assertEquals(true, Strip.from(JsonReader(required(off["strip"]))).inserts.firstOrNull()?.bypassed)
+        assertEquals(Json.Obj(emptyMap()), session.perform("plugins.open", jsonObject { put("strip_id", "demo-vocals"); put("insert_id", insert.id) }))
+        session.perform("plugins.remove", jsonObject { put("strip_id", "demo-vocals"); put("insert_id", insert.id) })
+        val after = eventually(session) { s -> s.mixer?.strips?.firstOrNull { it.id == "demo-vocals" }?.inserts?.isEmpty() == true }
+        assertEquals("plug-ins are no undo steps", start.undo, after.undo)
+        val gone = refused { session.perform("plugins.remove", jsonObject { put("strip_id", "demo-vocals"); put("insert_id", insert.id) }) }
+        assertEquals("stale_target", gone.reason)
+        val synth = page.plugins.first { it.isInstrument }
+        val source = session.perform("plugins.insert", jsonObject { put("strip_id", "demo-guitar"); put("plugin_id", synth.id) })
+        assertEquals("an instrument becomes the MIDI track's sound source", true, source["sound_source"]?.bool)
+        refused { session.perform("plugins.insert", jsonObject { put("strip_id", "demo-vocals"); put("plugin_id", synth.id) }) }
+        session.stop()
+    }
+
+    /**
+     * Spec 8.2: an event the phone already holds is ignored. Asking for a new snapshot for it, as
+     * the phone did, could loop while events stream (found porting the app to Android).
+     */
+    @Test fun anEventAlreadyHeldAsksForNoSnapshot() = runBlocking<Unit> {
+        val host = DemoHost()
+        val session = session(host)
+        connected(session)
+        session.perform("transport.set_click", jsonObject { put("enabled", true) })
+        eventually(session) { it.transport?.click == true }
+        val before = host.snapshotsServed()
+        repeat(5) {
+            host.resendLastEvent()
+            delay(40)
+        }
+        delay(300)
+        assertEquals("no snapshot for an event already held", before, host.snapshotsServed())
+        session.perform("transport.set_click", jsonObject { put("enabled", false) })
+        val after = eventually(session) { it.transport?.click == false }
+        assertEquals("and the phone still follows the computer", LinkState.Connected(busy = false), after.link)
+        session.stop()
+    }
 }

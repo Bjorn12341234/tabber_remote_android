@@ -41,8 +41,12 @@ class ResponseTimes private constructor(val samples: List<Duration>) {
         /** Enough for a rehearsal, small enough to sort each second. */
         const val KEPT = 500
 
-        /** Whether a verb's answer is a tap's: reads are not, and the chat's answers wait for the AI. */
-        fun counts(method: String): Boolean = method !in RemoteSession.READS && !method.startsWith("chat.")
+        /**
+         * Whether a verb's answer is a tap's: reads are not, the chat's answers wait for the AI, and a
+         * plug-in's insert waits for it to load.
+         */
+        fun counts(method: String): Boolean =
+            method !in RemoteSession.READS && !method.startsWith("chat.") && method != "plugins.insert"
     }
 }
 

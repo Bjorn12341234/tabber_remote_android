@@ -197,6 +197,9 @@ class ExchangeVectorTests(private val file: String) {
                     "chat" -> roundTrip(value) { ChatState.from(it).toJson() }
                     "view" -> roundTrip(value) { ViewState.from(it).toJson() }
                     "trainer" -> roundTrip(value) { TrainerState.from(it).toJson() }
+                    "plugins" -> roundTripList(value) { PluginRow.from(it).toJson() }
+                    "total", "offset" -> assertTrue("$file: $key of $method", value.int != null)
+                    "sound_source" -> assertTrue("$file: $key of $method", value.bool != null)
                     else -> fail("$file: unknown result field $key of $method")
                 }
             }

@@ -35,6 +35,7 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
@@ -133,12 +134,12 @@ fun RootScreen(model: AppModel) {
         )
     }
     if (model.showingComputer) {
-        ModalBottomSheet(onDismissRequest = { model.showingComputer = false }, containerColor = Studio.bg1) {
+        ModalBottomSheet(dragHandle = { BottomSheetDefaults.DragHandle(width = Studio.target) }, onDismissRequest = { model.showingComputer = false }, containerColor = Studio.bg1) {
             ComputerSheet(model)
         }
     }
     if (model.choosingPlace) {
-        ModalBottomSheet(onDismissRequest = { model.choosingPlace = false }, containerColor = Studio.bg1) {
+        ModalBottomSheet(dragHandle = { BottomSheetDefaults.DragHandle(width = Studio.target) }, onDismissRequest = { model.choosingPlace = false }, containerColor = Studio.bg1) {
             GoToSheet(model)
         }
     }

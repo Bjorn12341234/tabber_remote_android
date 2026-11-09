@@ -36,6 +36,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -160,6 +161,8 @@ private fun PagePicker(page: String, modifier: Modifier, choose: (String) -> Uni
 @Composable
 private fun Strips(model: AppModel, mixer: MixerState) {
     val list = rememberLazyListState()
+    // The tallest strip's INSERTS zone, for every strip, so the faders start level.
+    var insertsHeight by remember { mutableIntStateOf(0) }
     LaunchedEffect(model.addedBusId) {
         val added = model.addedBusId ?: return@LaunchedEffect
         val index = mixer.strips.indexOfFirst { it.id == added }
@@ -172,7 +175,18 @@ private fun Strips(model: AppModel, mixer: MixerState) {
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         itemsIndexed(mixer.strips, key = { _, strip -> strip.id }) { index, strip ->
-            StripView(model, strip, mixer.scale, mixer.unity, index)
+            StripView(model, strip, mixer.scale, mixer.unity, index, insertsHeight) { natural ->
+                if (natural > insertsHeight) insertsHeight = natural
+            }
+        }
+    }
+    // An instrument became a track's sound source: said for a while over the strips.
+    model.pluginNotice?.let { notice ->
+        Box(Modifier.fillMaxWidth().padding(top = 8.dp, start = 16.dp, end = 16.dp), contentAlignment = Alignment.TopCenter) {
+            Text(
+                notice, color = Studio.text1, fontSize = 15.sp,
+                modifier = Modifier.studioCard().padding(horizontal = 14.dp, vertical = 10.dp).testTag("plugin-notice"),
+            )
         }
     }
 }
@@ -223,7 +237,15 @@ private fun AddBusButton(model: AppModel) {
 
 /** One channel strip, top to bottom as in Tabber Studio's mixer. */
 @Composable
-private fun StripView(model: AppModel, strip: Strip, scale: List<ScaleMark>, unity: Double, index: Int) {
+private fun StripView(
+    model: AppModel,
+    strip: Strip,
+    scale: List<ScaleMark>,
+    unity: Double,
+    index: Int,
+    insertsHeight: Int,
+    insertsNatural: (Int) -> Unit,
+) {
     val scope = rememberCoroutineScope()
     var dragVolume by remember { mutableStateOf<Double?>(null) }
     var dragPan by remember { mutableStateOf<Double?>(null) }
@@ -248,6 +270,7 @@ private fun StripView(model: AppModel, strip: Strip, scale: List<ScaleMark>, uni
                 modifier = Modifier.padding(horizontal = 4.dp, vertical = 6.dp).semantics { heading() },
             )
         }
+        if (model.pluginsAvailable) InsertsZone(model, strip, insertsHeight, insertsNatural)
         if (!strip.isMaster) {
             var panStart by remember { mutableStateOf(0.0) }
             var panMoved by remember { mutableStateOf(Offset.Zero) }
