@@ -2650,8 +2650,14 @@ what was measured, and what changed in the plan.
     them. The audit flagged a slot drawn as two texts; one label, as
     Studio's, passes with nothing left out. The browser's iOS search field
     and Cancel button are left out of the audit, as the sheet's Done was.
+  - **Studio 0.3.29 released (c976dcab):** the verifier, the engine byte for
+    byte, the smoke test (which now requires plugins/1) and the TR37 scans
+    pass; parked at /Volumes/Data/tabber_work/rel0329 (DMG 486,401,240
+    bytes, SHA-256 1340ac35...). Installing waits for the owner to quit the
+    running 0.3.28.
   - **Owed:** a real insert on the owner's Mac from the phone (the release
-    smoke test runs the remote without an engine).
+    smoke test runs the remote without an engine), with TestFlight build 18,
+    which the owner uploads.
 
 - **Studio 0.3.27 (916000de), built 2026-11-08 and installed:** the release
   verifier passed; signed, notarized and stapled; the certified engine byte
