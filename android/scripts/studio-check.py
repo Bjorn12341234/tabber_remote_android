@@ -25,6 +25,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -145,6 +146,8 @@ def main() -> None:
     if subprocess.run([ADB, "get-state"], capture_output=True).returncode != 0:
         fail("no emulator: android/scripts/emulator.sh start")
     root = Path(tempfile.mkdtemp(prefix="tabberspak-studio-"))
+    # Kept after a failure, for Tabber Studio's logs there; removed after a pass.
+    evidence["studio_home"] = str(root)
     process, client, log = studio(root)
     try:
         client.call("project.new")
@@ -202,12 +205,15 @@ def main() -> None:
         evidence["reconnected_after_restart_s"] = round(time.monotonic() - restarted, 1)
         shot("reconnected")
         evidence["ok"] = True
+        evidence.pop("studio_home")
         print(json.dumps(evidence))
     finally:
         try:
             lrc._quit_packaged(process, client, log)
         except Exception:  # noqa: BLE001  (already gone)
             pass
+        if evidence.get("ok"):
+            shutil.rmtree(root, ignore_errors=True)
 
 
 if __name__ == "__main__":
