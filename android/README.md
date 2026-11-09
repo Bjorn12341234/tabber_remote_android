@@ -293,3 +293,13 @@ Proposed; the owner schedules them, one per session (plan.md, Rules for every sp
   DemoHost.swift's error table lacks four reasons its demo throws (`chat_busy`, `routing_loop`,
   `unknown_plan`, `wrong_kind`), which it answers as the generic 1099.
 
+
+### iOS build 20 and Linux Tabber Studio 0.3.29, 2026-11-09
+
+- **iOS build 20** (merged at `1b13fe8`) is build 19's code: the iPhone's release script builds
+  only committed, pushed code, and the one commit since build 19 is its build number. Nothing to
+  port.
+- **The Studio check** passes against Linux Tabber Studio 0.3.29 (built from its `27c6c2b6`,
+  which opens recording through its Linux audio layer): paired and connected in 3.5 s, the take
+  loop read back (1, then 0 after the delete, 1 after Undo), and a reconnect 9.1 s after Studio
+  restarted. That time includes Studio's own relaunch.
