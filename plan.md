@@ -2656,9 +2656,9 @@ what was measured, and what changed in the plan.
     bytes, SHA-256 1340ac35...). Installed once the owner quit 0.3.28 (it
     quit normally), with 0.3.18 kept and 0.3.28 in the Trash; the remote
     answers 1.10 with plugins/1 on the loopback and on Tailscale.
-  - **Owed:** a real insert on the owner's Mac from the phone (the release
-    smoke test runs the remote without an engine), with TestFlight build 18,
-    which the owner uploads.
+  - **Checked on the owner's devices, 2026-11-09:** TestFlight build 18
+    (4d72281, uploaded by the owner) with Studio 0.3.29. The owner: "ok it
+    works".
 
 - **Studio 0.3.27 (916000de), built 2026-11-08 and installed:** the release
   verifier passed; signed, notarized and stapled; the certified engine byte
