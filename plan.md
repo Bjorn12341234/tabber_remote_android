@@ -2659,6 +2659,27 @@ what was measured, and what changed in the plan.
   - **Checked on the owner's devices, 2026-11-09:** TestFlight build 18
     (4d72281, uploaded by the owner) with Studio 0.3.29. The owner: "ok it
     works".
+- **Four faults found porting the app to Android (2026-11-09), fixed here.**
+  The owner: "Android's tuner can hear a guitar's low E; the iPhone's can't.
+  why?"
+  - **The tuner's window:** the Viga Tuner detector decimates by 4 and looks
+    for periods up to half its window, so Spak's 1024 samples at 48 kHz
+    heard nothing below about 94 Hz: no low E (82.4 Hz), no drop D, no bass.
+    Measured on pure tones: 1024 heard from A (110 Hz) up; 2048, the Viga
+    Tuner's own default, down to drop D; 4096 down to a five-string bass's
+    low B (30.9 Hz). Spak now uses 4096: the first reading after 85 ms, then
+    one every 21 ms.
+  - **Events already held:** RemoteSession asked for a new snapshot for any
+    event that was not the next one, older ones included, where spec 8.2
+    ignores them; on Android it lost the connection to the real Studio.
+    Now ignored. DemoHost can resend an event the phone already has, and a
+    test proves no snapshot follows (it fails on the old code).
+  - **The take card** stayed after Leave the demo and Forget; now that and
+    the computer's plug-in list go with the computer.
+  - **InteropTests** expected protocol 1.0 from the Studio checkout it runs
+    against, which speaks the phone's newest version.
+  - RemoteKit 48 and 13 UI tests (tuner, take loop, Computer sheet,
+    welcome) pass. On the phone with the next TestFlight build.
 
 - **Studio 0.3.27 (916000de), built 2026-11-08 and installed:** the release
   verifier passed; signed, notarized and stapled; the certified engine byte

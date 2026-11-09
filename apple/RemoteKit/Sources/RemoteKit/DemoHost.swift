@@ -160,6 +160,20 @@ public actor DemoHost {
 
     public func setDropBeforeNextAnswer(_ value: Bool) { dropBeforeNextAnswer = value }
 
+    /// Tests: how many session.snapshot requests the demo has answered.
+    public private(set) var snapshotsServed = 0
+
+    /// Tests: send every connection again the last event it had, with its seq:
+    /// an event the phone's last snapshot or event already holds (spec 8.2).
+    public func resendLastEvent() {
+        for connection in connections.values where connection.authed && connection.seq > 0 {
+            send(["jsonrpc": "2.0", "method": "event",
+                  "params": ["topic": "undo", "seq": .number(Double(connection.seq)), "t": .number(now()),
+                             "data": (try? JSONCoding.value(undoState())) ?? .null]],
+                 to: connection)
+        }
+    }
+
     /// Tests: every open connection goes quiet without closing (no answers, no
     /// heartbeats), as when the phone was away; new connections work.
     public func goSilent() { for connection in connections.values { connection.silent = true } }
@@ -290,6 +304,7 @@ public actor DemoHost {
             for topic in p["topics"]?.arrayValue ?? [] { if let t = topic.stringValue { connection.topics.remove(t) } }
             return ["topics": .array(connection.topics.sorted().map { .string($0) })]
         case "session.snapshot":
+            snapshotsServed += 1
             return try snapshot(seq: connection.seq)
         case "transport.play":
             if let from = p["from"], let bar = from["bar"]?.intValue, let beat = from["beat"]?.intValue {

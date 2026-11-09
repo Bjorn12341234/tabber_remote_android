@@ -249,6 +249,7 @@ final class AppModel {
         session = nil
         state = SessionState()
         bar = TransportSummary()
+        forgetComputerState()
         if let known, let signer = try? DeviceKeyStore.loadOrCreate() { start(known, signer) }
     }
 
@@ -262,6 +263,16 @@ final class AppModel {
         session = nil
         state = SessionState()
         bar = TransportSummary()
+        forgetComputerState()
+    }
+
+    /// What belonged to the computer just left: its last take's card, its
+    /// plug-in list (found porting the app to Android, 2026-11-09).
+    private func forgetComputerState() {
+        lastTake = nil
+        catalog = []
+        loadingPlugin = nil
+        pluginNotice = nil
     }
 
     var isConnected: Bool { if case .connected = state.link { return true }; return false }

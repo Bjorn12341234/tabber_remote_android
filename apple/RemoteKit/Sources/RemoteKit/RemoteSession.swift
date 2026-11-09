@@ -255,7 +255,11 @@ public actor RemoteSession {
         for await message in client.incoming {
             switch message {
             case .event(let event):
-                if event.seq != state.seq + 1 {
+                if event.seq <= state.seq {
+                    // Already in the last snapshot: ignored, as spec 8.2 says. Asking
+                    // for another snapshot for it could loop while events stream
+                    // (found porting the app to Android, 2026-11-09).
+                } else if event.seq != state.seq + 1 {
                     await resnapshot()
                 } else {
                     state.seq = event.seq

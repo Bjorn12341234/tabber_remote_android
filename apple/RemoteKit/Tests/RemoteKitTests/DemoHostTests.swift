@@ -464,6 +464,28 @@ struct DemoHostTests {
         await session.stop()
     }
 
+    /// Spec 8.2: an event the phone already holds is ignored. Asking for a new
+    /// snapshot for it, as the phone did, could loop while events stream (found
+    /// porting the app to Android, 2026-11-09).
+    @Test func anEventAlreadyHeldAsksForNoSnapshot() async throws {
+        let host = DemoHost()
+        let session = session(host)
+        _ = try await connected(session)
+        _ = try await session.perform("transport.set_click", ["enabled": true])
+        _ = try await eventually(session) { $0.transport?.click == true }
+        let before = await host.snapshotsServed
+        for _ in 0..<5 {
+            await host.resendLastEvent()
+            try await Task.sleep(for: .milliseconds(40))
+        }
+        try await Task.sleep(for: .milliseconds(300))
+        #expect(await host.snapshotsServed == before, "no snapshot for an event already held")
+        _ = try await session.perform("transport.set_click", ["enabled": false])
+        let after = try await eventually(session) { $0.transport?.click == false }
+        #expect(after.link == .connected(busy: false), "and the phone still follows the computer")
+        await session.stop()
+    }
+
     /// TR44 on the demo computer: the browser's rows, an effect at the end of
     /// a strip's chain, bypassed and removed; an instrument becomes a MIDI
     /// track's sound source and is refused on an audio track; no undo steps.

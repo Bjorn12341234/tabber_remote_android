@@ -29,7 +29,8 @@ struct InteropTests {
         let first = RemoteClient(transport: NetworkTransport(route: route, pin: pin))
         await first.start()
         let hello = try await first.sayHello(app: AppInfo(version: "1.0", build: "1"))
-        #expect(hello.host.id == hostID && hello.protocolVersion == "1.0")
+        #expect(hello.host.id == hostID && hello.protocolVersion == RemoteClient.protocolVersions[0],
+                "the interop host is the Tabber Studio checkout, which speaks the phone's newest version")
         #expect(hello.capabilities.contains("takes.discard/1"))
         let paired = try await first.pair(token: token, pin: pin, device: signer, name: "Interop iPhone", model: "test")
         #expect(paired.deviceID == signer.deviceID)
