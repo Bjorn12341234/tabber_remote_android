@@ -1361,12 +1361,26 @@ class DemoHost(
 
 /** The error table (spec 10), word for word. */
 object DemoErrors {
+    // Every reason of protocol/schemas/errors.json (VectorTests checks it stays so).
     internal val table: Map<String, Pair<Int, String>> = mapOf(
+        "parse_error" to (-32700 to "The phone sent something the computer could not read."),
+        "invalid_request" to (-32600 to "The phone sent a request the computer could not read."),
         "method_not_found" to (-32601 to "This version of Tabber Studio cannot do that."),
         "invalid_params" to (-32602 to "The phone sent a request the computer could not use."),
         "internal_error" to (-32603 to "Something went wrong in Tabber Studio."),
         "unauthenticated" to (1001 to "Pair this phone with the computer first."),
+        "pairing_closed" to (1002 to "Pairing is not open. Click Pair iPhone in Tabber Studio."),
+        "pairing_token_invalid" to (1003 to "This pairing code does not work. Scan the code on the computer again."),
+        "pairing_token_expired" to (1004 to "This pairing code has expired. Scan the new one on the computer."),
+        "pairing_declined" to (1005 to "Pairing was declined on the computer."),
+        "pairing_timeout" to (1006 to "Nobody allowed the pairing on the computer in time."),
+        "unknown_device" to (1007 to "This phone is no longer paired with this computer. Pair it again."),
+        "signature_invalid" to (1008 to "The phone's key did not check out. Pair it again."),
+        "challenge_invalid" to (1009 to "The connection took too long to start. Connecting again."),
         "unsupported_version" to (1010 to "Update Tabber Studio or Tabber Spak so they can talk to each other."),
+        "rate_limited" to (1011 to "Too many requests at once. Try again in a moment."),
+        "busy" to (1012 to "Tabber Studio is busy. Try again in a moment."),
+        "no_song" to (1013 to "Open a song in Tabber Studio first."),
         "already_recording" to (1021 to "Tabber Studio is already recording."),
         "unknown_track" to (1023 to "That track is gone from the song."),
         "unknown_take" to (1024 to "That take is gone from the song."),
@@ -1375,10 +1389,18 @@ object DemoErrors {
         "undo_mismatch" to (1027 to "The computer's newest change is a different one. Undo it there, or try again."),
         "nothing_to_undo" to (1028 to "There is nothing to undo."),
         "nothing_to_redo" to (1029 to "There is nothing to redo."),
+        "needs_save_location" to (1030 to "Save this song on the computer first, so it has a file."),
+        "not_supported" to (1031 to "This version of Tabber Studio cannot do that. Update Tabber Studio."),
         "unknown_strip" to (1032 to "That strip is gone from the mixer."),
         "no_tab" to (1033 to "Choose a tab track to write on first."),
+        "routing_loop" to (1034 to "That route would make a feedback loop."),
+        "wrong_kind" to (1035 to "That strip cannot be routed that way."),
+        "chat_unavailable" to (1036 to "Set up the AI in Tabber Studio first, in Preferences › AI."),
+        "chat_busy" to (1037 to "The chat is still working on the last request."),
+        "unknown_plan" to (1038 to "That plan is gone. Ask again."),
         "needs_loop" to (1039 to "Turn Loop on first: the trainer speeds up each time the loop comes round."),
         "track_limit" to (1040 to "This song has as many tracks as Tabber Studio can play."),
+        "host_error" to (1099 to "Tabber Studio could not do that."),
     )
 
     internal fun make(reason: String, data: Map<String, Json> = emptyMap()): RemoteError {

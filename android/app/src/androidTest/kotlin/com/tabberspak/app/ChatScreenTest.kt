@@ -1,6 +1,8 @@
 package com.tabberspak.app
 
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
@@ -31,7 +33,9 @@ class ChatScreenTest {
 
     private fun ask(text: String) {
         compose.waitForTag("chat-field").performTextInput(text)
-        compose.onNodeWithTag("chat-send").performClick()
+        // Send by its action: the keyboard slides the field up as it opens, and a tap aimed at
+        // where Send was a moment ago could miss (1 run in 13). Every other test taps for real.
+        compose.onNodeWithTag("chat-send").performSemanticsAction(SemanticsActions.OnClick)
     }
 
     @Test fun itOpensOnlyWhenUnlockedThenPlansAndExecutes() {

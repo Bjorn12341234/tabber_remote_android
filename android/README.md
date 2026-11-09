@@ -249,3 +249,47 @@ Proposed; the owner schedules them, one per session (plan.md, Rules for every sp
 - **Tests:** 45 UI tests on the emulator pass in one run; the JVM suites pass; the Studio check
   passes against Linux Tabber Studio 0.3.27 (connected in 2.7 s, the take loop read back, a
   reconnect 5.9 s after Studio restarted).
+
+### iOS build 18: protocol 1.10, plug-ins and wiring the Flow, 2026-11-09
+
+- **From the iPhone repo** (merged at `95195d0`): protocol 1.10 with `plugins/1`, its schemas
+  and the plugins vector; TR43 (wiring the Flow by hand) and TR44 (plug-ins on the mixer's
+  strips), checked on the owner's iPhone with build 18; and the Mac side's fixes for the four
+  faults found porting to Android, which Android already had.
+- **Protocol 1.10 and plug-ins (TR44):** RemoteKit's `Insert`, `PluginRow` and `PluginPage`, a
+  strip's inserts (none from an older computer), the client offering 1.10 only as the iPhone
+  does, the catalog as a read, and an insert that may wait three minutes for its plug-in to load
+  (no response time). The demo computer has Tabber's five plug-ins and two Demo Audio ones. The
+  app shows each strip's INSERTS as Studio's ("● Name", "○ Name" bypassed, "+k more…",
+  "＋ Plugin"; one height on every strip so the faders stay level, with Android's 48 dp rows),
+  the slot's menu (Open on the computer, Bypass or Un-bypass, Remove) and the Insert Plugin
+  browser (its tabs, the format filter, the search, a greyed row's reason, the loading line, a
+  refusal kept on screen).
+- **Wiring the Flow by hand (TR43, by a helper agent on its own branch, merged):** drag from a
+  card's teal port onto a bus or the Master; a track chooses Output or Send, a bus moves its
+  output or is refused in Studio's words ("Reverb would loop: Delay → Reverb → Delay."); hold a
+  card for its menu (its output, Send to, Remove send), which TalkBack gets as the card's
+  actions; the hint line under the diagram. A drag from a port never scrolls or zooms the
+  diagram under the wire. It also found the cards' captions clipped by Material's 24 sp lines,
+  fixed.
+- **Different from the iPhone, on purpose:** a refusal shows Tabber Studio's own words, the
+  error's `detail` ("Old Delay failed to load."), as the spec says; the iPhone shows only the
+  generic "Tabber Studio could not do that.".
+- **Found and fixed here:** with the plug-in state below the model's start-up, a phone that had
+  paired before stopped at launch (Kotlin sets properties in the order they are written; the
+  demo never starts that way). The start-up now runs last; `AppModelTest` fails with the old
+  order. The accessibility pass now audits the sheets' own windows too (the Computer sheet, Go
+  to, Insert Plugin), which it had not reached; every sheet's handle is 48 dp wide. The demo
+  computer's error table is now the protocol's, all 38 reasons (four it throws had fallen back to
+  "Tabber Studio could not do that."), checked against `errors.json`. The Chat tests press Send
+  by its action: the keyboard slides it up as it opens, and a tap could miss (1 run in 13).
+- **Tests:** RemoteKit's 82 on the JVM (the plugins vector round-trips exactly; the stale-event
+  test from the iPhone fails under the old rule), interop 3 of 3 against Tabber Studio Linux's
+  own 1.10 host (synced to macOS 0.3.29 for it, its Part 11). New UI tests: Plugins 3, Flow 5
+  (the iPhone's three, a port's drag leaving a zoomed diagram where it was, TalkBack's actions),
+  the Insert Plugin browser's audit and the paired start; each new test was seen to fail with
+  its feature broken.
+- **Found upstream** (the iPhone app, reported to the owner): the refusal's words above, and
+  DemoHost.swift's error table lacks four reasons its demo throws (`chat_busy`, `routing_loop`,
+  `unknown_plan`, `wrong_kind`), which it answers as the generic 1099.
+

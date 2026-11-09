@@ -7,7 +7,9 @@ import androidx.test.espresso.ViewAction
 import androidx.test.espresso.UiController
 import androidx.test.espresso.Espresso
 import android.view.View
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
@@ -169,7 +171,8 @@ class AccessibilityTest {
             audit(scenario, "Chat locked")
             tap("unlock-chat")
             compose.waitForTag("chat-field").performTextInput("Mute the drums")
-            tap("chat-send")
+            // By its action: the keyboard slides Send up as it opens (ChatScreenTest.ask).
+            compose.onNodeWithTag("chat-send").performSemanticsAction(SemanticsActions.OnClick)
             compose.waitForTag("chat-plan")
             audit(scenario, "Chat")
             compose.onNodeWithTag("connection").performClick()

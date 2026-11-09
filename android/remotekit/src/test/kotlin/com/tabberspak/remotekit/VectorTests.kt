@@ -260,3 +260,15 @@ class JsonTests {
         }
     }
 }
+
+/** The demo computer's errors are the protocol's, word for word (spec 10). */
+class ErrorTableTests {
+    @Test fun theDemosTableIsTheProtocols() {
+        val protocol = (Vectors.json("../schemas/errors.json")["errors"]?.array ?: emptyList()).associate { entry ->
+            entry["reason"]!!.string!! to (entry["code"]!!.int!! to entry["message"]!!.string!!)
+        }
+        assertTrue("the protocol's table was read", protocol.size > 30)
+        assertEquals(protocol, DemoErrors.table)
+    }
+}
+
