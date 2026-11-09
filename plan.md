@@ -1037,6 +1037,8 @@ you have to go to the computer and click on it manually on the computer?"
 | TR40 | Tab on MIDI tracks: with MIDI tab shown, the phone's fretboard and piano write on a MIDI track as Studio's MIDI Tab does, each edit one undo step | spec, Studio, this repo | Headless: a fret from the phone is the note Studio's MIDI Tab writes, at the same string and fret, one undo step; the instrument is untouched; UI tests |
 | TR41 | Add Bus from the phone, as the mixer's "+ Bus" makes it: Studio asks for its name first | spec, Studio, this repo | Headless: the bus equals "+ Bus"'s, named as typed; not an undo step there, nor here; it shows in the phone's Mixer and Routing at once; UI tests |
 | TR42 | The routing Flow view on the phone: Studio's Flow tab, tracks through buses to the master | this repo, Studio if a read is missing | The phone draws what Studio's Flow tab draws for the same song, checked against Studio's own flow model; readable at the largest text; UI tests and the accessibility audit |
+| TR43 | Wiring by hand in the phone's Flow, as Studio's Flow does it, and the computer's master fader following the phone | this repo, Studio | UI tests: a track's output to a bus and back, a send made by dragging and taken away from the card's menu, a looping bus refused in Studio's words; the accessibility audit; headless: the master strip follows mixer.set_master_gain and project.set_properties |
+| TR44 | Plug-ins on the phone's mixer strips: each strip's INSERTS as Studio's strip lists them, its "+ Plugin" opening Studio's Insert Plugin browser, and a slot's Open UI, Bypass and Remove | spec, Studio, this repo | Protocol 1.10 (plugins/1) with a vector of all five verbs; headless: the browser's rows and paging, the browser's own insert on the strip's chain, the strip menu's own Bypass and Remove, refusals in Studio's words, no undo steps; UI tests and the accessibility audit; a real insert on the owner's Mac |
 
 ### M2, the Lock Screen and the Action Button (1.1)
 
@@ -2581,6 +2583,103 @@ what was measured, and what changed in the plan.
   - **Not yet:** Studio's Flow also draws sidechains and each card's
     plug-in count; the routing topic carries neither, so they need a
     protocol addition.
+- **TR43 ✅ 2026-11-08: wiring by hand in the Flow, and the master fader
+  (Studio 0.3.28).** The owner: "when i slide the master volume in the app
+  its not changing in tabber studio" and "in flow, i dont seem to be able to
+  move by hand the connections manually".
+  - **The master fader (Studio 9f7e5ca8, 0.3.28 at 5eacd919):**
+    `mixer.set_master_gain` set the song and the engine but left the mixer's
+    master strip where it was, so the computer looked unchanged; the phone,
+    the chat and scripts all use it. `project.set_properties` also missed
+    the engine: it looked for `mw._engine`, which the window does not have.
+    Both now go through `apply_master_gain`: the song and the engine, as the
+    master fader's own handler does, then the strip, without echo. Tests
+    check the strip's fader and label and the engine for both commands.
+  - **Wiring in the Flow (this repo):** drag from a card's teal output port
+    (a handle a thumb wide at any zoom) onto a bus or the Master. On the
+    Master the output goes back there; on a bus a track chooses Output or
+    Send (Studio's plain or Option drag) and a bus moves its output, or is
+    refused as "Reverb would loop: Delay → Reverb → Delay.". Press and hold
+    a card for its menu (output, send to, remove send), which VoiceOver also
+    gets as actions; a hint line under the diagram says how. Each change is
+    one undo step on the computer, through the routing verbs the Routing
+    page uses, so no protocol change.
+  - **Tests:** FlowUITests (three), and the accessibility, mixer, routing
+    and welcome suites: 17 passed.
+  - **Studio 0.3.28 released and installed:** the verifier, the engine byte
+    for byte, the smoke test and the TR37 scans pass; parked at
+    /Volumes/Data/tabber_work/rel0328 (DMG 486,446,958 bytes, SHA-256
+    3f0bb3c7...); installed with 0.3.18 kept and 0.3.27 in the Trash; the
+    remote answers 1.9 with every capability on the loopback and Tailscale.
+    Not on the website, which offers 0.3.27; Spak needs nothing newer.
+  - **Not yet:** tapping a wire to select and delete it, as Studio's Flow
+    does; the card's menu removes a send, and dropping on the Master undoes
+    an output.
+- **TR44 ✅ 2026-11-09: plug-ins from the phone (protocol 1.10, Studio
+  3d5026f9, 0.3.29).** The owner: "should you be able to insert plugins on
+  tracks from the app?", then "yes".
+  - **Protocol 1.10, `plugins/1`** (cc67548): each mixer strip carries its
+    `inserts` (name, bypassed, auto_bypassed); `plugins.catalog` gives the
+    Insert Plugin browser's rows, 200 a page, since a message is at most
+    64 KB; `plugins.insert`, `plugins.bypass`, `plugins.remove` and
+    `plugins.open`. None is an undo step, there or here. `stale_target` may
+    carry the mixer, for an insert gone from its strip.
+  - **Studio:** the rows are the browser's, in its order (Tabber's own, then
+    the scan cache): on the owner's Mac 96 rows in one 19.5 KB page. Insert
+    is the browser's own `PluginInsertController.begin_insert` on the
+    strip's chain (a track's is its strip's index in the timeline, as the
+    mixer builds it), so the plug-in loads in the background, opens its
+    window on the computer and is saved as there; it and `insert_native`
+    take `on_done`, so a refusal reaches the phone, not a message box on a
+    computer nobody is at. Bypass and Remove are the strip menu's own
+    actions, split into raising `bypass()` and `remove()`.
+  - **The phone:** an INSERTS zone on every strip, as Studio's: "● Name",
+    "○ Name" bypassed, then a dashed "+ Plugin"; one height on every strip
+    so the faders stay level, growing with the text size (a preference key
+    keeps the tallest); a long chain shows "+k more…". A slot opens a
+    sheet of choices: Open on the computer, Bypass or Un-bypass, Remove.
+    "+ Plugin" opens Insert Plugin: Tabber Plugins and Plugins, All, VST3
+    and CLAP, Search plugins; a greyed row says why; it waits up to three
+    minutes for a plug-in to load, shows "Loading … on …", and keeps a
+    refusal in Studio's words on screen. An instrument on a MIDI track says
+    it is now the track's sound source. The demo has Tabber's five and two
+    "Demo Audio" plug-ins.
+  - **Tests:** Studio's TR44 tests (4) with stand-ins; RemoteKit 47,
+    including the demo's plug-ins and every vector's round trip; UI tests
+    22, PluginsUITests (3) and the Insert Plugin browser's audit among
+    them. The audit flagged a slot drawn as two texts; one label, as
+    Studio's, passes with nothing left out. The browser's iOS search field
+    and Cancel button are left out of the audit, as the sheet's Done was.
+  - **Studio 0.3.29 released (c976dcab):** the verifier, the engine byte for
+    byte, the smoke test (which now requires plugins/1) and the TR37 scans
+    pass; parked at /Volumes/Data/tabber_work/rel0329 (DMG 486,401,240
+    bytes, SHA-256 1340ac35...). Installed once the owner quit 0.3.28 (it
+    quit normally), with 0.3.18 kept and 0.3.28 in the Trash; the remote
+    answers 1.10 with plugins/1 on the loopback and on Tailscale.
+  - **Checked on the owner's devices, 2026-11-09:** TestFlight build 18
+    (4d72281, uploaded by the owner) with Studio 0.3.29. The owner: "ok it
+    works".
+- **Four faults found porting the app to Android (2026-11-09), fixed here.**
+  The owner: "Android's tuner can hear a guitar's low E; the iPhone's can't.
+  why?"
+  - **The tuner's window:** the Viga Tuner detector decimates by 4 and looks
+    for periods up to half its window, so Spak's 1024 samples at 48 kHz
+    heard nothing below about 94 Hz: no low E (82.4 Hz), no drop D, no bass.
+    Measured on pure tones: 1024 heard from A (110 Hz) up; 2048, the Viga
+    Tuner's own default, down to drop D; 4096 down to a five-string bass's
+    low B (30.9 Hz). Spak now uses 4096: the first reading after 85 ms, then
+    one every 21 ms.
+  - **Events already held:** RemoteSession asked for a new snapshot for any
+    event that was not the next one, older ones included, where spec 8.2
+    ignores them; on Android it lost the connection to the real Studio.
+    Now ignored. DemoHost can resend an event the phone already has, and a
+    test proves no snapshot follows (it fails on the old code).
+  - **The take card** stayed after Leave the demo and Forget; now that and
+    the computer's plug-in list go with the computer.
+  - **InteropTests** expected protocol 1.0 from the Studio checkout it runs
+    against, which speaks the phone's newest version.
+  - RemoteKit 48 and 13 UI tests (tuner, take loop, Computer sheet,
+    welcome) pass. On the phone with the next TestFlight build.
 
 - **Studio 0.3.27 (916000de), built 2026-11-08 and installed:** the release
   verifier passed; signed, notarized and stapled; the certified engine byte

@@ -156,6 +156,9 @@ struct ExchangeVectorTests {
                 case "chat": try roundTrip(ChatState.self, value)
                 case "view": try roundTrip(ViewState.self, value)
                 case "trainer": try roundTrip(TrainerState.self, value)
+                case "plugins": try roundTrip([PluginRow].self, value)
+                case "total", "offset": try roundTrip(Int.self, value)
+                case "sound_source": try roundTrip(Bool.self, value)
                 default: Issue.record("unknown result field \(key) of \(method)")
                 }
             }

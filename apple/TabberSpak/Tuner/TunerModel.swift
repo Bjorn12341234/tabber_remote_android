@@ -116,7 +116,12 @@ final class TunerModel {
                 try? session.setActive(false, options: .notifyOthersOnDeactivation)
                 return
             }
-            tap.prepare(sampleRate: format.sampleRate, blockSize: 1024)
+            // The detector decimates by 4 and looks for periods up to half its
+            // window, so 1024 samples at 48 kHz heard nothing below about 94 Hz:
+            // no low E (82.4 Hz), no bass. 4096 hears down to about 23 Hz, a
+            // five-string bass's low B (30.9 Hz) included (found porting the
+            // app to Android, 2026-11-09).
+            tap.prepare(sampleRate: format.sampleRate, blockSize: 4096)
             tap.install(on: input, format: format)
             try engine.start()
             self.engine = engine

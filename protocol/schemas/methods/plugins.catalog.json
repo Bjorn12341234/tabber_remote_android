@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tabber.studio/schemas/remote/1/methods/plugins.catalog.json",
+  "title": "plugins.catalog",
+  "x-capability": "plugins/1",
+  "x-changes": false,
+  "$defs": {
+    "params": {
+      "type": "object",
+      "properties": {
+        "offset": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "The first row; 0 when absent."
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "description": "Rows at most; 200 when absent."
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "result": {
+      "type": "object",
+      "properties": {
+        "plugins": {
+          "type": "array",
+          "maxItems": 200,
+          "items": {
+            "$ref": "../common.json#/$defs/plugin"
+          }
+        },
+        "total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "plugins",
+        "total",
+        "offset"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

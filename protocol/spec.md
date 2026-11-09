@@ -254,7 +254,7 @@ whether Tabber Studio is busy:
 ## 7. Versions and capabilities
 
 - **The protocol version** is `major.minor`. `hello` lists what the remote
-  speaks (`"protocol_versions": ["1.9"]`, one entry per major, the highest
+  speaks (`"protocol_versions": ["1.10"]`, one entry per major, the highest
   minor it knows); the host answers with the version it chose: the major
   both speak, and the lower of the two minors. It lists only that version's
   capabilities, refuses the verbs of any other with `not_supported` and
@@ -349,6 +349,13 @@ shows Add Bus only when the host lists it:
 | Capability | Gives |
 |---|---|
 | `mixer.add_bus/1` | `mixer.add_bus` |
+
+Version 1.10 adds one capability. A 1.10 remote works with any 1.x host and
+shows a strip's plug-ins only when the host lists it:
+
+| Capability | Gives |
+|---|---|
+| `plugins/1` | `plugins.catalog`, `plugins.insert`, `plugins.bypass`, `plugins.remove`, `plugins.open`, and `inserts` on the mixer's strips |
 
 ## 8. Snapshot and events
 
@@ -555,6 +562,42 @@ whose id is `master`. A track's strip has the track's id.
   trimmed, as the dialog does), in the mixer and the routing at once.
   `strip` is the new bus's strip. A name of only spaces is refused with
   `invalid_params`. A new bus is not an undo step, there or here.
+- With plugins/1 each strip also carries its `inserts` (below).
+
+### Plug-ins (plugins/1)
+
+Each strip's INSERTS, as Tabber Studio's mixer strip lists them, and its
+Insert Plugin browser, which the strip's "＋ Plugin" opens.
+
+| Verb | Params | Result | Control API |
+|---|---|---|---|
+| `plugins.catalog` | `offset`, `limit` (both optional) | `plugins`, `total`, `offset` | the Insert Plugin browser's rows |
+| `plugins.insert` | `key`, `strip_id`, `plugin_id` | `strip`, `mixer`, `sound_source` | the browser's Insert, after "＋ Plugin" |
+| `plugins.bypass` | `key`, `strip_id`, `insert_id`, `bypassed` | `strip` | a slot's Bypass and Un-bypass |
+| `plugins.remove` | `key`, `strip_id`, `insert_id` | `strip`, `mixer` | a slot's Remove |
+| `plugins.open` | `key`, `strip_id`, `insert_id` | none | a slot's Open UI, on the computer |
+
+- **`inserts`** lists a strip's plug-ins in chain order: each `name`,
+  `bypassed` (the strip's hollow dot) and `auto_bypassed`, when Tabber
+  Studio bypassed it itself because it took too long. A track's instrument
+  is its sound source, not an insert, so it is not listed.
+- **`plugins.catalog`** gives the browser's rows in its order, at most 200
+  at a time: Tabber's own devices (`tabber`, its Tabber Plugins tab), then
+  the VST3 and CLAP plug-ins the computer has scanned (its Plugins tab). A
+  row that is not `available` says why in `reason`, in the browser's words,
+  and cannot be inserted.
+- **`plugins.insert`** puts the row at the end of the strip's chain, as
+  choosing it in the browser does, and answers once it is in: a plug-in can
+  take seconds to load. Tabber Studio then opens its window on the
+  computer, as it does there. An instrument on a MIDI track becomes the
+  track's sound source instead (`sound_source`). A refusal is `host_error`
+  in Tabber Studio's words, also for a row the computer no longer has;
+  while another insert is loading the answer is `busy`.
+- **`plugins.open`** opens the plug-in's own window on the computer, as
+  clicking its slot does: its controls are drawn there, not on the phone.
+- **An insert that is gone** from the strip is `stale_target`, with the
+  `mixer`.
+- **Plug-ins are not undo steps,** there or here.
 
 ### Tab (tab/1)
 
@@ -781,7 +824,7 @@ state in `data`, as listed.
 | 1023 | `unknown_track` | That track is gone from the song. | `tracks` |
 | 1024 | `unknown_take` | That take is gone from the song. | `takes` |
 | 1025 | `unknown_marker` | That marker is gone from the song. | `markers` |
-| 1026 | `stale_target` | This changed on the computer. The phone now shows the new state. | the current state of the topic |
+| 1026 | `stale_target` | This changed on the computer. The phone now shows the new state. | the current state of the topic, or `mixer` |
 | 1027 | `undo_mismatch` | The computer's newest change is a different one. Undo it there, or try again. | `undo` |
 | 1028 | `nothing_to_undo` | There is nothing to undo. | `undo` |
 | 1029 | `nothing_to_redo` | There is nothing to redo. | `undo` |

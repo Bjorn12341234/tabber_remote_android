@@ -36,7 +36,8 @@ public struct ResponseTimes: Sendable, Hashable {
     /// Whether a verb's answer is a tap's. Reads are not taps, and the chat's
     /// answers wait for the AI, which is not the line's speed.
     static func counts(_ method: String) -> Bool {
-        !RemoteSession.reads.contains(method) && !method.hasPrefix("chat.")
+        // A plug-in's insert waits for it to load: not a response time.
+        !RemoteSession.reads.contains(method) && !method.hasPrefix("chat.") && method != "plugins.insert"
     }
 }
 

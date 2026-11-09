@@ -65,6 +65,26 @@ public actor DemoHost {
     private var faders: [String: (volume: Double, pan: Double)] = [:]
     private var buses: [(id: String, name: String)] = [("demo-bus-reverb", "Reverb")]
     private var busCounter = 0
+    /// Each strip's INSERTS (plugins/1): the guitar plays through Tabber Amp.
+    private var inserts: [String: [Insert]] = ["demo-guitar": [Insert(id: "fx-1", name: "Tabber Amp")]]
+    private var insertCounter = 1
+    /// The Insert Plugin browser's rows: Tabber's own, then plug-ins the demo computer has.
+    static let plugins: [PluginRow] = [
+        PluginRow(id: "pl-tabber-amp", name: "Tabber Amp", vendor: "Tabber", category: "Amp", kind: "effect",
+                  format: "vst3", tabber: true),
+        PluginRow(id: "pl-tabber-eq", name: "Tabber EQ", vendor: "Tabber", category: "EQ", kind: "effect",
+                  format: "vst3", tabber: true),
+        PluginRow(id: "pl-tabber-compressor", name: "Tabber Compressor", vendor: "Tabber", category: "Dynamics",
+                  kind: "effect", format: "vst3", tabber: true),
+        PluginRow(id: "pl-tabber-limiter", name: "Tabber Limiter", vendor: "Tabber", category: "Dynamics",
+                  kind: "effect", format: "native", tabber: true),
+        PluginRow(id: "pl-tabber-synth", name: "Tabber Synth", vendor: "Tabber", category: "Synthesizer",
+                  kind: "instrument", format: "native", tabber: true),
+        PluginRow(id: "pl-demo-plate", name: "Plate Reverb", vendor: "Demo Audio", category: "Reverb",
+                  kind: "effect", format: "vst3", tabber: false),
+        PluginRow(id: "pl-demo-echo", name: "Tape Echo", vendor: "Demo Audio", category: "Delay",
+                  kind: "effect", format: "clap", tabber: false),
+    ]
     /// Each send's level and Pre-fader: direct writes, as the mixer's send controls.
     private var sendLevels: [String: (level: Double, pre: Bool)] = [:]
     /// The chat (chat/1), answered by a few scripted words in place of the AI.
@@ -139,6 +159,20 @@ public actor DemoHost {
     }
 
     public func setDropBeforeNextAnswer(_ value: Bool) { dropBeforeNextAnswer = value }
+
+    /// Tests: how many session.snapshot requests the demo has answered.
+    public private(set) var snapshotsServed = 0
+
+    /// Tests: send every connection again the last event it had, with its seq:
+    /// an event the phone's last snapshot or event already holds (spec 8.2).
+    public func resendLastEvent() {
+        for connection in connections.values where connection.authed && connection.seq > 0 {
+            send(["jsonrpc": "2.0", "method": "event",
+                  "params": ["topic": "undo", "seq": .number(Double(connection.seq)), "t": .number(now()),
+                             "data": (try? JSONCoding.value(undoState())) ?? .null]],
+                 to: connection)
+        }
+    }
 
     /// Tests: every open connection goes quiet without closing (no answers, no
     /// heartbeats), as when the phone was away; new connections work.
@@ -229,12 +263,12 @@ public actor DemoHost {
             }
             connection.challenge = Data((0..<32).map { _ in UInt8.random(in: 0...255) })
             return ["host": ["id": .string(Self.hostID), "name": .string(computerName), "app_version": "demo"],
-                    "protocol_version": "1.9",
+                    "protocol_version": "1.10",
                     "capabilities": ["transport/1", "record/1", "tempo_scale/1", "tracks/1", "tracks.monitor/1",
                                      "markers/1", "takes/1", "takes.discard/1", "takes.go_again/1", "undo/1",
                                      "save/1", "meters/1", "mixer/1", "tab/1", "routing/1", "chat/1", "view/1",
                                      "trainer/1", "tracks.add/1", "view.part/1", "tab.midi/1",
-                                     "mixer.add_bus/1"],
+                                     "mixer.add_bus/1", "plugins/1"],
                     "limits": ["max_frame_bytes": 65536, "requests_per_second": 20, "burst": 40,
                                "heartbeat_ms": 2000, "heartbeat_misses": 3, "connections_per_device": 2],
                     "challenge": .string(Base64URL.encode(connection.challenge))]
@@ -270,6 +304,7 @@ public actor DemoHost {
             for topic in p["topics"]?.arrayValue ?? [] { if let t = topic.stringValue { connection.topics.remove(t) } }
             return ["topics": .array(connection.topics.sorted().map { .string($0) })]
         case "session.snapshot":
+            snapshotsServed += 1
             return try snapshot(seq: connection.seq)
         case "transport.play":
             if let from = p["from"], let bar = from["bar"]?.intValue, let beat = from["beat"]?.intValue {
@@ -465,6 +500,44 @@ public actor DemoHost {
             buses.append((id, name))
             faders[id] = (0.7, 0)
             return ["strip": try JSONCoding.value(strip(id)!), "mixer": try JSONCoding.value(mixerState())]
+        case "plugins.catalog":
+            let offset = max(0, p["offset"]?.intValue ?? 0), limit = max(1, min(200, p["limit"]?.intValue ?? 200))
+            return ["plugins": try JSONCoding.value(Array(Self.plugins.dropFirst(offset).prefix(limit))),
+                    "total": .number(Double(Self.plugins.count)), "offset": .number(Double(offset))]
+        case "plugins.insert":
+            // The strip's "+ Plugin" and the browser's Insert: at the end of the
+            // chain; an instrument becomes a MIDI track's sound source instead.
+            let id = p["strip_id"]?.stringValue ?? ""
+            guard strip(id) != nil else { throw DemoErrors.make("unknown_strip", ["mixer": try JSONCoding.value(mixerState())]) }
+            guard let row = Self.plugins.first(where: { $0.id == p["plugin_id"]?.stringValue }) else {
+                throw DemoErrors.make("host_error", ["detail": "That plug-in is not on the computer any more. Open the list again."])
+            }
+            if row.isInstrument {
+                guard song.tracks.first(where: { $0.id == id })?.kind == .midi else {
+                    throw DemoErrors.make("host_error", ["detail": "Insert this instrument on a MIDI/score track"])
+                }
+            } else {
+                insertCounter += 1
+                inserts[id, default: []].append(Insert(id: "fx-\(insertCounter)", name: row.name))
+            }
+            return ["strip": try JSONCoding.value(strip(id)!), "mixer": try JSONCoding.value(mixerState()),
+                    "sound_source": .bool(row.isInstrument)]
+        case "plugins.bypass", "plugins.remove", "plugins.open":
+            let id = p["strip_id"]?.stringValue ?? ""
+            guard strip(id) != nil else { throw DemoErrors.make("unknown_strip", ["mixer": try JSONCoding.value(mixerState())]) }
+            guard let index = inserts[id]?.firstIndex(where: { $0.id == p["insert_id"]?.stringValue }) else {
+                throw DemoErrors.make("stale_target", ["mixer": try JSONCoding.value(mixerState())])
+            }
+            switch method {
+            case "plugins.bypass":
+                inserts[id]![index].bypassed = p["bypassed"]?.boolValue ?? false
+                return ["strip": try JSONCoding.value(strip(id)!)]
+            case "plugins.remove":
+                inserts[id]!.remove(at: index)
+                return ["strip": try JSONCoding.value(strip(id)!), "mixer": try JSONCoding.value(mixerState())]
+            default:
+                return [:]                          // its window would open on the computer
+            }
         case "trainer.state":
             return ["trainer": try JSONCoding.value(trainerState())]
         case "trainer.set":
@@ -569,7 +642,8 @@ public actor DemoHost {
         }
         return Strip(id: id, kind: kind, name: name, color: color, volume: (fader.volume * 1000).rounded() / 1000,
                      volumeDB: Self.db(fader.volume), pan: (fader.pan * 1000).rounded() / 1000,
-                     panLabel: Self.panLabel(fader.pan), muted: song.muted.contains(id), soloed: song.soloed.contains(id))
+                     panLabel: Self.panLabel(fader.pan), muted: song.muted.contains(id), soloed: song.soloed.contains(id),
+                     inserts: inserts[id] ?? [])
     }
 
     private func mixerState() -> MixerState {

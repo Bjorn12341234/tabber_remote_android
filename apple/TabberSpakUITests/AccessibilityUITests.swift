@@ -30,8 +30,10 @@ final class AccessibilityUITests: XCTestCase {
             // the text size, and the Routing page says the same in text that grows.
             if let diagram, [.dynamicType, .textClipped].contains(issue.auditType),
                diagram.intersects(issue.element?.frame ?? .zero) { return true }
-            // The sheet's Done is iOS's own toolbar button, whose largest sizes iOS caps.
-            if issue.auditType == .dynamicType, issue.element?.identifier == "done" { return true }
+            // The sheet's Done and Cancel are iOS's own toolbar buttons, whose largest sizes iOS caps.
+            if issue.auditType == .dynamicType, ["done", "cancel"].contains(issue.element?.identifier ?? "") { return true }
+            // The Insert Plugin browser's search is iOS's own search field, whose prompt iOS clips (TR44).
+            if issue.auditType == .textClipped, issue.element?.elementType == .searchField { return true }
             // The audit flags rows at the foot of the long Computer sheet: "Leave the
             // demo" failed there too, and passes higher up (8 Nov 2026). Those rows'
             // growth is checked at the largest text by ComputerSheetUITests instead.
@@ -79,6 +81,18 @@ final class AccessibilityUITests: XCTestCase {
         app.tabBars.buttons["Tab"].tap()
         XCTAssertTrue(element(app, "midi-part").waitForExistence(timeout: 8))
         try audit(app, "Tab, a MIDI part")
+    }
+
+    /// The Insert Plugin browser, on a strip's "＋ Plugin" (TR44).
+    @MainActor
+    func testTheInsertPluginBrowser() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo", "-reset-input", "-screen", "mixer"]
+        app.launch()
+        XCTAssertTrue(element(app, "add-plugin-Guitar").waitForExistence(timeout: 8))
+        element(app, "add-plugin-Guitar").tap()
+        XCTAssertTrue(element(app, "plugin-Tabber Amp").waitForExistence(timeout: 8))
+        try audit(app, "Insert Plugin")
     }
 
     /// The routing Flow (TR42).

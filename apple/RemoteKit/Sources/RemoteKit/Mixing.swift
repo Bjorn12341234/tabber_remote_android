@@ -20,16 +20,34 @@ public struct Strip: Codable, Sendable, Hashable, Identifiable {
     public var panLabel: String
     public var muted: Bool
     public var soloed: Bool
+    /// The strip's INSERTS in chain order (plugins/1); none from an older computer.
+    public var inserts: [Insert] {
+        get { listed ?? [] }
+        set { listed = newValue }
+    }
+    /// What the computer sent: nil when it has no plugins/1, so the strip reads back as it came.
+    private var listed: [Insert]?
 
     enum CodingKeys: String, CodingKey {
-        case id, kind, name, color, volume, pan, muted, soloed
+        case id, kind, name, color, volume, pan, muted, soloed, inserts
         case volumeDB = "volume_db", panLabel = "pan_label"
     }
 
     public init(id: String, kind: String, name: String, color: String?, volume: Double, volumeDB: Double?,
-                pan: Double, panLabel: String, muted: Bool, soloed: Bool) {
+                pan: Double, panLabel: String, muted: Bool, soloed: Bool, inserts: [Insert]? = nil) {
         self.id = id; self.kind = kind; self.name = name; self.color = color; self.volume = volume
         self.volumeDB = volumeDB; self.pan = pan; self.panLabel = panLabel; self.muted = muted; self.soloed = soloed
+        self.listed = inserts
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(String.self, forKey: .id); kind = try c.decode(String.self, forKey: .kind)
+        name = try c.decode(String.self, forKey: .name); color = try c.decodeIfPresent(String.self, forKey: .color)
+        volume = try c.decode(Double.self, forKey: .volume); volumeDB = try c.decodeIfPresent(Double.self, forKey: .volumeDB)
+        pan = try c.decode(Double.self, forKey: .pan); panLabel = try c.decode(String.self, forKey: .panLabel)
+        muted = try c.decode(Bool.self, forKey: .muted); soloed = try c.decode(Bool.self, forKey: .soloed)
+        listed = try c.decodeIfPresent([Insert].self, forKey: .inserts)
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -38,6 +56,7 @@ public struct Strip: Codable, Sendable, Hashable, Identifiable {
         try c.encode(color, forKey: .color); try c.encode(volume, forKey: .volume)
         try c.encode(volumeDB, forKey: .volumeDB); try c.encode(pan, forKey: .pan)
         try c.encode(panLabel, forKey: .panLabel); try c.encode(muted, forKey: .muted); try c.encode(soloed, forKey: .soloed)
+        try c.encodeIfPresent(listed, forKey: .inserts)
     }
 
     public var isMaster: Bool { kind == "master" }

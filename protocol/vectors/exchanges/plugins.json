@@ -1,0 +1,1416 @@
+{
+ "name": "plugins",
+ "description": "Plug-ins from the phone (spec 9, plugins/1): each strip's INSERTS, the Insert Plugin browser's rows a page at a time, an effect inserted at the end of a track's chain once it has loaded, bypassed, its window opened on the computer and removed; an instrument becomes a MIDI track's sound source; a refusal in Tabber Studio's words; an insert gone from the strip.",
+ "start": "authenticated",
+ "host_state": {
+  "pairing": {
+   "open": false
+  },
+  "paired_devices": [
+   {
+    "device_id": "zsiNWgOpGPu3nnQsDLV1c5EUoLWC_GqaxM6F0p8aU88",
+    "name": "Björn's iPhone",
+    "key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAELmFLfdxxNIkeJNkXdNhfQVal4qrDnl_C1tq3bYJMIbARSFIBJiHBKBXg2n0qXdRgpN7x-2sEbrFmAaCll5zfdw"
+   }
+  ],
+  "capabilities": [
+   "transport/1",
+   "record/1",
+   "tempo_scale/1",
+   "tracks/1",
+   "tracks.monitor/1",
+   "markers/1",
+   "takes/1",
+   "takes.discard/1",
+   "takes.go_again/1",
+   "undo/1",
+   "save/1",
+   "meters/1",
+   "pair.code/1",
+   "mixer/1",
+   "tab/1",
+   "plugins/1"
+  ],
+  "snapshot": {
+   "seq": 10,
+   "t": 9000.0,
+   "project": {
+    "title": "My Song",
+    "unsaved": false,
+    "has_file": true
+   },
+   "transport": {
+    "state": "stopped",
+    "position": {
+     "bar": 1,
+     "beat": 1,
+     "seconds": 0.0
+    },
+    "tempo_bpm": 96.0,
+    "tempo_scale": 1.0,
+    "time_signature": {
+     "beats": 4,
+     "unit": 4
+    },
+    "loop": {
+     "enabled": false,
+     "start": null,
+     "end": null
+    },
+    "click": false,
+    "count_in_bars": 0,
+    "counting_in": false
+   },
+   "record": {
+    "recording": false,
+    "started": null,
+    "armed_track_ids": []
+   },
+   "tracks": [
+    {
+     "id": "trk-guitar",
+     "name": "Guitar",
+     "kind": "midi",
+     "armed": false,
+     "monitor": "auto",
+     "selected": true,
+     "color": "#50A0DC",
+     "instrument": "Acoustic Guitar (steel)",
+     "tuning": [
+      64,
+      59,
+      55,
+      50,
+      45,
+      40
+     ]
+    },
+    {
+     "id": "trk-vocals",
+     "name": "Vocals",
+     "kind": "audio",
+     "armed": false,
+     "monitor": "auto",
+     "selected": false,
+     "color": "#DC5050"
+    },
+    {
+     "id": "trk-keys",
+     "name": "Keys",
+     "kind": "midi",
+     "armed": false,
+     "monitor": "auto",
+     "selected": false,
+     "color": "#64BE64",
+     "instrument": "Electric Piano 1"
+    }
+   ],
+   "markers": [
+    {
+     "id": "mrk-intro",
+     "name": "Intro",
+     "bar": 1,
+     "beat": 1
+    },
+    {
+     "id": "mrk-verse",
+     "name": "Verse",
+     "bar": 9,
+     "beat": 1
+    },
+    {
+     "id": "mrk-chorus",
+     "name": "Chorus",
+     "bar": 25,
+     "beat": 1
+    },
+    {
+     "id": "mrk-solo",
+     "name": "Solo",
+     "bar": 41,
+     "beat": 1
+    }
+   ],
+   "takes": [],
+   "undo": {
+    "undo": null,
+    "redo": null
+   }
+  }
+ },
+ "steps": [
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "session.subscribe",
+    "params": {
+     "topics": [
+      "mixer"
+     ]
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "result": {
+     "seq": 10,
+     "t": 9000.0,
+     "project": {
+      "title": "My Song",
+      "unsaved": false,
+      "has_file": true
+     },
+     "transport": {
+      "state": "stopped",
+      "position": {
+       "bar": 1,
+       "beat": 1,
+       "seconds": 0.0
+      },
+      "tempo_bpm": 96.0,
+      "tempo_scale": 1.0,
+      "time_signature": {
+       "beats": 4,
+       "unit": 4
+      },
+      "loop": {
+       "enabled": false,
+       "start": null,
+       "end": null
+      },
+      "click": false,
+      "count_in_bars": 0,
+      "counting_in": false
+     },
+     "record": {
+      "recording": false,
+      "started": null,
+      "armed_track_ids": []
+     },
+     "tracks": [
+      {
+       "id": "trk-guitar",
+       "name": "Guitar",
+       "kind": "midi",
+       "armed": false,
+       "monitor": "auto",
+       "selected": true,
+       "color": "#50A0DC",
+       "instrument": "Acoustic Guitar (steel)",
+       "tuning": [
+        64,
+        59,
+        55,
+        50,
+        45,
+        40
+       ]
+      },
+      {
+       "id": "trk-vocals",
+       "name": "Vocals",
+       "kind": "audio",
+       "armed": false,
+       "monitor": "auto",
+       "selected": false,
+       "color": "#DC5050"
+      },
+      {
+       "id": "trk-keys",
+       "name": "Keys",
+       "kind": "midi",
+       "armed": false,
+       "monitor": "auto",
+       "selected": false,
+       "color": "#64BE64",
+       "instrument": "Electric Piano 1"
+      }
+     ],
+     "markers": [
+      {
+       "id": "mrk-intro",
+       "name": "Intro",
+       "bar": 1,
+       "beat": 1
+      },
+      {
+       "id": "mrk-verse",
+       "name": "Verse",
+       "bar": 9,
+       "beat": 1
+      },
+      {
+       "id": "mrk-chorus",
+       "name": "Chorus",
+       "bar": 25,
+       "beat": 1
+      },
+      {
+       "id": "mrk-solo",
+       "name": "Solo",
+       "bar": 41,
+       "beat": 1
+      }
+     ],
+     "takes": [],
+     "undo": {
+      "undo": null,
+      "redo": null
+     }
+    }
+   }
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 2,
+    "method": "mixer.state",
+    "params": {}
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 2,
+    "result": {
+     "mixer": {
+      "strips": [
+       {
+        "id": "trk-guitar",
+        "kind": "track",
+        "name": "Guitar",
+        "color": "#50A0DC",
+        "volume": 0.7,
+        "volume_db": 0.0,
+        "pan": -0.3,
+        "pan_label": "L19",
+        "muted": false,
+        "soloed": false,
+        "inserts": [
+         {
+          "id": "fx-301",
+          "name": "Tabber Amp",
+          "bypassed": false,
+          "auto_bypassed": false
+         }
+        ]
+       },
+       {
+        "id": "trk-vocals",
+        "kind": "track",
+        "name": "Vocals",
+        "color": "#DC5050",
+        "volume": 0.74,
+        "volume_db": 0.3,
+        "pan": 0.0,
+        "pan_label": "C",
+        "muted": false,
+        "soloed": false,
+        "inserts": []
+       },
+       {
+        "id": "trk-keys",
+        "kind": "track",
+        "name": "Keys",
+        "color": "#64BE64",
+        "volume": 0.62,
+        "volume_db": -3.2,
+        "pan": 0.0,
+        "pan_label": "C",
+        "muted": false,
+        "soloed": false,
+        "inserts": []
+       },
+       {
+        "id": "bus-reverb",
+        "kind": "bus",
+        "name": "Reverb",
+        "color": null,
+        "volume": 0.52,
+        "volume_db": -7.7,
+        "pan": 0.0,
+        "pan_label": "C",
+        "muted": false,
+        "soloed": false,
+        "inserts": []
+       },
+       {
+        "id": "master",
+        "kind": "master",
+        "name": "Master",
+        "color": null,
+        "volume": 0.7,
+        "volume_db": 0.0,
+        "pan": 0.0,
+        "pan_label": "C",
+        "muted": false,
+        "soloed": false,
+        "inserts": []
+       }
+      ],
+      "scale": [
+       {
+        "db": 0,
+        "volume": 0.7
+       },
+       {
+        "db": -12,
+        "volume": 0.442
+       },
+       {
+        "db": -24,
+        "volume": 0.279
+       },
+       {
+        "db": -48,
+        "volume": 0.111
+       }
+      ]
+     }
+    }
+   },
+   "note": "Each strip carries its INSERTS: Tabber Amp on the guitar."
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 3,
+    "method": "plugins.catalog",
+    "params": {
+     "offset": 0,
+     "limit": 50
+    }
+   },
+   "note": "The strip's + Plugin opens the browser's rows."
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 3,
+    "result": {
+     "plugins": [
+      {
+       "id": "pl-tabber-amp",
+       "name": "Tabber Amp",
+       "vendor": "Tabber",
+       "category": "Amp",
+       "kind": "effect",
+       "format": "native",
+       "tabber": true,
+       "available": true,
+       "reason": null
+      },
+      {
+       "id": "pl-tabber-compressor",
+       "name": "Tabber Compressor",
+       "vendor": "Tabber",
+       "category": "Dynamics",
+       "kind": "effect",
+       "format": "native",
+       "tabber": true,
+       "available": true,
+       "reason": null
+      },
+      {
+       "id": "pl-tabber-synth",
+       "name": "Tabber Synth",
+       "vendor": "Tabber",
+       "category": "Synth",
+       "kind": "instrument",
+       "format": "native",
+       "tabber": true,
+       "available": true,
+       "reason": null
+      },
+      {
+       "id": "pl-valhalla-room",
+       "name": "ValhallaRoom",
+       "vendor": "Valhalla DSP, LLC",
+       "category": "Fx|Reverb",
+       "kind": "effect",
+       "format": "vst3",
+       "tabber": false,
+       "available": true,
+       "reason": null
+      },
+      {
+       "id": "pl-old-delay",
+       "name": "Old Delay",
+       "vendor": "Somebody",
+       "category": "failed to load",
+       "kind": "effect",
+       "format": "vst3",
+       "tabber": false,
+       "available": false,
+       "reason": "failed to load"
+      }
+     ],
+     "total": 5,
+     "offset": 0
+    }
+   },
+   "note": "Tabber's own devices first, then the scanned plug-ins; one that failed to load says so."
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 4,
+    "method": "plugins.insert",
+    "params": {
+     "key": "b8d5a7e2-1c0f-4b8e-9a51-2f6d3c7e9a01",
+     "strip_id": "trk-vocals",
+     "plugin_id": "pl-tabber-compressor"
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 4,
+    "result": {
+     "strip": {
+      "id": "trk-vocals",
+      "kind": "track",
+      "name": "Vocals",
+      "color": "#DC5050",
+      "volume": 0.74,
+      "volume_db": 0.3,
+      "pan": 0.0,
+      "pan_label": "C",
+      "muted": false,
+      "soloed": false,
+      "inserts": [
+       {
+        "id": "fx-318",
+        "name": "Tabber Compressor",
+        "bypassed": false,
+        "auto_bypassed": false
+       }
+      ]
+     },
+     "mixer": {
+      "strips": [
+       {
+        "id": "trk-guitar",
+        "kind": "track",
+        "name": "Guitar",
+        "color": "#50A0DC",
+        "volume": 0.7,
+        "volume_db": 0.0,
+        "pan": -0.3,
+        "pan_label": "L19",
+        "muted": false,
+        "soloed": false,
+        "inserts": [
+         {
+          "id": "fx-301",
+          "name": "Tabber Amp",
+          "bypassed": false,
+          "auto_bypassed": false
+         }
+        ]
+       },
+       {
+        "id": "trk-vocals",
+        "kind": "track",
+        "name": "Vocals",
+        "color": "#DC5050",
+        "volume": 0.74,
+        "volume_db": 0.3,
+        "pan": 0.0,
+        "pan_label": "C",
+        "muted": false,
+        "soloed": false,
+        "inserts": [
+         {
+          "id": "fx-318",
+          "name": "Tabber Compressor",
+          "bypassed": false,
+          "auto_bypassed": false
+         }
+        ]
+       },
+       {
+        "id": "trk-keys",
+        "kind": "track",
+        "name": "Keys",
+        "color": "#64BE64",
+        "volume": 0.62,
+        "volume_db": -3.2,
+        "pan": 0.0,
+        "pan_label": "C",
+        "muted": false,
+        "soloed": false,
+        "inserts": []
+       },
+       {
+        "id": "bus-reverb",
+        "kind": "bus",
+        "name": "Reverb",
+        "color": null,
+        "volume": 0.52,
+        "volume_db": -7.7,
+        "pan": 0.0,
+        "pan_label": "C",
+        "muted": false,
+        "soloed": false,
+        "inserts": []
+       },
+       {
+        "id": "master",
+        "kind": "master",
+        "name": "Master",
+        "color": null,
+        "volume": 0.7,
+        "volume_db": 0.0,
+        "pan": 0.0,
+        "pan_label": "C",
+        "muted": false,
+        "soloed": false,
+        "inserts": []
+       }
+      ],
+      "scale": [
+       {
+        "db": 0,
+        "volume": 0.7
+       },
+       {
+        "db": -12,
+        "volume": 0.442
+       },
+       {
+        "db": -24,
+        "volume": 0.279
+       },
+       {
+        "db": -48,
+        "volume": 0.111
+       }
+      ]
+     },
+     "sound_source": false
+    }
+   },
+   "note": "Answered once the compressor is in, at the end of the vocals' chain."
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "method": "event",
+    "params": {
+     "topic": "mixer",
+     "seq": 11,
+     "t": 9002.4,
+     "data": {
+      "strips": [
+       {
+        "id": "trk-guitar",
+        "kind": "track",
+        "name": "Guitar",
+        "color": "#50A0DC",
+        "volume": 0.7,
+        "volume_db": 0.0,
+        "pan": -0.3,
+        "pan_label": "L19",
+        "muted": false,
+        "soloed": false,
+        "inserts": [
+         {
+          "id": "fx-301",
+          "name": "Tabber Amp",
+          "bypassed": false,
+          "auto_bypassed": false
+         }
+        ]
+       },
+       {
+        "id": "trk-vocals",
+        "kind": "track",
+        "name": "Vocals",
+        "color": "#DC5050",
+        "volume": 0.74,
+        "volume_db": 0.3,
+        "pan": 0.0,
+        "pan_label": "C",
+        "muted": false,
+        "soloed": false,
+        "inserts": [
+         {
+          "id": "fx-318",
+          "name": "Tabber Compressor",
+          "bypassed": false,
+          "auto_bypassed": false
+         }
+        ]
+       },
+       {
+        "id": "trk-keys",
+        "kind": "track",
+        "name": "Keys",
+        "color": "#64BE64",
+        "volume": 0.62,
+        "volume_db": -3.2,
+        "pan": 0.0,
+        "pan_label": "C",
+        "muted": false,
+        "soloed": false,
+        "inserts": []
+       },
+       {
+        "id": "bus-reverb",
+        "kind": "bus",
+        "name": "Reverb",
+        "color": null,
+        "volume": 0.52,
+        "volume_db": -7.7,
+        "pan": 0.0,
+        "pan_label": "C",
+        "muted": false,
+        "soloed": false,
+        "inserts": []
+       },
+       {
+        "id": "master",
+        "kind": "master",
+        "name": "Master",
+        "color": null,
+        "volume": 0.7,
+        "volume_db": 0.0,
+        "pan": 0.0,
+        "pan_label": "C",
+        "muted": false,
+        "soloed": false,
+        "inserts": []
+       }
+      ],
+      "scale": [
+       {
+        "db": 0,
+        "volume": 0.7
+       },
+       {
+        "db": -12,
+        "volume": 0.442
+       },
+       {
+        "db": -24,
+        "volume": 0.279
+       },
+       {
+        "db": -48,
+        "volume": 0.111
+       }
+      ]
+     }
+    }
+   }
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 5,
+    "method": "plugins.bypass",
+    "params": {
+     "key": "1f2e3d4c-5b6a-4978-8a9b-0c1d2e3f4a5b",
+     "strip_id": "trk-vocals",
+     "insert_id": "fx-318",
+     "bypassed": true
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 5,
+    "result": {
+     "strip": {
+      "id": "trk-vocals",
+      "kind": "track",
+      "name": "Vocals",
+      "color": "#DC5050",
+      "volume": 0.74,
+      "volume_db": 0.3,
+      "pan": 0.0,
+      "pan_label": "C",
+      "muted": false,
+      "soloed": false,
+      "inserts": [
+       {
+        "id": "fx-318",
+        "name": "Tabber Compressor",
+        "bypassed": true,
+        "auto_bypassed": false
+       }
+      ]
+     }
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "method": "event",
+    "params": {
+     "topic": "mixer",
+     "seq": 12,
+     "t": 9003.0,
+     "data": {
+      "strips": [
+       {
+        "id": "trk-guitar",
+        "kind": "track",
+        "name": "Guitar",
+        "color": "#50A0DC",
+        "volume": 0.7,
+        "volume_db": 0.0,
+        "pan": -0.3,
+        "pan_label": "L19",
+        "muted": false,
+        "soloed": false,
+        "inserts": [
+         {
+          "id": "fx-301",
+          "name": "Tabber Amp",
+          "bypassed": false,
+          "auto_bypassed": false
+         }
+        ]
+       },
+       {
+        "id": "trk-vocals",
+        "kind": "track",
+        "name": "Vocals",
+        "color": "#DC5050",
+        "volume": 0.74,
+        "volume_db": 0.3,
+        "pan": 0.0,
+        "pan_label": "C",
+        "muted": false,
+        "soloed": false,
+        "inserts": [
+         {
+          "id": "fx-318",
+          "name": "Tabber Compressor",
+          "bypassed": true,
+          "auto_bypassed": false
+         }
+        ]
+       },
+       {
+        "id": "trk-keys",
+        "kind": "track",
+        "name": "Keys",
+        "color": "#64BE64",
+        "volume": 0.62,
+        "volume_db": -3.2,
+        "pan": 0.0,
+        "pan_label": "C",
+        "muted": false,
+        "soloed": false,
+        "inserts": []
+       },
+       {
+        "id": "bus-reverb",
+        "kind": "bus",
+        "name": "Reverb",
+        "color": null,
+        "volume": 0.52,
+        "volume_db": -7.7,
+        "pan": 0.0,
+        "pan_label": "C",
+        "muted": false,
+        "soloed": false,
+        "inserts": []
+       },
+       {
+        "id": "master",
+        "kind": "master",
+        "name": "Master",
+        "color": null,
+        "volume": 0.7,
+        "volume_db": 0.0,
+        "pan": 0.0,
+        "pan_label": "C",
+        "muted": false,
+        "soloed": false,
+        "inserts": []
+       }
+      ],
+      "scale": [
+       {
+        "db": 0,
+        "volume": 0.7
+       },
+       {
+        "db": -12,
+        "volume": 0.442
+       },
+       {
+        "db": -24,
+        "volume": 0.279
+       },
+       {
+        "db": -48,
+        "volume": 0.111
+       }
+      ]
+     }
+    }
+   }
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 6,
+    "method": "plugins.open",
+    "params": {
+     "key": "7c6b5a49-3827-4165-8f4e-3d2c1b0a9f8e",
+     "strip_id": "trk-vocals",
+     "insert_id": "fx-318"
+    }
+   },
+   "note": "Its window opens on the computer, as clicking its slot does."
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 6,
+    "result": {}
+   }
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 7,
+    "method": "plugins.remove",
+    "params": {
+     "key": "2a3b4c5d-6e7f-4801-9a2b-3c4d5e6f7a8b",
+     "strip_id": "trk-vocals",
+     "insert_id": "fx-318"
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 7,
+    "result": {
+     "strip": {
+      "id": "trk-vocals",
+      "kind": "track",
+      "name": "Vocals",
+      "color": "#DC5050",
+      "volume": 0.74,
+      "volume_db": 0.3,
+      "pan": 0.0,
+      "pan_label": "C",
+      "muted": false,
+      "soloed": false,
+      "inserts": []
+     },
+     "mixer": {
+      "strips": [
+       {
+        "id": "trk-guitar",
+        "kind": "track",
+        "name": "Guitar",
+        "color": "#50A0DC",
+        "volume": 0.7,
+        "volume_db": 0.0,
+        "pan": -0.3,
+        "pan_label": "L19",
+        "muted": false,
+        "soloed": false,
+        "inserts": [
+         {
+          "id": "fx-301",
+          "name": "Tabber Amp",
+          "bypassed": false,
+          "auto_bypassed": false
+         }
+        ]
+       },
+       {
+        "id": "trk-vocals",
+        "kind": "track",
+        "name": "Vocals",
+        "color": "#DC5050",
+        "volume": 0.74,
+        "volume_db": 0.3,
+        "pan": 0.0,
+        "pan_label": "C",
+        "muted": false,
+        "soloed": false,
+        "inserts": []
+       },
+       {
+        "id": "trk-keys",
+        "kind": "track",
+        "name": "Keys",
+        "color": "#64BE64",
+        "volume": 0.62,
+        "volume_db": -3.2,
+        "pan": 0.0,
+        "pan_label": "C",
+        "muted": false,
+        "soloed": false,
+        "inserts": []
+       },
+       {
+        "id": "bus-reverb",
+        "kind": "bus",
+        "name": "Reverb",
+        "color": null,
+        "volume": 0.52,
+        "volume_db": -7.7,
+        "pan": 0.0,
+        "pan_label": "C",
+        "muted": false,
+        "soloed": false,
+        "inserts": []
+       },
+       {
+        "id": "master",
+        "kind": "master",
+        "name": "Master",
+        "color": null,
+        "volume": 0.7,
+        "volume_db": 0.0,
+        "pan": 0.0,
+        "pan_label": "C",
+        "muted": false,
+        "soloed": false,
+        "inserts": []
+       }
+      ],
+      "scale": [
+       {
+        "db": 0,
+        "volume": 0.7
+       },
+       {
+        "db": -12,
+        "volume": 0.442
+       },
+       {
+        "db": -24,
+        "volume": 0.279
+       },
+       {
+        "db": -48,
+        "volume": 0.111
+       }
+      ]
+     }
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "method": "event",
+    "params": {
+     "topic": "mixer",
+     "seq": 13,
+     "t": 9004.2,
+     "data": {
+      "strips": [
+       {
+        "id": "trk-guitar",
+        "kind": "track",
+        "name": "Guitar",
+        "color": "#50A0DC",
+        "volume": 0.7,
+        "volume_db": 0.0,
+        "pan": -0.3,
+        "pan_label": "L19",
+        "muted": false,
+        "soloed": false,
+        "inserts": [
+         {
+          "id": "fx-301",
+          "name": "Tabber Amp",
+          "bypassed": false,
+          "auto_bypassed": false
+         }
+        ]
+       },
+       {
+        "id": "trk-vocals",
+        "kind": "track",
+        "name": "Vocals",
+        "color": "#DC5050",
+        "volume": 0.74,
+        "volume_db": 0.3,
+        "pan": 0.0,
+        "pan_label": "C",
+        "muted": false,
+        "soloed": false,
+        "inserts": []
+       },
+       {
+        "id": "trk-keys",
+        "kind": "track",
+        "name": "Keys",
+        "color": "#64BE64",
+        "volume": 0.62,
+        "volume_db": -3.2,
+        "pan": 0.0,
+        "pan_label": "C",
+        "muted": false,
+        "soloed": false,
+        "inserts": []
+       },
+       {
+        "id": "bus-reverb",
+        "kind": "bus",
+        "name": "Reverb",
+        "color": null,
+        "volume": 0.52,
+        "volume_db": -7.7,
+        "pan": 0.0,
+        "pan_label": "C",
+        "muted": false,
+        "soloed": false,
+        "inserts": []
+       },
+       {
+        "id": "master",
+        "kind": "master",
+        "name": "Master",
+        "color": null,
+        "volume": 0.7,
+        "volume_db": 0.0,
+        "pan": 0.0,
+        "pan_label": "C",
+        "muted": false,
+        "soloed": false,
+        "inserts": []
+       }
+      ],
+      "scale": [
+       {
+        "db": 0,
+        "volume": 0.7
+       },
+       {
+        "db": -12,
+        "volume": 0.442
+       },
+       {
+        "db": -24,
+        "volume": 0.279
+       },
+       {
+        "db": -48,
+        "volume": 0.111
+       }
+      ]
+     }
+    }
+   }
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 8,
+    "method": "plugins.insert",
+    "params": {
+     "key": "3b4c5d6e-7f80-4912-ab3c-4d5e6f7a8b9c",
+     "strip_id": "trk-keys",
+     "plugin_id": "pl-tabber-synth"
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 8,
+    "result": {
+     "strip": {
+      "id": "trk-keys",
+      "kind": "track",
+      "name": "Keys",
+      "color": "#64BE64",
+      "volume": 0.62,
+      "volume_db": -3.2,
+      "pan": 0.0,
+      "pan_label": "C",
+      "muted": false,
+      "soloed": false,
+      "inserts": []
+     },
+     "mixer": {
+      "strips": [
+       {
+        "id": "trk-guitar",
+        "kind": "track",
+        "name": "Guitar",
+        "color": "#50A0DC",
+        "volume": 0.7,
+        "volume_db": 0.0,
+        "pan": -0.3,
+        "pan_label": "L19",
+        "muted": false,
+        "soloed": false,
+        "inserts": [
+         {
+          "id": "fx-301",
+          "name": "Tabber Amp",
+          "bypassed": false,
+          "auto_bypassed": false
+         }
+        ]
+       },
+       {
+        "id": "trk-vocals",
+        "kind": "track",
+        "name": "Vocals",
+        "color": "#DC5050",
+        "volume": 0.74,
+        "volume_db": 0.3,
+        "pan": 0.0,
+        "pan_label": "C",
+        "muted": false,
+        "soloed": false,
+        "inserts": []
+       },
+       {
+        "id": "trk-keys",
+        "kind": "track",
+        "name": "Keys",
+        "color": "#64BE64",
+        "volume": 0.62,
+        "volume_db": -3.2,
+        "pan": 0.0,
+        "pan_label": "C",
+        "muted": false,
+        "soloed": false,
+        "inserts": []
+       },
+       {
+        "id": "bus-reverb",
+        "kind": "bus",
+        "name": "Reverb",
+        "color": null,
+        "volume": 0.52,
+        "volume_db": -7.7,
+        "pan": 0.0,
+        "pan_label": "C",
+        "muted": false,
+        "soloed": false,
+        "inserts": []
+       },
+       {
+        "id": "master",
+        "kind": "master",
+        "name": "Master",
+        "color": null,
+        "volume": 0.7,
+        "volume_db": 0.0,
+        "pan": 0.0,
+        "pan_label": "C",
+        "muted": false,
+        "soloed": false,
+        "inserts": []
+       }
+      ],
+      "scale": [
+       {
+        "db": 0,
+        "volume": 0.7
+       },
+       {
+        "db": -12,
+        "volume": 0.442
+       },
+       {
+        "db": -24,
+        "volume": 0.279
+       },
+       {
+        "db": -48,
+        "volume": 0.111
+       }
+      ]
+     },
+     "sound_source": true
+    }
+   },
+   "note": "An instrument on a MIDI track becomes its sound source, outside its inserts."
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 9,
+    "method": "plugins.insert",
+    "params": {
+     "key": "4c5d6e7f-8091-4a23-bc4d-5e6f7a8b9cad",
+     "strip_id": "trk-vocals",
+     "plugin_id": "pl-old-delay"
+    }
+   }
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 9,
+    "error": {
+     "code": 1099,
+     "message": "Tabber Studio could not do that.",
+     "data": {
+      "reason": "host_error",
+      "detail": "Old Delay failed to load."
+     }
+    }
+   }
+  },
+  {
+   "from": "remote",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 10,
+    "method": "plugins.remove",
+    "params": {
+     "key": "5d6e7f80-91a2-4b34-8d5e-6f7a8b9cadbe",
+     "strip_id": "trk-guitar",
+     "insert_id": "fx-999"
+    }
+   },
+   "note": "An insert removed on the computer meanwhile."
+  },
+  {
+   "from": "host",
+   "message": {
+    "jsonrpc": "2.0",
+    "id": 10,
+    "error": {
+     "code": 1026,
+     "message": "This changed on the computer. The phone now shows the new state.",
+     "data": {
+      "reason": "stale_target",
+      "mixer": {
+       "strips": [
+        {
+         "id": "trk-guitar",
+         "kind": "track",
+         "name": "Guitar",
+         "color": "#50A0DC",
+         "volume": 0.7,
+         "volume_db": 0.0,
+         "pan": -0.3,
+         "pan_label": "L19",
+         "muted": false,
+         "soloed": false,
+         "inserts": [
+          {
+           "id": "fx-301",
+           "name": "Tabber Amp",
+           "bypassed": false,
+           "auto_bypassed": false
+          }
+         ]
+        },
+        {
+         "id": "trk-vocals",
+         "kind": "track",
+         "name": "Vocals",
+         "color": "#DC5050",
+         "volume": 0.74,
+         "volume_db": 0.3,
+         "pan": 0.0,
+         "pan_label": "C",
+         "muted": false,
+         "soloed": false,
+         "inserts": []
+        },
+        {
+         "id": "trk-keys",
+         "kind": "track",
+         "name": "Keys",
+         "color": "#64BE64",
+         "volume": 0.62,
+         "volume_db": -3.2,
+         "pan": 0.0,
+         "pan_label": "C",
+         "muted": false,
+         "soloed": false,
+         "inserts": []
+        },
+        {
+         "id": "bus-reverb",
+         "kind": "bus",
+         "name": "Reverb",
+         "color": null,
+         "volume": 0.52,
+         "volume_db": -7.7,
+         "pan": 0.0,
+         "pan_label": "C",
+         "muted": false,
+         "soloed": false,
+         "inserts": []
+        },
+        {
+         "id": "master",
+         "kind": "master",
+         "name": "Master",
+         "color": null,
+         "volume": 0.7,
+         "volume_db": 0.0,
+         "pan": 0.0,
+         "pan_label": "C",
+         "muted": false,
+         "soloed": false,
+         "inserts": []
+        }
+       ],
+       "scale": [
+        {
+         "db": 0,
+         "volume": 0.7
+        },
+        {
+         "db": -12,
+         "volume": 0.442
+        },
+        {
+         "db": -24,
+         "volume": 0.279
+        },
+        {
+         "db": -48,
+         "volume": 0.111
+        }
+       ]
+      }
+     }
+    }
+   }
+  }
+ ]
+}

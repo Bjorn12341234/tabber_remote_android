@@ -159,6 +159,19 @@ final class ScreenshotUITests: SpakUITestCase {
         try shoot("tr41-3-delay")
     }
 
+    /// TR44: a strip's inserts, and the Insert Plugin browser.
+    @MainActor
+    func testPlugins() throws {
+        launch(["-demo", "-screen", "mixer"])
+        XCTAssertTrue(appears("insert-Guitar-Tabber Amp"))
+        sleep(1)
+        try shoot("tr44-1-inserts")
+        element("add-plugin-Bass").tap()
+        XCTAssertTrue(appears("plugin-Tabber Amp"))
+        sleep(1)
+        try shoot("tr44-2-browser")
+    }
+
     /// TR42: the routing Flow, as Studio's Flow tab lays it out.
     @MainActor
     func testTheFlow() throws {

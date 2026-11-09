@@ -463,4 +463,67 @@ struct DemoHostTests {
         await #expect(throws: RemoteError.self) { try await session.perform("mixer.add_bus", ["name": "   "]) }
         await session.stop()
     }
+
+    /// Spec 8.2: an event the phone already holds is ignored. Asking for a new
+    /// snapshot for it, as the phone did, could loop while events stream (found
+    /// porting the app to Android, 2026-11-09).
+    @Test func anEventAlreadyHeldAsksForNoSnapshot() async throws {
+        let host = DemoHost()
+        let session = session(host)
+        _ = try await connected(session)
+        _ = try await session.perform("transport.set_click", ["enabled": true])
+        _ = try await eventually(session) { $0.transport?.click == true }
+        let before = await host.snapshotsServed
+        for _ in 0..<5 {
+            await host.resendLastEvent()
+            try await Task.sleep(for: .milliseconds(40))
+        }
+        try await Task.sleep(for: .milliseconds(300))
+        #expect(await host.snapshotsServed == before, "no snapshot for an event already held")
+        _ = try await session.perform("transport.set_click", ["enabled": false])
+        let after = try await eventually(session) { $0.transport?.click == false }
+        #expect(after.link == .connected(busy: false), "and the phone still follows the computer")
+        await session.stop()
+    }
+
+    /// TR44 on the demo computer: the browser's rows, an effect at the end of
+    /// a strip's chain, bypassed and removed; an instrument becomes a MIDI
+    /// track's sound source and is refused on an audio track; no undo steps.
+    @Test func pluginsAreInsertedBypassedAndRemoved() async throws {
+        let session = session(DemoHost())
+        let start = try await connected(session)
+        let page = try JSONCoding.decode(PluginPage.self, from: try await session.perform("plugins.catalog"))
+        #expect(page.total == page.plugins.count && page.plugins.first?.name == "Tabber Amp")
+        #expect(page.plugins.prefix { $0.tabber }.count == page.plugins.filter(\.tabber).count, "Tabber's own first")
+        let second = try JSONCoding.decode(PluginPage.self, from: try await session.perform("plugins.catalog",
+                                                                                          ["offset": 2, "limit": 2]))
+        #expect(second.offset == 2 && second.plugins.map(\.id) == page.plugins.dropFirst(2).prefix(2).map(\.id))
+
+        _ = try await session.perform("mixer.state")
+        let mixer = try await eventually(session) { $0.mixer != nil }.mixer!
+        #expect(mixer.strips.first { $0.id == "demo-guitar" }?.inserts.map(\.name) == ["Tabber Amp"])
+        let compressor = page.plugins.first { $0.name == "Tabber Compressor" }!
+        let added = try await session.perform("plugins.insert", ["strip_id": "demo-vocals", "plugin_id": .string(compressor.id)])
+        let vocals = try JSONCoding.decode(Strip.self, from: added["strip"]!)
+        #expect(vocals.inserts.map(\.name) == ["Tabber Compressor"] && added["sound_source"]?.boolValue == false)
+        let insert = vocals.inserts[0]
+        let off = try await session.perform("plugins.bypass", ["strip_id": "demo-vocals", "insert_id": .string(insert.id),
+                                                               "bypassed": true])
+        #expect(try JSONCoding.decode(Strip.self, from: off["strip"]!).inserts.first?.bypassed == true)
+        #expect(try await session.perform("plugins.open", ["strip_id": "demo-vocals", "insert_id": .string(insert.id)]) == [:])
+        _ = try await session.perform("plugins.remove", ["strip_id": "demo-vocals", "insert_id": .string(insert.id)])
+        let after = try await eventually(session) { $0.mixer?.strips.first { $0.id == "demo-vocals" }?.inserts.isEmpty == true }
+        #expect(after.undo == start.undo, "plug-ins are no undo steps")
+        await #expect(throws: RemoteError.self) {         // gone: stale_target
+            try await session.perform("plugins.remove", ["strip_id": "demo-vocals", "insert_id": .string(insert.id)])
+        }
+
+        let synth = page.plugins.first(where: \.isInstrument)!
+        let source = try await session.perform("plugins.insert", ["strip_id": "demo-guitar", "plugin_id": .string(synth.id)])
+        #expect(source["sound_source"]?.boolValue == true, "an instrument becomes the MIDI track's sound source")
+        await #expect(throws: RemoteError.self) {
+            try await session.perform("plugins.insert", ["strip_id": "demo-vocals", "plugin_id": .string(synth.id)])
+        }
+        await session.stop()
+    }
 }

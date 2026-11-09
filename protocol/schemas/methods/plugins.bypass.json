@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tabber.studio/schemas/remote/1/methods/plugins.bypass.json",
+  "title": "plugins.bypass",
+  "x-capability": "plugins/1",
+  "x-changes": true,
+  "$defs": {
+    "params": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "$ref": "../common.json#/$defs/key"
+        },
+        "strip_id": {
+          "$ref": "../common.json#/$defs/id",
+          "description": "The strip, as in the mixer."
+        },
+        "insert_id": {
+          "$ref": "../common.json#/$defs/id",
+          "description": "The insert, as in the strip's inserts."
+        },
+        "bypassed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "key",
+        "strip_id",
+        "insert_id",
+        "bypassed"
+      ],
+      "additionalProperties": false
+    },
+    "result": {
+      "type": "object",
+      "properties": {
+        "strip": {
+          "$ref": "../common.json#/$defs/strip"
+        }
+      },
+      "required": [
+        "strip"
+      ],
+      "additionalProperties": false
+    }
+  }
+}
