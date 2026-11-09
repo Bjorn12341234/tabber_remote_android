@@ -2653,8 +2653,9 @@ what was measured, and what changed in the plan.
   - **Studio 0.3.29 released (c976dcab):** the verifier, the engine byte for
     byte, the smoke test (which now requires plugins/1) and the TR37 scans
     pass; parked at /Volumes/Data/tabber_work/rel0329 (DMG 486,401,240
-    bytes, SHA-256 1340ac35...). Installing waits for the owner to quit the
-    running 0.3.28.
+    bytes, SHA-256 1340ac35...). Installed once the owner quit 0.3.28 (it
+    quit normally), with 0.3.18 kept and 0.3.28 in the Trash; the remote
+    answers 1.10 with plugins/1 on the loopback and on Tailscale.
   - **Owed:** a real insert on the owner's Mac from the phone (the release
     smoke test runs the remote without an engine), with TestFlight build 18,
     which the owner uploads.
