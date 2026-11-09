@@ -98,6 +98,9 @@ object Studio {
     val radiusCard = 8.dp
     val radiusControl = 6.dp
 
+    /** The least a control is to a finger: Android's 48 dp (the iPhone's 44 points are Apple's figure). */
+    val target = 48.dp
+
     /** Tabber Studio's twelve track colours, for a track that sends none. */
     val tracks = listOf(
         Color(80, 160, 220), Color(100, 190, 100), Color(220, 170, 60), Color(170, 100, 210),
@@ -144,7 +147,7 @@ fun StudioButton(
     kind: ButtonKind = ButtonKind.NORMAL,
     enabled: Boolean = true,
     pending: Boolean = false,
-    minHeight: Dp = 44.dp,
+    minHeight: Dp = Studio.target,
     content: (@Composable () -> Unit)? = null,
 ) {
     val interaction = remember { MutableInteractionSource() }
@@ -162,7 +165,7 @@ fun StudioButton(
     }
     Box(
         modifier
-            .sizeIn(minHeight = minHeight, minWidth = 44.dp)
+            .sizeIn(minHeight = minHeight, minWidth = Studio.target)
             .clip(RoundedCornerShape(Studio.radiusControl))
             .background(background)
             .clickable(interactionSource = interaction, indication = null, enabled = enabled, role = Role.Button, onClick = onClick)
@@ -208,7 +211,7 @@ fun LetterButton(
 ) {
     Box(
         modifier
-            .sizeIn(minWidth = 44.dp, minHeight = 44.dp)
+            .sizeIn(minWidth = Studio.target, minHeight = Studio.target)
             .clickable(role = Role.Switch, onClick = onClick)
             .semantics { contentDescription = spoken; selected = isOn }
             .alpha(if (pending) 0.5f else 1f),

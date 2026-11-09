@@ -1,8 +1,10 @@
 package com.tabberspak.app
 
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.lifecycle.lifecycleScope
@@ -20,7 +22,12 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        // The app is always dark, as Tabber Studio is: light status and navigation icons, whatever
+        // the phone's own light or dark setting.
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
+            navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
+        )
         if (savedInstanceState == null) take(intent)
         setContent { StudioTheme { RootScreen(model) } }
     }
@@ -41,7 +48,10 @@ class MainActivity : ComponentActivity() {
         val link = intent.dataString?.let(PairingLink::parse)
         if (link != null) {
             lifecycleScope.launch { model.pair(link) }
-        } else {
+        } else if (BuildConfig.DEBUG) {
+            // The launch options for tests and scripts, in debug builds only: any app may start
+            // this activity, and in a release build these would let it pair the phone elsewhere
+            // or forget its computer. On the iPhone only Xcode passes launch arguments.
             model.launch(intent.extras)
         }
     }

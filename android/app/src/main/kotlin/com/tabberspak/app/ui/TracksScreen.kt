@@ -48,6 +48,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -69,24 +70,23 @@ fun TracksScreen(model: AppModel) {
     ScreenScaffold(model, title = model.state.project.title.ifEmpty { "Tracks" }) {
         Connected(model) {
             val list = rememberLazyListState()
+            // The owner: "the arrange and the stuff up top should stay up top even when you scroll
+            // down if there is a lot of tracks." At the largest text they would fill the screen,
+            // so there they scroll with the tracks, as on the iPhone.
+            val pinned = !largeText()
             LaunchedEffect(model.addedTrackId) {
                 val added = model.addedTrackId ?: return@LaunchedEffect
                 val index = model.state.tracks.indexOfFirst { it.id == added }
-                if (index >= 0) list.animateScrollToItem(index + 1)
+                if (index >= 0) list.animateScrollToItem(index + if (pinned) 1 else 2)
             }
             Column(Modifier.fillMaxSize()) {
-                // The owner: "the arrange and the stuff up top should stay up top even when you
-                // scroll down if there is a lot of tracks."
-                Column(Modifier.padding(horizontal = 16.dp).padding(top = 4.dp, bottom = 12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    if (model.viewAvailable) ViewButtons(model)
-                    RecordOptions(model)
-                    if (model.trainerAvailable && model.state.transport?.loop?.enabled == true) TrainerRow(model)
-                }
+                if (pinned) Controls(model, Modifier.padding(horizontal = 16.dp).padding(top = 4.dp, bottom = 12.dp))
                 LazyColumn(
                     state = list,
                     modifier = Modifier.weight(1f).padding(horizontal = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
+                    if (!pinned) item { Controls(model, Modifier.padding(top = 4.dp, bottom = 4.dp)) }
                     val showHint = model.isConnected && !model.state.record.recording &&
                         model.state.tracks.isNotEmpty() && model.state.tracks.none { it.armed }
                     item {
@@ -106,6 +106,16 @@ fun TracksScreen(model: AppModel) {
                 }
             }
         }
+    }
+}
+
+/** What the computer shows, the toggles for a take, and the trainer while Loop is on. */
+@Composable
+private fun Controls(model: AppModel, modifier: Modifier) {
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        if (model.viewAvailable) ViewButtons(model)
+        RecordOptions(model)
+        if (model.trainerAvailable && model.state.transport?.loop?.enabled == true) TrainerRow(model)
     }
 }
 
@@ -133,7 +143,7 @@ fun ScreenScaffold(
             Box(Modifier.weight(1f)) {
                 var choosing by remember { mutableStateOf(false) }
                 Row(
-                    Modifier.sizeIn(minHeight = 44.dp)
+                    Modifier.sizeIn(minHeight = Studio.target)
                         .then(if (titleChoices.isEmpty()) Modifier else Modifier.clickable(role = Role.Button) { choosing = true }),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -227,8 +237,8 @@ private fun AddTrackButton(model: AppModel) {
 private fun ViewButtons(model: AppModel) {
     val view = model.state.view
     val editors = listOf("arrange" to "Arrange", "tab" to "Tab", "piano_roll" to "Piano Roll")
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-        SingleChoiceSegmentedButtonRow(Modifier.weight(1f).semantics { contentDescription = "What the computer shows" }.testTag("view-editor")) {
+    val segments: @Composable (Modifier) -> Unit = { modifier ->
+        SingleChoiceSegmentedButtonRow(modifier.semantics { contentDescription = "What the computer shows" }.testTag("view-editor")) {
             editors.forEachIndexed { index, (editor, label) ->
                 SegmentedButton(
                     selected = (view?.editor ?: "tab") == editor,
@@ -241,10 +251,30 @@ private fun ViewButtons(model: AppModel) {
                         activeBorderColor = Studio.edge, inactiveBorderColor = Studio.edge,
                     ),
                     modifier = Modifier.testTag("view-editor-$label"),
-                ) { Text(label, fontSize = 13.sp, maxLines = 1) }
+                ) { Text(label, fontSize = 13.sp, maxLines = 2, textAlign = TextAlign.Center) }
             }
         }
-        ToggleChip("Split", isOn = view?.split ?: false, spoken = "Split view on the computer", modifier = Modifier.testTag("view-split")) { model.toggleSplit() }
+    }
+    val split: @Composable (Modifier) -> Unit = { modifier ->
+        ToggleChip("Split", isOn = view?.split ?: false, spoken = "Split view on the computer", modifier = modifier.testTag("view-split")) { model.toggleSplit() }
+    }
+    // At the largest text three segments would break their words: the choice is a menu, Split
+    // beside it. (Material's segmented row measures itself by its narrowest word, so the text
+    // size decides, not the fit.)
+    if (largeText()) {
+        val names = editors.map { it.second }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            ChoiceMenu(
+                "What the computer shows", names, editors.firstOrNull { it.first == (view?.editor ?: "tab") }?.second ?: "Tab",
+                "view-editor", Modifier.weight(1f),
+            ) { name -> editors.firstOrNull { it.second == name }?.let { model.showEditor(it.first) } }
+            split(Modifier)
+        }
+    } else {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            segments(Modifier.weight(1f))
+            split(Modifier)
+        }
     }
 }
 
@@ -252,14 +282,26 @@ private fun ViewButtons(model: AppModel) {
 @Composable
 private fun RecordOptions(model: AppModel) {
     val transport = model.state.transport
-    ChipWell {
-        ToggleChip("Loop", transport?.loop?.enabled ?: false, Modifier.weight(1f).testTag("loop"), onClick = model::toggleLoop)
-        ToggleChip(
-            "Count-in", (transport?.countInBars ?: 0) > 0, Modifier.weight(1f).testTag("count-in"),
-            spoken = if ((transport?.countInBars ?: 0) > 0) "Count-in, one bar" else "Count-in", onClick = model::toggleCountIn,
-        )
-        ToggleChip("Metro", transport?.click ?: false, Modifier.weight(1f).testTag("click"), spoken = "Metronome", onClick = model::toggleClick)
-    }
+    val counting = (transport?.countInBars ?: 0) > 0
+    val chips: List<@Composable (Modifier) -> Unit> = listOf(
+        { modifier -> ToggleChip("Loop", transport?.loop?.enabled ?: false, modifier.testTag("loop"), onClick = model::toggleLoop) },
+        { modifier ->
+            ToggleChip(
+                "Count-in", counting, modifier.testTag("count-in"),
+                spoken = if (counting) "Count-in, one bar" else "Count-in", onClick = model::toggleCountIn,
+            )
+        },
+        { modifier -> ToggleChip("Metro", transport?.click ?: false, modifier.testTag("click"), spoken = "Metronome", onClick = model::toggleClick) },
+    )
+    // Side by side when they fit; stacked at the largest text, so no word breaks (as on the iPhone).
+    FitsOr(
+        wide = { ChipWell { chips.forEach { it(Modifier.weight(1f)) } } },
+        narrow = {
+            Column(Modifier.fillMaxWidth().studioWell().padding(3.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                chips.forEach { it(Modifier.fillMaxWidth()) }
+            }
+        },
+    )
 }
 
 /**
@@ -269,22 +311,50 @@ private fun RecordOptions(model: AppModel) {
 @Composable
 private fun TrainerRow(model: AppModel) {
     val trainer = model.state.trainer ?: TrainerState()
-    Row(
-        Modifier.fillMaxWidth().studioWell().padding(3.dp).testTag("trainer-row"),
-        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp),
-    ) {
+    val button: @Composable () -> Unit = {
         ToggleChip("Trainer", trainer.enabled, Modifier.testTag("trainer"), spoken = "Speed Trainer", onClick = model::toggleTrainer)
-        TrainerField(model, "start", "Start speed", trainer.start, TrainerState.starts)
-        Text("+", color = Studio.text2, fontWeight = FontWeight.SemiBold)
-        TrainerField(model, "step", "Faster each loop by", trainer.step, TrainerState.steps)
-        Text("→", color = Studio.text2, fontWeight = FontWeight.SemiBold)
-        TrainerField(model, "target", "Target speed", trainer.target, TrainerState.targets)
-        Spacer(Modifier.weight(1f))
+    }
+    val speed: @Composable () -> Unit = {
         Text(
             "${trainer.speed}%", style = Studio.counter(15, FontWeight.Bold), color = if (trainer.enabled) Studio.text1 else Studio.text2,
             modifier = Modifier.padding(end = 8.dp).semantics { contentDescription = "Speed now, ${trainer.speed} percent" }.testTag("trainer-speed"),
         )
     }
+    val start: @Composable () -> Unit = { TrainerField(model, "start", "Start speed", trainer.start, TrainerState.starts) }
+    val step: @Composable () -> Unit = { TrainerField(model, "step", "Faster each loop by", trainer.step, TrainerState.steps) }
+    val target: @Composable () -> Unit = { TrainerField(model, "target", "Target speed", trainer.target, TrainerState.targets) }
+    val well = Modifier.fillMaxWidth().studioWell().padding(3.dp).testTag("trainer-row")
+    // The button and the fields in Studio's order, then the speed now; when they do not fit (the
+    // largest text), each field on a line of its own, named, as on the iPhone.
+    FitsOr(
+        wide = {
+            Row(well, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                button()
+                start()
+                Text("+", color = Studio.text2, fontWeight = FontWeight.SemiBold)
+                step()
+                Text("→", color = Studio.text2, fontWeight = FontWeight.SemiBold)
+                target()
+                Spacer(Modifier.weight(1f))
+                speed()
+            }
+        },
+        narrow = {
+            Column(well, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    button()
+                    Spacer(Modifier.weight(1f))
+                    speed()
+                }
+                for ((name, field) in listOf("Start" to start, "Faster each loop by" to step, "Up to" to target)) {
+                    Row(Modifier.padding(start = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text(name, color = Studio.text2, fontSize = 15.sp, modifier = Modifier.weight(1f))
+                        field()
+                    }
+                }
+            }
+        },
+    )
 }
 
 @Composable
@@ -292,7 +362,7 @@ private fun TrainerField(model: AppModel, name: String, spoken: String, value: I
     var open by remember { mutableStateOf(false) }
     Box {
         Box(
-            Modifier.sizeIn(minHeight = 44.dp).clip(RoundedCornerShape(Studio.radiusControl)).background(Studio.bg3)
+            Modifier.sizeIn(minHeight = Studio.target).clip(RoundedCornerShape(Studio.radiusControl)).background(Studio.bg3)
                 .clickable(role = Role.Button) { open = true }
                 .semantics { contentDescription = "$spoken, $value percent" }
                 .padding(horizontal = 10.dp).testTag("trainer-$name"),
@@ -349,7 +419,7 @@ fun ComputerChip(model: AppModel) {
         else -> Studio.record to "not connected"
     }
     Row(
-        Modifier.sizeIn(minHeight = 44.dp).clip(RoundedCornerShape(Studio.radiusControl))
+        Modifier.sizeIn(minHeight = Studio.target).clip(RoundedCornerShape(Studio.radiusControl))
             .clickable(role = Role.Button) { model.showingComputer = true }
             .semantics { contentDescription = "${model.computerName}, $words. Shows the computer, pairing and settings." }
             .padding(horizontal = 8.dp).testTag("connection"),

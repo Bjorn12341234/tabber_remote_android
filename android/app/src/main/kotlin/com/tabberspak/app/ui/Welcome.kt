@@ -225,7 +225,7 @@ fun FixItCard(model: AppModel, trouble: Trouble, computer: String) {
         Text(title, color = Studio.text1, fontWeight = FontWeight.SemiBold, fontSize = 22.sp, modifier = Modifier.testTag("fix-it-title"))
         Text(message, color = Studio.text2, fontSize = 17.sp)
         for (check in checks) Text(check, color = Studio.text1, fontSize = 17.sp)
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(top = 8.dp)) {
+        val actions: @Composable () -> Unit = {
             when (trouble) {
                 Trouble.Unreachable -> {
                     StudioButton("Try again", onClick = model::wake, modifier = Modifier.testTag("fix-it-retry"))
@@ -238,6 +238,12 @@ fun FixItCard(model: AppModel, trouble: Trouble, computer: String) {
                 Trouble.LocalNetworkDenied -> Unit
             }
         }
+        // Side by side when they fit, one under the other at the largest text (as on the iPhone).
+        FitsOr(
+            Modifier.padding(top = 8.dp),
+            wide = { Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) { actions() } },
+            narrow = { Column(verticalArrangement = Arrangement.spacedBy(10.dp)) { actions() } },
+        )
     }
 }
 

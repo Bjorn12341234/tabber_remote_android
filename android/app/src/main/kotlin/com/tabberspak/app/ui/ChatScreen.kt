@@ -278,7 +278,7 @@ private fun ChatInput(draft: String, onDraft: (String) -> Unit, working: Boolean
             modifier = Modifier.weight(1f).semantics { contentDescription = "Ask Tabber Studio" }.testTag("chat-field"),
         )
         Box(
-            Modifier.size(44.dp).clip(CircleShape).background(Studio.accent).alpha(if (working) 0.5f else 1f)
+            Modifier.size(Studio.target).clip(CircleShape).background(Studio.accent).alpha(if (working) 0.5f else 1f)
                 .clickable(enabled = canSend, role = Role.Button) { submit() }
                 .semantics { contentDescription = "Send" }.testTag("chat-send"),
             contentAlignment = Alignment.Center,

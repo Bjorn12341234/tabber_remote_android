@@ -35,8 +35,14 @@ scripts/emulator.sh start          # the test phone, headless and without audio
 ../../tabber_studio_linux/scripts/with_jack_dummy.sh \
     ../../tabber_studio_linux/.venv/bin/python scripts/studio-check.py   # S1 and a restart, against the installed Tabber Studio
 ./gradlew :app:assembleDebug       # app-debug.apk: com.tabberspak.app.debug, beside a Play build
+scripts/release-android.sh --local # a signed .aab in ~/tabber-spak-releases/, nothing committed
+scripts/release-android.sh         # build N+1 for Play: checks, .aab, then commit, tag android-b<N>, push
+python3 scripts/draw-icon.py       # the icon, drawn again from the iPhone's design
 scripts/emulator.sh stop
 ```
+
+The UI tests, the Studio check and the release script's smoke test all use the one emulator; run
+them one after another.
 
 Run Gradle with `JAVA_HOME=/opt/android-studio/jbr` (the scripts set it).
 
@@ -61,9 +67,19 @@ Run Gradle with `JAVA_HOME=/opt/android-studio/jbr` (the scripts set it).
   `apple/RemoteKit` imports no UI framework, so the protocol runs and is tested on the JVM.
 - **The version** is the iPhone app's `MARKETING_VERSION`, read from its Xcode project, so both
   phones say the same. The build number is `android/BUILD_NUMBER`.
-- **Signing:** the Google Play upload key and its passwords live in `~/.gradle/gradle.properties`
-  as `TABBERSPAK_UPLOAD_*` and the key in `~/.android-keys/`, never in this repository, as for
-  the owner's other Android apps.
+- **Signing:** the Google Play upload key is `~/.android-keys/tabberspak-upload.jks` (made
+  2026-11-09, RSA 4096, valid to 2054) and its passwords are `TABBERSPAK_UPLOAD_*` in
+  `~/.gradle/gradle.properties`, never in this repository, as for the owner's other Android apps.
+  Its certificate's SHA-256 is `store/upload-certificate.sha256`, which the release script checks
+  every bundle against. Back up the `.jks` and those four lines together: without them no update
+  can be uploaded (Play can reset an upload key, slowly).
+- **The launch options** (`reset`, `demo`, `known_host`, `pair_link` and the rest, for tests and
+  scripts) work in debug builds only. Any app may start the activity, and in a release build they
+  would let it pair the phone with another computer or make it forget its own. On the iPhone only
+  Xcode passes launch arguments.
+- **Nothing is backed up or moved to a new phone** (`res/xml/data_extraction_rules.xml`): the
+  pairing belongs to this phone's Keystore key, so a new phone pairs again.
+- **Touch targets are 48 dp**, Android's figure, where the iPhone uses Apple's 44 points.
 
 ## Sprints
 
@@ -203,3 +219,33 @@ Proposed; the owner schedules them, one per session (plan.md, Rules for every sp
     which cannot read a guitar's low E (82.4 Hz) at 48 kHz.
   - `apple/TabberSpak/AppModel.swift`: `leaveDemo()` and `forget()` keep `lastTake`, the take card
     bug above.
+
+### TA5, 2026-11-09
+
+- **The icon:** `scripts/draw-icon.py` draws the iPhone's spak (the lever with Studio's teal band
+  and gate) as an adaptive icon, its layers the Swift script's shapes, colours and gradients,
+  scaled into Android's safe circle, with a one-colour layer for themed icons.
+- **The look:** the window is Studio's screen colour while the app starts, and the status and
+  navigation bars keep light icons whatever the phone's own theme (they were dark grey on dark).
+- **The accessibility pass:** Google's Accessibility Test Framework on every screen, as Xcode's
+  audit on the iPhone (`AccessibilityTest`, 4 tests): no findings left. It found controls under
+  Android's 48 dp (S and M, Undo, the hold buttons, Send, a send's remove, the pan knob and the
+  send's bar; the mixer's strips grew to 104 dp so S and M fit), and the fretboard and piano
+  claiming 24 dp of the row above them for TalkBack, because their semantics sat inside the
+  scrolling, in its overscroll margin; they sit on the board in view now. TalkBack hears the
+  tuner's reading at most once a second, as VoiceOver reads a value that updates frequently.
+- **The largest text** (200 %, `LargestTextTest`, 4 tests): a row whose words do not fit stacks,
+  as the iPhone's ViewThatFits does (`FitsOr`): the note values in rows of three (in one row,
+  1/16 read "1/1"), the edit chips two by two, the toggles one under another, the trainer's fields
+  each on a line with its name, the fix-it buttons. The computer's view and the mixer's pages
+  become a menu, the tabs' names grow to half again on one line, and the Tracks controls scroll
+  with the tracks. The test's check for cut words fails with the old single row.
+- **Lint:** no errors; the one warning left is the deliberate `targetSdk` 36.
+- **The release:** `scripts/release-android.sh`, as Storman's: the checks (RemoteKit, the tuner,
+  release lint), the signed bundle, its build number and its signer checked, and on the emulator
+  the minified build itself opened and its demo connected. A local build:
+  `~/tabber-spak-releases/TabberSpak-1.0-b2.aab`, 4.1 MB, signed by the upload key;
+  `BUILD_NUMBER` unchanged, as the first build for Play is TA6's.
+- **Tests:** 45 UI tests on the emulator pass in one run; the JVM suites pass; the Studio check
+  passes against Linux Tabber Studio 0.3.27 (connected in 2.7 s, the take loop read back, a
+  reconnect 5.9 s after Studio restarted).

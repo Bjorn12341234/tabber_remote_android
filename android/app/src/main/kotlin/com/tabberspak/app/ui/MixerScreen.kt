@@ -98,12 +98,25 @@ fun MixerScreen(model: AppModel) {
         Column(Modifier.fillMaxSize()) {
             // Mixer or Routing, under the title and always in view (the owner, 2026-11-08).
             if (model.mixerAvailable && model.isConnected && (model.routingAvailable || model.addBusAvailable)) {
-                Row(
-                    Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    if (model.routingAvailable) PagePicker(page, Modifier.weight(1f)) { page = it }
-                    if (model.addBusAvailable) AddBusButton(model)
+                // At the largest text the pages are a menu, so their names are never broken.
+                if (largeText()) {
+                    Row(
+                        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        if (model.routingAvailable) {
+                            ChoiceMenu("View", listOf("Mixer", "Routing", "Flow"), page, "mixer-page", Modifier.weight(1f)) { page = it }
+                        }
+                        if (model.addBusAvailable) AddBusButton(model)
+                    }
+                } else {
+                    Row(
+                        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        if (model.routingAvailable) PagePicker(page, Modifier.weight(1f)) { page = it }
+                        if (model.addBusAvailable) AddBusButton(model)
+                    }
                 }
             }
             Box(Modifier.weight(1f)) {
@@ -138,7 +151,7 @@ private fun PagePicker(page: String, modifier: Modifier, choose: (String) -> Uni
                     activeBorderColor = Studio.edge, inactiveBorderColor = Studio.edge,
                 ),
                 modifier = Modifier.testTag("mixer-page-$name"),
-            ) { Text(name, fontSize = 13.sp, maxLines = 1) }
+            ) { Text(name, fontSize = 13.sp, maxLines = 2, textAlign = TextAlign.Center) }
         }
     }
 }
@@ -218,9 +231,10 @@ private fun StripView(model: AppModel, strip: Strip, scale: List<ScaleMark>, uni
     val pan = dragPan ?: strip.pan
     val tint = if (strip.isBus) Studio.text3 else Studio.track(strip.color, index)
     Column(
-        Modifier.width(96.dp).fillMaxHeight().studioCard()
+        // Room for S and M side by side at Android's 48 dp each.
+        Modifier.width(104.dp).fillMaxHeight().studioCard()
             .alpha(if (model.audible(strip.id) || strip.isMaster || strip.isBus) 1f else 0.55f)
-            .padding(8.dp),
+            .padding(horizontal = 4.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -345,7 +359,7 @@ private fun panLabel(pan: Double): String {
 @Composable
 private fun PanKnob(pan: Double, label: String, modifier: Modifier) {
     val measurer = rememberTextMeasurer()
-    Canvas(modifier.size(76.dp, 44.dp)) {
+    Canvas(modifier.size(76.dp, Studio.target)) {
         val r = 15.dp.toPx()
         val centre = Offset(r, size.height / 2)
         drawCircle(Studio.bg3, r, centre)

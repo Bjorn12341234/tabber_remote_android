@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -70,6 +71,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tabberspak.app.AppModel
@@ -126,49 +128,92 @@ private fun TabEditor(model: AppModel, tab: TabState) {
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         TabStaff(model, tab)
-        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            for (choice in NoteValue.values) {
-                ChoiceChip(
-                    if (choice == 1) "1" else "1/$choice", Format.value(choice), value.value == choice,
-                    Modifier.weight(1f).testTag("value-$choice"),
-                ) { model.tab("tab.set_duration", duration(choice, value.dotted, value.triplet)) }
-            }
+        // Each row side by side when its words fit; at the largest text, in rows of fewer, so a
+        // value never reads cut short ("1/1" for 1/16).
+        val valueChip: @Composable RowScope.(Int) -> Unit = { choice ->
+            ChoiceChip(
+                if (choice == 1) "1" else "1/$choice", Format.value(choice), value.value == choice,
+                Modifier.weight(1f).testTag("value-$choice"),
+            ) { model.tab("tab.set_duration", duration(choice, value.dotted, value.triplet)) }
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            EditChip("Dot", Modifier.weight(1f).testTag("dot"), lit = value.dotted, toggles = true, spoken = "Dotted") {
-                model.tab("tab.set_duration", duration(value.value, !value.dotted, value.triplet))
-            }
-            EditChip("Triplet", Modifier.weight(1f).testTag("triplet"), lit = value.triplet, toggles = true) {
-                model.tab("tab.set_duration", duration(value.value, value.dotted, !value.triplet))
-            }
-            EditChip("Rest", Modifier.weight(1f).testTag("rest"), spoken = "Rest, on or off for this beat") { model.tab("tab.rest") }
-            EditChip("Delete", Modifier.weight(1f).testTag("delete-note"), spoken = "Delete the note on this string") { model.tab("tab.delete") }
-        }
-        Row(Modifier.padding(top = 2.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+        FitsOr(
+            wide = { Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) { NoteValue.values.forEach { valueChip(it) } } },
+            narrow = { InRows(NoteValue.values, 3, valueChip) },
+        )
+        val edits: List<@Composable RowScope.() -> Unit> = listOf(
+            {
+                EditChip("Dot", Modifier.weight(1f).testTag("dot"), lit = value.dotted, toggles = true, spoken = "Dotted") {
+                    model.tab("tab.set_duration", duration(value.value, !value.dotted, value.triplet))
+                }
+            },
+            {
+                EditChip("Triplet", Modifier.weight(1f).testTag("triplet"), lit = value.triplet, toggles = true) {
+                    model.tab("tab.set_duration", duration(value.value, value.dotted, !value.triplet))
+                }
+            },
+            { EditChip("Rest", Modifier.weight(1f).testTag("rest"), spoken = "Rest, on or off for this beat") { model.tab("tab.rest") } },
+            { EditChip("Delete", Modifier.weight(1f).testTag("delete-note"), spoken = "Delete the note on this string") { model.tab("tab.delete") } },
+        )
+        FitsOr(
+            wide = { Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) { edits.forEach { it() } } },
+            narrow = { InRows(edits, 2) { it() } },
+        )
+        val previous: @Composable RowScope.() -> Unit = {
             HoldButton(
                 "Previous beat. Hold to go back fast.",
                 tap = { model.tab("tab.move", jsonObject { put("by", -1) }) },
                 hold = { bars -> model.fastStep(-1, bars) },
                 modifier = Modifier.testTag("previous"),
             ) { Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = null, modifier = Modifier.width(20.dp)) }
-            InputChoice(input, Modifier.weight(1f)) { chosen ->
-                input = chosen
-                model.setPreference("tabInput", chosen)
-            }
+        }
+        val next: @Composable RowScope.(Modifier) -> Unit = { modifier ->
             HoldButton(
                 "Next beat. Hold to go forward fast.",
                 tap = { model.tab("tab.move", jsonObject { put("by", 1) }) },
                 hold = { bars -> model.fastStep(1, bars) },
-                modifier = Modifier.testTag("next"),
+                modifier = modifier.testTag("next"),
                 primary = true,
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text("Next", color = LocalContentColor.current, fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+                    Text("Next", color = LocalContentColor.current, fontWeight = FontWeight.SemiBold, fontSize = 16.sp, maxLines = 1)
                     Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
                 }
             }
         }
+        val choose: (String) -> Unit = { chosen ->
+            input = chosen
+            model.setPreference("tabInput", chosen)
+        }
+        FitsOr(
+            Modifier.padding(top = 2.dp),
+            wide = {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                    previous()
+                    InputChoice(input, Modifier.weight(1f), choose)
+                    next(Modifier)
+                }
+            },
+            narrow = {
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    InputChoice(input, Modifier.fillMaxWidth(), choose)
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        previous()
+                        next(Modifier.weight(1f))
+                    }
+                }
+            },
+        )
         if (input == "Piano") Piano(model, tab) else Fretboard(model, tab)
+    }
+}
+
+/** Items in rows of [size], each row the full width, as the Tab screen's chips at the largest text. */
+@Composable
+private fun <T> InRows(items: List<T>, size: Int, item: @Composable RowScope.(T) -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        for (row in items.chunked(size)) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) { row.forEach { item(it) } }
+        }
     }
 }
 
@@ -189,7 +234,7 @@ private fun InputChoice(input: String, modifier: Modifier, choose: (String) -> U
                     activeBorderColor = Studio.edge, inactiveBorderColor = Studio.edge,
                 ),
                 modifier = Modifier.testTag("input-$choice"),
-            ) { Text(choice, fontSize = 13.sp, maxLines = 1) }
+            ) { Text(choice, fontSize = 13.sp, maxLines = 2, textAlign = TextAlign.Center) }
         }
     }
 }
@@ -199,14 +244,15 @@ private fun InputChoice(input: String, modifier: Modifier, choose: (String) -> U
 private fun EditChip(title: String, modifier: Modifier, lit: Boolean = false, toggles: Boolean = false, spoken: String = title, onClick: () -> Unit) {
     Box(
         modifier
-            .sizeIn(minHeight = 44.dp)
+            .sizeIn(minHeight = Studio.target)
             .clip(RoundedCornerShape(Studio.radiusControl))
             .background(if (lit) Studio.accent else Studio.bg3)
             .clickable(role = Role.Button, onClick = onClick)
             .semantics {
                 contentDescription = spoken
                 if (toggles) selected = lit
-            },
+            }
+            .padding(horizontal = 6.dp),
         contentAlignment = Alignment.Center,
     ) {
         Text(title, color = if (lit) Studio.onAccent else Studio.text1, fontWeight = FontWeight.SemiBold, fontSize = 15.sp, maxLines = 1)
@@ -349,8 +395,8 @@ private fun TabStaff(model: AppModel, tab: TabState) {
         Modifier.fillMaxWidth().height(height.dp)
             .clip(RoundedCornerShape(Studio.radiusCard)).background(Studio.editor)
             .onSizeChanged { viewport = it.width }
-            .horizontalScroll(scroll)
-            .testTag("staff"),
+            .testTag("staff")
+            .horizontalScroll(scroll),
     ) {
         for (bar in tab.bars) key(bar.bar) { BarView(model, tab, bar, height) }
     }
@@ -461,8 +507,10 @@ private fun Fretboard(model: AppModel, tab: TabState) {
     val neck = Board.GAP * tab.strings
     fun stringName(string: Int): String = tab.tuning.getOrNull(string - 1)?.let { Format.noteNames[it.mod(12)] } ?: ""
     fun moveString(by: Int) = model.tab("tab.set_cursor", cursor(tab.cursor.bar, tab.cursor.beat, (tab.cursor.string + by).coerceIn(1, strings)))
+    // The semantics belong to the board in view, so they come before the scrolling: after it they
+    // would describe the scrolled content, whose overscroll margin reaches over the row above.
     Box(
-        Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())
+        Modifier.fillMaxWidth()
             .semantics {
                 contentDescription = "Fretboard"
                 stateDescription = "String ${tab.cursor.string}, ${stringName(tab.cursor.string)}, fret $spokenFret"
@@ -477,7 +525,8 @@ private fun Fretboard(model: AppModel, tab: TabState) {
                     CustomAccessibilityAction("Lower string") { moveString(1); true },
                 )
             }
-            .testTag("fretboard"),
+            .testTag("fretboard")
+            .horizontalScroll(rememberScrollState()),
     ) {
         Canvas(
             Modifier.width(Board.WIDTH.dp).height((neck + 22).dp)
@@ -588,7 +637,7 @@ private fun Piano(model: AppModel, tab: TabState) {
         scroll.scrollTo(with(screen) { x.dp.toPx() }.roundToInt())
     }
     Box(
-        Modifier.fillMaxWidth().horizontalScroll(scroll)
+        Modifier.fillMaxWidth()
             .semantics {
                 contentDescription = "Piano"
                 stateDescription = Format.note(spokenPitch)
@@ -599,7 +648,8 @@ private fun Piano(model: AppModel, tab: TabState) {
                     true
                 }
             }
-            .testTag("piano"),
+            .testTag("piano")
+            .horizontalScroll(scroll),
     ) {
         Canvas(
             Modifier.width((Keys.whites.size * Keys.WHITE).dp).height(Keys.HEIGHT.dp)

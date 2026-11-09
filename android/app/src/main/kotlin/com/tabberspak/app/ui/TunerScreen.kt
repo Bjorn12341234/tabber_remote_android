@@ -1,5 +1,9 @@
 package com.tabberspak.app.ui
 
+import kotlinx.coroutines.delay
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.mutableStateOf
 import android.Manifest
 import android.app.Activity
 import android.content.Context
@@ -151,7 +155,17 @@ private fun openSettings(context: Context) {
 @Composable
 private fun TunerDial(reading: TunerModel.Reading?, modifier: Modifier = Modifier) {
     val measurer = rememberTextMeasurer()
-    val spoken = reading?.spoken ?: "Play a string"
+    // TalkBack hears the reading at most once a second, as VoiceOver reads a value that updates
+    // frequently: it speaks each change of the focused dial, and the needle changes 20 times a
+    // second. The needle itself moves at full speed.
+    val latest by rememberUpdatedState(reading?.spoken ?: "Play a string")
+    var spoken by remember { mutableStateOf(latest) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            spoken = latest
+            delay(1000)
+        }
+    }
     Canvas(modifier.semantics { contentDescription = "Tuner"; stateDescription = spoken }.testTag("tuner-dial")) {
         val inTune = reading?.inTune ?: false
         val ink = if (inTune) Studio.accent else Studio.text1

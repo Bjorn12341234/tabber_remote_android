@@ -115,7 +115,7 @@ private fun TrackRouting(model: AppModel, routing: RoutingState, source: Routing
             var adding by remember { mutableStateOf(false) }
             Box {
                 Row(
-                    Modifier.fillMaxWidth().sizeIn(minHeight = 44.dp).clickable(role = Role.Button) { adding = true }.testTag("add-send-${source.name}"),
+                    Modifier.fillMaxWidth().sizeIn(minHeight = Studio.target).clickable(role = Role.Button) { adding = true }.testTag("add-send-${source.name}"),
                     verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
                     Icon(Icons.Filled.Add, contentDescription = null, tint = Studio.text1, modifier = Modifier.size(18.dp))
@@ -166,7 +166,7 @@ private fun OutputMenu(model: AppModel, routing: RoutingState, source: RoutingSo
     val current = routing.outputName(source)
     Box {
         Row(
-            Modifier.fillMaxWidth().sizeIn(minHeight = 44.dp)
+            Modifier.fillMaxWidth().sizeIn(minHeight = Studio.target)
                 .clickable(role = Role.Button) { open = true }
                 .alpha(if ("output-${source.stripId}" in model.pending) 0.5f else 1f)
                 .semantics(mergeDescendants = true) { contentDescription = "Output of ${source.name}"; stateDescription = current }
@@ -241,7 +241,7 @@ private fun SendRow(model: AppModel, send: RoutingSend, trackName: String, busNa
         var moved by remember { mutableStateOf(0f) }
         SendTrack(
             dragLevel ?: send.level,
-            modifier.sizeIn(minWidth = 60.dp).height(44.dp)
+            modifier.sizeIn(minWidth = 60.dp).height(Studio.target)
                 .pointerInput(send.id) {
                     detectHorizontalDragGestures(
                         onDragStart = { start = send.level; moved = 0f },
@@ -267,7 +267,7 @@ private fun SendRow(model: AppModel, send: RoutingSend, trackName: String, busNa
 
     @Composable
     fun Remove() = Box(
-        Modifier.size(44.dp).clickable(role = Role.Button) { model.removeSend(send) }
+        Modifier.size(Studio.target).clickable(role = Role.Button) { model.removeSend(send) }
             .semantics { contentDescription = "Remove send to $busName" }.testTag("remove-send-$trackName-$busName"),
         contentAlignment = Alignment.Center,
     ) { Icon(Icons.Outlined.RemoveCircleOutline, contentDescription = null, tint = Studio.text2) }

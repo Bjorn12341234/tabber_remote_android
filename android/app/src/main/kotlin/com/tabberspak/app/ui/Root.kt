@@ -170,7 +170,9 @@ private fun ScreenBar(model: AppModel) {
                 selected = model.screen == screen,
                 onClick = { model.screen = screen },
                 icon = { Icon(icon, contentDescription = null) },
-                label = { Text(label) },
+                // The tabs' names grow with the text up to half again, on one line: past that a
+                // word would break ("Track / s"); TalkBack reads each tab's name at any size.
+                label = { LimitedScale(1.5f) { Text(label, maxLines = 1, softWrap = false) } },
                 modifier = Modifier.testTag("tab-${label.lowercase()}"),
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = Studio.accent, selectedTextColor = Studio.accent, indicatorColor = Studio.bg2,
