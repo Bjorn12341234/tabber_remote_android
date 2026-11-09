@@ -545,6 +545,92 @@ final class AppModel {
 
     func chatStop() { act("chat-stop", "chat.stop") }
 
+    // Plug-ins (each strip's INSERTS, plugins/1)
+
+    var pluginsAvailable: Bool { state.capabilities.contains("plugins/1") }
+    /// The Insert Plugin browser's rows, read when the browser opens.
+    private(set) var catalog: [PluginRow] = []
+    private(set) var catalogLoading = false
+    /// The plug-in loading on the computer now, and its strip.
+    private(set) var loadingPlugin: (stripID: String, name: String)?
+    /// Said for a while once an instrument became a track's sound source.
+    private(set) var pluginNotice: String?
+
+    /// The browser's rows, a page at a time, as the computer has them now.
+    func loadCatalog() {
+        guard let session, !catalogLoading else { return }
+        catalogLoading = true
+        Task {
+            do {
+                var rows: [PluginRow] = []
+                var offset = 0
+                while true {
+                    let page = try JSONCoding.decode(PluginPage.self, from: try await session.perform(
+                        "plugins.catalog", ["offset": .number(Double(offset)), "limit": 200]))
+                    rows += page.plugins
+                    offset = page.offset + page.plugins.count
+                    if page.plugins.isEmpty || offset >= page.total { break }
+                }
+                catalog = rows
+                problem = nil
+            } catch {
+                problem = Self.explain(error)
+            }
+            catalogLoading = false
+        }
+    }
+
+    /// The strip's "＋ Plugin" and the browser's Insert. The computer answers
+    /// once the plug-in has loaded, which can take a while, and opens its
+    /// window there, as it does for a click.
+    func insertPlugin(_ row: PluginRow, on strip: Strip, done: @escaping (Bool) -> Void) {
+        guard let session, loadingPlugin == nil else { return }
+        loadingPlugin = (strip.id, row.name)
+        Task {
+            do {
+                let result = try await session.perform("plugins.insert",
+                                                       ["strip_id": .string(strip.id), "plugin_id": .string(row.id)],
+                                                       timeout: .seconds(185))
+                loadingPlugin = nil
+                problem = nil
+                feedback = (.tap, feedback.count + 1)
+                if result["sound_source"]?.boolValue == true {
+                    say("\(row.name) is now the sound source of \(strip.name).")
+                }
+                done(true)
+            } catch {
+                loadingPlugin = nil
+                problem = Self.explain(error)
+                feedback = (.failure, feedback.count + 1)
+                done(false)
+            }
+        }
+    }
+
+    private func say(_ notice: String) {
+        pluginNotice = notice
+        Task {
+            try? await Task.sleep(for: .seconds(6))
+            if pluginNotice == notice { pluginNotice = nil }
+        }
+    }
+
+    /// A slot's Bypass or Un-bypass.
+    func bypassInsert(_ insert: Insert, on strip: Strip) {
+        act("bypass-\(insert.id)", "plugins.bypass", ["strip_id": .string(strip.id), "insert_id": .string(insert.id),
+                                                      "bypassed": .bool(!insert.bypassed)])
+    }
+
+    /// A slot's Remove.
+    func removeInsert(_ insert: Insert, on strip: Strip) {
+        act("remove-\(insert.id)", "plugins.remove", ["strip_id": .string(strip.id), "insert_id": .string(insert.id)])
+    }
+
+    /// A slot's Open UI: the plug-in's own window, on the computer.
+    func openInsert(_ insert: Insert, on strip: Strip) {
+        act("open-\(insert.id)", "plugins.open", ["strip_id": .string(strip.id), "insert_id": .string(insert.id)])
+    }
+
     // Routing (the Mixer's Routing view, routing/1)
 
     var routingAvailable: Bool { state.capabilities.contains("routing/1") }

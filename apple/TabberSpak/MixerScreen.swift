@@ -11,6 +11,8 @@ struct MixerScreen: View {
 
     @Bindable var model: AppModel
     @State private var page = Page.mixer
+    /// The tallest strip's INSERTS zone, for every strip.
+    @State private var insertsHeight: CGFloat = 0
 
     var body: some View {
         NavigationStack {
@@ -31,13 +33,27 @@ struct MixerScreen: View {
                             ScrollView(.horizontal) {
                                 HStack(alignment: .top, spacing: 8) {
                                     ForEach(Array(mixer.strips.enumerated()), id: \.element.id) { index, strip in
-                                        StripView(model: model, strip: strip, scale: mixer.scale, unity: mixer.unity, index: index)
+                                        StripView(model: model, strip: strip, scale: mixer.scale, unity: mixer.unity,
+                                                  index: index, insertsHeight: insertsHeight)
                                             .id(strip.id)
                                     }
                                 }
+                                .onPreferenceChange(InsertsHeight.self) { insertsHeight = $0 }
                                 .padding(.horizontal, 16)
                                 .padding(.vertical, 12)
                                 .frame(height: proxy.size.height)
+                            }
+                            .overlay(alignment: .top) {
+                                if let notice = model.pluginNotice {          // an instrument became a sound source
+                                    Text(notice)
+                                        .font(.subheadline)
+                                        .foregroundStyle(Studio.text1)
+                                        .padding(.horizontal, 14)
+                                        .padding(.vertical, 10)
+                                        .studioCard()
+                                        .padding(.top, 8)
+                                        .accessibilityIdentifier("plugin-notice")
+                                }
                             }
                             .scrollIndicators(.hidden)
                             // A bus added from here comes into view.
@@ -128,6 +144,7 @@ struct StripView: View {
     let scale: [ScaleMark]
     let unity: Double
     let index: Int
+    var insertsHeight: CGFloat = 0
     @State private var dragVolume: Double?
     @State private var dragStart: Double?
     @State private var dragPan: Double?
@@ -151,6 +168,10 @@ struct StripView: View {
             }
             .frame(maxWidth: .infinity, minHeight: 34)
             .fixedSize(horizontal: false, vertical: true)       // the name's height, not the strip's
+
+            if model.pluginsAvailable {
+                InsertsZone(model: model, strip: strip, height: insertsHeight)
+            }
 
             if !strip.isMaster {
                 PanKnob(pan: pan, label: dragPan.map(PanLabel.pan) ?? strip.panLabel)

@@ -1038,6 +1038,7 @@ you have to go to the computer and click on it manually on the computer?"
 | TR41 | Add Bus from the phone, as the mixer's "+ Bus" makes it: Studio asks for its name first | spec, Studio, this repo | Headless: the bus equals "+ Bus"'s, named as typed; not an undo step there, nor here; it shows in the phone's Mixer and Routing at once; UI tests |
 | TR42 | The routing Flow view on the phone: Studio's Flow tab, tracks through buses to the master | this repo, Studio if a read is missing | The phone draws what Studio's Flow tab draws for the same song, checked against Studio's own flow model; readable at the largest text; UI tests and the accessibility audit |
 | TR43 | Wiring by hand in the phone's Flow, as Studio's Flow does it, and the computer's master fader following the phone | this repo, Studio | UI tests: a track's output to a bus and back, a send made by dragging and taken away from the card's menu, a looping bus refused in Studio's words; the accessibility audit; headless: the master strip follows mixer.set_master_gain and project.set_properties |
+| TR44 | Plug-ins on the phone's mixer strips: each strip's INSERTS as Studio's strip lists them, its "+ Plugin" opening Studio's Insert Plugin browser, and a slot's Open UI, Bypass and Remove | spec, Studio, this repo | Protocol 1.10 (plugins/1) with a vector of all five verbs; headless: the browser's rows and paging, the browser's own insert on the strip's chain, the strip menu's own Bypass and Remove, refusals in Studio's words, no undo steps; UI tests and the accessibility audit; a real insert on the owner's Mac |
 
 ### M2, the Lock Screen and the Action Button (1.1)
 
@@ -2614,6 +2615,43 @@ what was measured, and what changed in the plan.
   - **Not yet:** tapping a wire to select and delete it, as Studio's Flow
     does; the card's menu removes a send, and dropping on the Master undoes
     an output.
+- **TR44 ✅ 2026-11-09: plug-ins from the phone (protocol 1.10, Studio
+  3d5026f9, 0.3.29).** The owner: "should you be able to insert plugins on
+  tracks from the app?", then "yes".
+  - **Protocol 1.10, `plugins/1`** (cc67548): each mixer strip carries its
+    `inserts` (name, bypassed, auto_bypassed); `plugins.catalog` gives the
+    Insert Plugin browser's rows, 200 a page, since a message is at most
+    64 KB; `plugins.insert`, `plugins.bypass`, `plugins.remove` and
+    `plugins.open`. None is an undo step, there or here. `stale_target` may
+    carry the mixer, for an insert gone from its strip.
+  - **Studio:** the rows are the browser's, in its order (Tabber's own, then
+    the scan cache): on the owner's Mac 96 rows in one 19.5 KB page. Insert
+    is the browser's own `PluginInsertController.begin_insert` on the
+    strip's chain (a track's is its strip's index in the timeline, as the
+    mixer builds it), so the plug-in loads in the background, opens its
+    window on the computer and is saved as there; it and `insert_native`
+    take `on_done`, so a refusal reaches the phone, not a message box on a
+    computer nobody is at. Bypass and Remove are the strip menu's own
+    actions, split into raising `bypass()` and `remove()`.
+  - **The phone:** an INSERTS zone on every strip, as Studio's: "● Name",
+    "○ Name" bypassed, then a dashed "+ Plugin"; one height on every strip
+    so the faders stay level, growing with the text size (a preference key
+    keeps the tallest); a long chain shows "+k more…". A slot opens a
+    sheet of choices: Open on the computer, Bypass or Un-bypass, Remove.
+    "+ Plugin" opens Insert Plugin: Tabber Plugins and Plugins, All, VST3
+    and CLAP, Search plugins; a greyed row says why; it waits up to three
+    minutes for a plug-in to load, shows "Loading … on …", and keeps a
+    refusal in Studio's words on screen. An instrument on a MIDI track says
+    it is now the track's sound source. The demo has Tabber's five and two
+    "Demo Audio" plug-ins.
+  - **Tests:** Studio's TR44 tests (4) with stand-ins; RemoteKit 47,
+    including the demo's plug-ins and every vector's round trip; UI tests
+    22, PluginsUITests (3) and the Insert Plugin browser's audit among
+    them. The audit flagged a slot drawn as two texts; one label, as
+    Studio's, passes with nothing left out. The browser's iOS search field
+    and Cancel button are left out of the audit, as the sheet's Done was.
+  - **Owed:** a real insert on the owner's Mac from the phone (the release
+    smoke test runs the remote without an engine).
 
 - **Studio 0.3.27 (916000de), built 2026-11-08 and installed:** the release
   verifier passed; signed, notarized and stapled; the certified engine byte

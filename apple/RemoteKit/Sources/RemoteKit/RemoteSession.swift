@@ -80,7 +80,7 @@ public actor RemoteSession {
     }
 
     public static let reads: Set<String> = ["takes.list", "session.snapshot", "mixer.state", "tab.state", "routing.state",
-                                            "chat.state", "view.state", "trainer.state"]
+                                            "chat.state", "view.state", "trainer.state", "plugins.catalog"]
     public static let topics = ["transport", "position", "record", "tracks", "markers", "takes", "undo", "project", "meters"]
 
     /// The topics to follow on a computer with these capabilities: a 1.0 host
@@ -426,7 +426,8 @@ public actor RemoteSession {
 
     /// Run a verb on the computer. A change gets a key once, and is resent with
     /// it after a drop until the computer answers or `patience` runs out.
-    public func perform(_ method: String, _ params: JSONValue = [:], patience: Duration = .seconds(10)) async throws -> JSONValue {
+    public func perform(_ method: String, _ params: JSONValue = [:], patience: Duration = .seconds(10),
+                        timeout: Duration = .seconds(15)) async throws -> JSONValue {
         var params = params
         if !Self.reads.contains(method), params["key"] == nil, case .object(var fields) = params {
             fields["key"] = .string(UUID().uuidString.lowercased())
@@ -439,7 +440,7 @@ public actor RemoteSession {
             }
             do {
                 let sent = ContinuousClock.now
-                let result = try await client.call(method, params)
+                let result = try await client.call(method, params, timeout: timeout)
                 applyResult(result)
                 if ResponseTimes.counts(method) { responseTimes.add(.now - sent) }
                 return result
