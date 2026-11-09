@@ -1,0 +1,5 @@
+- Plug-ins from the phone: on any mixer strip, insert a plug-in from Tabber Studio's own list, bypass or remove it, or open its window on the computer. This needs Tabber Studio 0.3.29 or later.
+- Wire the Flow by hand: drag from a track's port to a bus or the Master, and hold a card for its menu.
+- The tuner now hears a guitar's low E and the lowest strings of a bass.
+- When Tabber Studio can't do something, the phone now says why, in Tabber Studio's words.
+- A steadier connection while Tabber Studio plays, and the phone now names Preferences › Remote as the Mac does.

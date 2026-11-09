@@ -1042,14 +1042,14 @@ you have to go to the computer and click on it manually on the computer?"
 | TR43 | Wiring by hand in the phone's Flow, as Studio's Flow does it, and the computer's master fader following the phone | this repo, Studio | UI tests: a track's output to a bus and back, a send made by dragging and taken away from the card's menu, a looping bus refused in Studio's words; the accessibility audit; headless: the master strip follows mixer.set_master_gain and project.set_properties |
 | TR44 | Plug-ins on the phone's mixer strips: each strip's INSERTS as Studio's strip lists them, its "+ Plugin" opening Studio's Insert Plugin browser, and a slot's Open UI, Bypass and Remove | spec, Studio, this repo | Protocol 1.10 (plugins/1) with a vector of all five verbs; headless: the browser's rows and paging, the browser's own insert on the strip's chain, the strip menu's own Bypass and Remove, refusals in Studio's words, no undo steps; UI tests and the accessibility audit; a real insert on the owner's Mac |
 
-### M2, the Lock Screen and the Action Button (1.1)
+### M2, the Lock Screen and the Action Button (1.2)
 
 | # | Sprint | Where | Gate |
 |---|---|---|---|
 | TR10 | Controls and App Intents: start, stop, go again, discard, click; in Control Center, on the Lock Screen and Action Button, in Shortcuts and Siri | this repo | On a locked device the Action Button starts and stops a Tabber Studio recording; a repeated press never records twice; the app explains what happens without the permission |
 | TR11 | Live Activity while recording: self-updating time, stale date, Stop button | this repo | On a device it starts with the take; Stop from the Lock Screen stops the computer; the time matches the computer's within one second at stop; it goes stale when the computer is lost |
 
-### M3, the phone as a microphone (1.2)
+### M3, the phone as a microphone (1.3)
 
 | # | Sprint | Where | Gate |
 |---|---|---|---|
@@ -1057,7 +1057,7 @@ you have to go to the computer and click on it manually on the computer?"
 | TR13 | Mic screen: record on the phone (CAF, input choice, level), screen locked, interruptions, own indicator, outbox, upload during the take, Idea mode | this repo | On a device: a 10-minute take with the screen locked; a simulated call ends the take honestly and keeps the audio; the file reaches Tabber Studio's inbox with the same hash; nothing is deleted on the phone before confirmation |
 | TR14 | Takes recorded together with the computer: shared start, clock offset, drift; the chirp only if needed | Studio, this repo | 20 takes aligned against the computer's own recording of the same click: offset error and leftover drift recorded here; if the clock alone meets the owner's limit, the chirp is struck from the plan with the evidence |
 
-### M4, tab from the phone (1.3)
+### M4, tab from the phone (1.4)
 
 | # | Sprint | Where | Gate |
 |---|---|---|---|
@@ -1065,7 +1065,7 @@ you have to go to the computer and click on it manually on the computer?"
 | TR16 | One-bar tab editor: drawn tab for any string count and tuning, tap string and beat, fret pad, durations, rest, delete, next bar, play and loop the bar, undo | this repo | S3 on a device; UI tests against DemoHost; for a 20-bar fixture the phone shows the same notes as Tabber Studio (a data comparison) |
 | TR17 | Follow-along view, optional: the current bars scroll with playback | this repo | Decision 9; within one beat of the computer over a 3-minute song |
 
-### M5, tone (1.4)
+### M5, tone (1.5)
 
 | # | Sprint | Where | Gate |
 |---|---|---|---|
@@ -2802,6 +2802,31 @@ what was measured, and what changed in the plan.
     did the Spak pages and the App Store privacy text; all now say
     Preferences. Build 16, in review, still says Settings; the next build
     carries the fix.
+- **2026-11-09: Tabber Spak 1.0 is in the App Store, outside the EU; the
+  next version is 1.1.**
+  - **Released** at 19:14 (18:14:02 UTC in Apple's lookup): version 1.0,
+    build 16, as submitted on 8 November. Apple's lookup lists it in the
+    US, the UK, Norway, Iceland, Switzerland, Canada, Australia and Japan,
+    and in none of the EU stores tried: Sweden, Germany, France, Denmark,
+    Finland, the Netherlands and Ireland (apps.apple.com/se answers 404).
+    That is the EU's Digital Services Act: Apple lists an app in the EU only
+    once the account's trader status is declared and verified (Business ›
+    Agreements › Compliance › Digital Services Act). The owner declares it;
+    the website's App Store link waits until Sweden's store lists the app.
+  - **TestFlight is at build 21** (19 and 20 are the same code). Builds 17
+    to 21 say 1.0, and App Store Connect takes no new 1.0 build now that
+    1.0 is out, so the app says 1.1 from build 22 on (`MARKETING_VERSION`,
+    app and UI test targets). 1.1 is the work since build 16: the
+    Preferences wording, TR43, TR44 and the Android port's five fixes. Its
+    What's New is `apple/AppStore/en-US/whats_new.txt`, and the description
+    now names plug-ins and wiring the Flow by hand.
+  - **The milestones' versions move up one:** M2 is 1.2, M3 1.3, M4 1.4 and
+    M5 1.5.
+  - **1.1 with the website's Studio:** a 1.9 host, such as 0.3.27, answers
+    the phone's 1.10 with 1.9 (`choose_version`: the shared major, the lower
+    minor), so 1.1 works with it and shows no plug-ins. Plug-ins need 0.3.29,
+    Studio's newest release; the website still offers 0.3.27. So the website
+    offers 0.3.29 or later before 1.1 is released.
 
 ## Sources
 
