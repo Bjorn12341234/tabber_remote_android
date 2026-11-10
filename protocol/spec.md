@@ -690,12 +690,11 @@ When the selected track is one, `tab` is its drum tab:
   and has no `tuning`.
 - **`tab.put_pitch` is a tap on the Drum Map:** `pitch` is the GM number. It
   takes that drum off the cursor's beat when it is there, as the Delete key
-  on its line does. Otherwise it writes it on the cursor's line when that
-  line is free, else on the first free line, as Tabber Studio's staff
-  places a drum, and the cursor goes to that line. That is the number typed
-  on the line, one undo step with its label ("Set fret 38 on string 2"),
-  and Tabber Studio plays the beat. A beat with every line taken is refused
-  with `host_error`, in Tabber Studio's words.
+  on its line does. Otherwise it goes on the beat's first free line, as
+  Tabber Studio's staff places a drum, and the cursor goes to that line:
+  the number typed on that line, one undo step with its label ("Set fret 38
+  on string 2"), and Tabber Studio plays the beat. A beat with every line
+  taken is refused with `host_error`, in Tabber Studio's words.
 - **`tab.put`,** a fret on a string, is refused with `host_error`: drum tab
   takes its drums from the Drum Map.
 - **`tab.set_cursor`, `tab.move`, `tab.set_duration`, `tab.rest` and
