@@ -471,7 +471,7 @@ effect. Names marked TR1 are added to the Control API in sprint TR1.
 | `tracks.arm` | `key`, `track_id`, `armed` | `tracks` | `recording.arm_audio_track` (TR1) for audio, `recording.arm_track` for MIDI |
 | `tracks.select` | `key`, `track_id` | `tracks` | `tracks.select` |
 | `tracks.set_monitor` | `key`, `track_id`, `mode` (`off`, `auto`, `on`) | `tracks` | `recording.set_monitor` for MIDI; audio tracks as TR8 finds |
-| `tracks.add` | `key`, `kind` (`tab`, `midi`, `audio`, or `drums` with tab.drum/1) | `track`, `tracks`, `undo` | "+ Add Track" and its Tab, Midi or Audio track, or Tab with Drum ticked (tracks.add/1) |
+| `tracks.add` | `key`, `kind` (`tab`, `midi`, `audio`, or `drums` with tab.drum/1) | `track`, `tracks`, `undo` | "+ Add Track" and its Tab, Midi or Audio track, or Tab with Percussion Track ticked (tracks.add/1) |
 
 `tracks.add` adds a track as Tabber Studio's "+ Add Track" does, with what
 its chooser and its New Track dialog start with. Nothing opens on the
@@ -484,8 +484,8 @@ computer:
 - **`audio`** is an empty audio track to record on. When the computer shows
   Tab, it turns to Arrange to show the new track, as it does there.
 - **`drums`** (tab.drum/1) is a drum track as the New Track dialog makes it
-  with Drum ticked: six lines of drum tab. It comes selected, so the phone
-  can write drums on it at once.
+  with Percussion Track ticked: six lines of drum tab. It comes selected, so
+  the phone can write drums on it at once.
 - **Names** are the computer's own: "Track 2", "MIDI Track 2", "Audio 3",
   "Drums".
 - **One undo step,** named in the result's `undo`, which Undo on either
@@ -680,10 +680,10 @@ tab, read and written as Tabber Studio's own MIDI Tab reads and writes it:
 - The MIDI tab is there only while the computer's Tab editor shows it, as in
   Tabber Studio; otherwise `tab` is null and the verbs answer `no_tab`.
 
-**Drum tab (tab.drum/1).** A drum track is a tab track with Drum ticked in
-Tabber Studio: six lines, each note a GM percussion number on a line, as its
-Tab view shows it, with the numbers listed in its Drum Map. When the
-selected track is one, `tab` is its drum tab:
+**Drum tab (tab.drum/1).** A drum track is a tab track with Percussion Track
+ticked in Tabber Studio: six lines, each note a GM percussion number on a
+line, as its Tab view shows it, with the numbers listed in its Drum Map.
+When the selected track is one, `tab` is its drum tab:
 
 - **`drum`** is true, `tuning` holds one 0 per line (a line has no pitch),
   and each note's `fret` is its GM number. The track's row says `drum_tab`

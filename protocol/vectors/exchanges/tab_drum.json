@@ -1,6 +1,6 @@
 {
  "name": "tab_drum",
- "description": "Drum tab on a drum track: the Drum Map writes a snare on the first free line and takes a kick off again, a guitar fret is refused, and Add Track with Drum ticked makes a second drum track (spec 9, tab.drum/1).",
+ "description": "Drum tab on a drum track: the Drum Map writes a snare on the first free line and takes a kick off again, a guitar fret is refused, and Add Track with Percussion Track ticked makes a second drum track (spec 9, tab.drum/1).",
  "start": "authenticated",
  "host_state": {
   "pairing": {
