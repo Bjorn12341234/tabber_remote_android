@@ -29,10 +29,11 @@ final class TabScreenUITests: SpakUITestCase {
 
     /// TR39 and TR40: a MIDI track chosen while the computer shows Tab waits on
     /// Tabber Studio's "MIDI part" card; the phone answers it, so the computer
-    /// is never left waiting, and then writes on the MIDI tab. Drums offer
-    /// only standard notation.
+    /// is never left waiting, and then writes on the MIDI tab. Drums on a MIDI
+    /// track with a kit offer only standard notation.
     @MainActor
     func testTheMidiPartCardFromThePhone() {
+        launch(["-demo", "-demo-midi-drums", "-screen", "tab"])
         app.tabBars.buttons["Tracks"].tap()
         reveal("add-track")
         tap("add-track")
@@ -56,6 +57,42 @@ final class TabScreenUITests: SpakUITestCase {
         XCTAssertTrue(gone("show-midi-tab"), "drums cannot show MIDI tab")
         tap("show-notation")
         XCTAssertTrue(waitFor("part-shows", "in standard notation"))
+    }
+
+    /// TR45: Drums is a drum track. The Tab screen shows its drum tab with
+    /// Tabber Studio's Drum Map where the fretboard is; a drum goes on the
+    /// beat's first free line, and a lit drum comes off again. Undo takes it back.
+    @MainActor
+    func testTheDrumMapWritesDrumTab() {
+        app.tabBars.buttons["Tracks"].tap()
+        tap("track-Drums")
+        XCTAssertTrue(waitSelected("track-Drums"))
+        app.tabBars.buttons["Tab"].tap()
+        XCTAssertTrue(appears("drum-38"), "the Drum Map, where the fretboard is")
+        XCTAssertFalse(element("fretboard").exists || element("input").exists)
+        XCTAssertTrue(app.navigationBars["Drums"].waitForExistence(timeout: 8))
+        let groove = "beat 1: line 1, 42 Closed Hi-Hat, line 3, 36 Bass Drum 1, cursor"
+        XCTAssertTrue(waitFor("bar-1", groove))
+        tap("drum-38")
+        XCTAssertTrue(waitFor("bar-1", "beat 1: line 1, 42 Closed Hi-Hat, line 2, 38 Acoustic Snare, line 3, 36 Bass Drum 1"),
+                      "the snare on the first free line")
+        XCTAssertTrue(waitSelected("drum-38"), "lit on this beat")
+        tap("drum-38")
+        XCTAssertTrue(waitFor("bar-1", groove), "a lit drum comes off again")
+        tap("undo")
+        XCTAssertTrue(waitFor("bar-1", "line 2, 38 Acoustic Snare"), "Undo brings it back")
+    }
+
+    /// TR45: the Tab screen adds a drum track, as Add Track with Percussion
+    /// Track ticked makes it, and writes on it at once.
+    @MainActor
+    func testASongOfOnlyAudioGetsADrumTrack() {
+        launch(["-demo", "-demo-only-audio", "-screen", "tab"])
+        tap("add-drum-track")
+        XCTAssertTrue(appears("drum-36"), "the new drum track's drum tab, at once")
+        XCTAssertTrue(app.navigationBars["Drums"].waitForExistence(timeout: 8))
+        tap("drum-36")
+        XCTAssertTrue(waitFor("bar-1", "line 1, 36 Bass Drum 1"))
     }
 
     @MainActor

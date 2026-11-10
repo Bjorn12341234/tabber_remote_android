@@ -1042,6 +1042,12 @@ you have to go to the computer and click on it manually on the computer?"
 | TR43 | Wiring by hand in the phone's Flow, as Studio's Flow does it, and the computer's master fader following the phone | this repo, Studio | UI tests: a track's output to a bus and back, a send made by dragging and taken away from the card's menu, a looping bus refused in Studio's words; the accessibility audit; headless: the master strip follows mixer.set_master_gain and project.set_properties |
 | TR44 | Plug-ins on the phone's mixer strips: each strip's INSERTS as Studio's strip lists them, its "+ Plugin" opening Studio's Insert Plugin browser, and a slot's Open UI, Bypass and Remove | spec, Studio, this repo | Protocol 1.10 (plugins/1) with a vector of all five verbs; headless: the browser's rows and paging, the browser's own insert on the strip's chain, the strip menu's own Bypass and Remove, refusals in Studio's words, no undo steps; UI tests and the accessibility audit; a real insert on the owner's Mac |
 
+### Asked for 2026-11-10
+
+| # | Sprint | Where | Gate |
+|---|---|---|---|
+| TR45 | Drum tab from the phone: a drum track's drum tab, with Studio's Drum Map where the fretboard is, and a drum track from Add Track | spec, Studio, this repo | Protocol 1.11 (tab.drum/1) with a vector; headless: a Drum Map tap is the number typed on the beat's first free line, off again as Delete takes it, a full beat refused in Studio's words, a guitar fret refused, and an older phone sees no drum tab; UI tests and the accessibility audit |
+
 ### M2, the Lock Screen and the Action Button (1.2)
 
 | # | Sprint | Where | Gate |
@@ -2827,6 +2833,42 @@ what was measured, and what changed in the plan.
     minor), so 1.1 works with it and shows no plug-ins. Plug-ins need 0.3.29,
     Studio's newest release; the website still offers 0.3.27. So the website
     offers 0.3.29 or later before 1.1 is released.
+
+- **TR45 ✅ 2026-11-10: drum tab from the phone (protocol 1.11, d81e933;
+  Studio ca6580d9, 0.3.31).** The owner: "i hope spak now can write on drum
+  tracks too". A drum track in Tabber Studio is a tab track with Percussion
+  Track ticked: six lines, a GM number typed on a line, the numbers listed
+  in its Drum Map dock where the fretboard is. A MIDI track with a kit has
+  no tab there, and none here.
+  - **On the phone:** a drum track's Tab screen shows its drum tab and the
+    Drum Map, GM 35 to 59 by number and name, in place of the fretboard and
+    the piano. A tap writes the drum on the beat's first free line, as
+    Studio's staff places a drum (core/staff_percussion.py, which prefers no
+    line); a lit drum comes off again, as Delete on its line takes it. Each
+    is Studio's own undo step ("Set fret 38 on string 2"). Add Track, on
+    Tracks and on the Tab screen, adds a drum track: the New Track dialog
+    with Percussion Track ticked, accepted as it opens.
+  - **Older phones:** before 1.11 a drum track's `tab` is null in the
+    snapshot, the events and the answers, and its tab verbs answer
+    `no_tab`, so the App Store's 1.0 never writes guitar frets on drum
+    lines. Rows say `drum_tab` and carry no tuning for the same reason.
+  - **The demo:** Drums is now a drum track with a rock beat in eighths;
+    `-demo-midi-drums` keeps TR39's MIDI track with a kit for its tests.
+  - **Gate met:** Studio `test_tr45_drum_tab.py` (4, over a real
+    connection: the Add Track dialog's own track, the Drum Map's lines and
+    toggle, a full beat and a fret refused, the tab keys on drum lines, and
+    a 1.10 phone's view, refusals and null events); the remote suite 139 of
+    140 (test_tr36's track limit test failed once in the whole run and
+    passes alone). RemoteKit 56 with the demo's drum tab; the vector
+    validator; UI tests: the Tab screen's 10 (two new: the Drum Map writes,
+    lights and takes off a drum, Undo, and a drum track added to a song of
+    only audio), the Tracks screen's 9 with Add Track's Drum track, the
+    MIDI card with `-demo-midi-drums`, and the accessibility audit of the
+    Drum Map and of every screen. The Drum Map runs on under the transport,
+    as Routing's list does, so its audit leaves out contrast there; each
+    cell is one text, the number over the name, so both grow.
+  - **Studio 0.3.31** (ea525a5b) is built from build/release-0331, the
+    0.3.30 script with its engine and plug-in inputs.
 
 ## Sources
 

@@ -187,11 +187,15 @@ struct AddTrackButton: View {
             // Not during a take: in Tabber Studio a new track clears the record arms.
             .disabled(model.pending.contains("add-track") || model.state.record.recording)
             .accessibilityLabel("Add Track")
-            .accessibilityHint("Adds a tab, MIDI or audio track to the song on the computer.")
+            .accessibilityHint(model.drumTabAvailable ? "Adds a tab, drum, MIDI or audio track to the song on the computer."
+                               : "Adds a tab, MIDI or audio track to the song on the computer.")
             .accessibilityIdentifier("add-track")
             .confirmationDialog("What kind of track do you want to add?", isPresented: $choosing,
                                 titleVisibility: .visible) {
                 Button("Tab track") { model.addTrack(.tab) }
+                if model.drumTabAvailable {
+                    Button("Drum track") { model.addTrack(.drums) }     // Tab track with Percussion Track ticked
+                }
                 Button("MIDI track") { model.addTrack(.midi) }
                 Button("Audio track") { model.addTrack(.audio) }
                 Button("Cancel", role: .cancel) {}

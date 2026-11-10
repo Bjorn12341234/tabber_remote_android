@@ -9,8 +9,9 @@ Record from across the room
 
 Tracks and tab
 - Choose a track, hear it alone, mute it and arm it for recording.
-- Add a tab, MIDI or audio track, as Tabber Studio's own Add Track makes it.
+- Add a tab, drum, MIDI or audio track, as Tabber Studio's own Add Track makes it.
 - Write tab with a fretboard or a piano, on a tab track or as MIDI tab on a MIDI track, one undo step per note.
+- Write drums on a drum track with Tabber Studio's Drum Map.
 
 Mix
 - Tabber Studio's own faders, pan, solo, mute and meters, for every track, bus and the master.
@@ -24,6 +25,6 @@ Practise
 Ask
 - Ask Tabber Studio's chat for a change, typed or spoken. The phone shows the plan, and nothing changes until you tap Execute. The AI runs on your computer, with your own key.
 
-Tabber Spak needs Tabber Studio 0.3.27 or later (0.3.29 for plug-ins) on a Mac with Apple Silicon, free from tabber.tourbuddy.se. Pair the phone once by scanning the code the computer shows. It talks only to the computers you pair it with, over an encrypted connection on your own network. Tabber Spak collects no data.
+Tabber Spak needs Tabber Studio 0.3.27 or later (0.3.29 for plug-ins, 0.3.31 for drums) on a Mac with Apple Silicon, free from tabber.tourbuddy.se. Pair the phone once by scanning the code the computer shows. It talks only to the computers you pair it with, over an encrypted connection on your own network. Tabber Spak collects no data.
 
 Try the demo to see every screen without a computer.

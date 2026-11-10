@@ -92,7 +92,8 @@ public enum TrackKind: String, Codable, Sendable { case audio, midi }
 
 /// What Tabber Studio's "+ Add Track" chooser makes (tracks.add/1): a tab
 /// track arrives as a MIDI track with a tuning; a MIDI track has none.
-public enum NewTrackKind: String, CaseIterable, Sendable { case tab, midi, audio }
+/// What "+ Add Track" makes; `drums` is Tab with Percussion Track ticked (tab.drum/1).
+public enum NewTrackKind: String, CaseIterable, Sendable { case tab, midi, audio, drums }
 public enum MonitorMode: String, Codable, Sendable { case off, auto, on }
 
 public struct Track: Codable, Sendable, Hashable, Identifiable {
@@ -107,12 +108,19 @@ public struct Track: Codable, Sendable, Hashable, Identifiable {
     public var instrument: String?
     /// A tab track's open strings as MIDI notes, highest first; nil when it has no tab (tab/1).
     public var tuning: [Int]?
+    /// A drum track with drum tab, written with the Drum Map (tab.drum/1); it has no tuning.
+    public var drumTab: Bool?
+
+    enum CodingKeys: String, CodingKey {
+        case id, name, kind, armed, monitor, selected, color, instrument, tuning
+        case drumTab = "drum_tab"
+    }
 
     public init(id: String, name: String, kind: TrackKind, armed: Bool, monitor: MonitorMode,
-                selected: Bool, color: String?, instrument: String? = nil, tuning: [Int]? = nil) {
+                selected: Bool, color: String?, instrument: String? = nil, tuning: [Int]? = nil, drumTab: Bool? = nil) {
         self.id = id; self.name = name; self.kind = kind; self.armed = armed
         self.monitor = monitor; self.selected = selected; self.color = color
-        self.instrument = instrument; self.tuning = tuning
+        self.instrument = instrument; self.tuning = tuning; self.drumTab = drumTab
     }
     public func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
@@ -121,10 +129,11 @@ public struct Track: Codable, Sendable, Hashable, Identifiable {
         try c.encode(selected, forKey: .selected); try c.encode(color, forKey: .color)
         try c.encodeIfPresent(instrument, forKey: .instrument)       // absent from 1.0 hosts, and kept absent
         try c.encodeIfPresent(tuning, forKey: .tuning)
+        try c.encodeIfPresent(drumTab, forKey: .drumTab)
     }
 
-    /// A track the phone can write tab on.
-    public var hasTab: Bool { tuning != nil }
+    /// A track the phone can write tab on: a tab track, or a drum track's drum tab.
+    public var hasTab: Bool { tuning != nil || drumTab == true }
 }
 
 public struct Marker: Codable, Sendable, Hashable, Identifiable {

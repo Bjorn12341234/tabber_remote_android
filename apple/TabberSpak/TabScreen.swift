@@ -4,7 +4,8 @@ import SwiftUI
 /// Tabber Studio's Tab view on the phone: the chosen track's tab around the
 /// cursor, the note values, and the fretboard or the piano to write with. A
 /// fretboard tap writes that fret at the cursor (tap it again to take it off)
-/// and the cursor stays, so more taps make a chord; Next moves on.
+/// and the cursor stays, so more taps make a chord; Next moves on. A drum
+/// track's drum tab is written with Tabber Studio's Drum Map instead (TR45).
 struct TabScreen: View {
     @Bindable var model: AppModel
     @AppStorage("tabInput") private var input = "Fretboard"
@@ -74,7 +75,9 @@ struct TabScreen: View {
                     .accessibilityIdentifier("triplet")
                     EditChip(title: "Rest", spoken: "Rest, on or off for this beat") { model.tab("tab.rest") }
                         .accessibilityIdentifier("rest")
-                    EditChip(title: "Delete", spoken: "Delete the note on this string") { model.tab("tab.delete") }
+                    EditChip(title: "Delete", spoken: tab.drum ? "Delete the drum on this line" : "Delete the note on this string") {
+                        model.tab("tab.delete")
+                    }
                         .accessibilityIdentifier("delete-note")
                 }
                 HStack(spacing: 6) {
@@ -85,12 +88,20 @@ struct TabScreen: View {
                     .accessibilityLabel("Previous beat")
                     .accessibilityHint("Hold to go back fast.")
                     .accessibilityIdentifier("previous")
-                    Picker("Write with", selection: $input) {
-                        Text("Fretboard").tag("Fretboard")
-                        Text("Piano").tag("Piano")
+                    if tab.drum {
+                        Text("Drum Map")                 // the computer's dock title for a drum track
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(Studio.text2)
+                            .frame(maxWidth: .infinity)
+                            .accessibilityAddTraits(.isHeader)
+                    } else {
+                        Picker("Write with", selection: $input) {
+                            Text("Fretboard").tag("Fretboard")
+                            Text("Piano").tag("Piano")
+                        }
+                        .pickerStyle(.segmented)
+                        .accessibilityIdentifier("input")
                     }
-                    .pickerStyle(.segmented)
-                    .accessibilityIdentifier("input")
                     HoldButton(kind: .primary, tap: { model.tab("tab.move", ["by": 1]) },
                                hold: { bars in await model.fastStep(by: 1, bars: bars) }) {
                         HStack(spacing: 6) { Text("Next"); Image(systemName: "chevron.right") }
@@ -100,7 +111,9 @@ struct TabScreen: View {
                     .accessibilityIdentifier("next")
                 }
                 .padding(.top, 2)
-                if input == "Piano" {
+                if tab.drum {
+                    DrumMapPad(model: model, tab: tab)
+                } else if input == "Piano" {
                     Piano(model: model, tab: tab)
                 } else {
                     Fretboard(model: model, tab: tab)
@@ -184,6 +197,14 @@ private struct ChooseTabTrack: View {
                         .accessibilityLabel("Add Tab Track")
                         .accessibilityHint("Adds a guitar tab track to the song on the computer, to write on here.")
                         .accessibilityIdentifier("add-tab-track")
+                    if model.drumTabAvailable {
+                        Button("+ Add Drum Track") { model.addTrack(.drums) }
+                            .buttonStyle(.studioGhost)
+                            .disabled(model.pending.contains("add-track") || model.state.record.recording)
+                            .accessibilityLabel("Add Drum Track")
+                            .accessibilityHint("Adds a drum track to the song on the computer, to write drums on here.")
+                            .accessibilityIdentifier("add-drum-track")
+                    }
                 }
             }
             .padding(16)
@@ -356,10 +377,57 @@ private struct BarView: View {
 
     private var spoken: String {
         bar.beats.enumerated().map { index, beat in
-            let notes = beat.notes.isEmpty ? "rest" : beat.notes.map { "string \($0.string) fret \($0.fret)" }.joined(separator: ", ")
+            let notes = beat.notes.isEmpty ? "rest" : beat.notes.map {
+                tab.drum ? "line \($0.string), \($0.fret) \(DrumMap.name($0.fret))" : "string \($0.string) fret \($0.fret)"
+            }.joined(separator: ", ")
             let here = tab.cursor.bar == bar.bar && tab.cursor.beat == index + 1 ? ", cursor" : ""
             return "beat \(index + 1): \(notes)\(here)"
         }.joined(separator: "; ")
+    }
+}
+
+// MARK: the Drum Map
+
+/// Tabber Studio's Drum Map (ui/fretboard_widget.py DrumGuideCanvas), which
+/// it docks where the fretboard is for a drum track: the common kit sounds,
+/// GM 35 to 59, by number and name, the cursor beat's drums lit. There one
+/// types the number; here a tap writes it on the beat's first free line, as
+/// Studio's staff places a drum, and a lit drum comes off again (tab.drum/1).
+struct DrumMapPad: View {
+    @Bindable var model: AppModel
+    let tab: TabState
+    /// Each cell's least width; three cells a row on an iPhone, fewer as the text grows.
+    @ScaledMetric(relativeTo: .body) private var cell: CGFloat = 104
+
+    var body: some View {
+        let beat = tab.cursorBar.flatMap { bar in bar.beats.indices.contains(tab.cursor.beat - 1) ? bar.beats[tab.cursor.beat - 1] : nil }
+        let lit = Set(beat?.notes.map(\.fret) ?? [])
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: cell), spacing: 4)], spacing: 4) {
+            ForEach(DrumMap.numbers, id: \.self) { number in
+                let on = lit.contains(number)
+                Button { model.tab("tab.put_pitch", ["pitch": .number(Double(number))]) } label: {
+                    // One text, the number over the name, so both grow with the text size.
+                    let figure = Text("\(number)").font(Studio.counter(.subheadline, weight: .semibold))
+                    let name = Text(DrumMap.name(number)).font(.caption)
+                    Text("\(figure)\n\(name)")
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .foregroundStyle(on ? Studio.onAccent : Studio.text1)
+                        .frame(maxWidth: .infinity, minHeight: 52, alignment: .topLeading)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 6)
+                        .background(on ? Studio.accent : Studio.bg3,
+                                    in: RoundedRectangle(cornerRadius: Studio.radiusControl, style: .continuous))
+                        .contentShape(.rect)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("\(number), \(DrumMap.name(number))")
+                .accessibilityAddTraits(on ? .isSelected : [])
+                .accessibilityHint(on ? "Takes it off this beat." : "Writes it on this beat.")
+                .accessibilityIdentifier("drum-\(number)")
+            }
+        }
+        .padding(.top, 4)
     }
 }
 
