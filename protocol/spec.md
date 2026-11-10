@@ -254,7 +254,7 @@ whether Tabber Studio is busy:
 ## 7. Versions and capabilities
 
 - **The protocol version** is `major.minor`. `hello` lists what the remote
-  speaks (`"protocol_versions": ["1.10"]`, one entry per major, the highest
+  speaks (`"protocol_versions": ["1.11"]`, one entry per major, the highest
   minor it knows); the host answers with the version it chose: the major
   both speak, and the lower of the two minors. It lists only that version's
   capabilities, refuses the verbs of any other with `not_supported` and
@@ -356,6 +356,13 @@ shows a strip's plug-ins only when the host lists it:
 | Capability | Gives |
 |---|---|
 | `plugins/1` | `plugins.catalog`, `plugins.insert`, `plugins.bypass`, `plugins.remove`, `plugins.open`, and `inserts` on the mixer's strips |
+
+Version 1.11 adds one capability. A 1.11 remote works with any 1.x host and
+writes drum tab only when the host lists it:
+
+| Capability | Gives |
+|---|---|
+| `tab.drum/1` | the tab/1 verbs and the `tab` topic on a drum track's drum tab, `drum_tab` on track rows, and `drums` in `tracks.add` |
 
 ## 8. Snapshot and events
 
@@ -464,7 +471,7 @@ effect. Names marked TR1 are added to the Control API in sprint TR1.
 | `tracks.arm` | `key`, `track_id`, `armed` | `tracks` | `recording.arm_audio_track` (TR1) for audio, `recording.arm_track` for MIDI |
 | `tracks.select` | `key`, `track_id` | `tracks` | `tracks.select` |
 | `tracks.set_monitor` | `key`, `track_id`, `mode` (`off`, `auto`, `on`) | `tracks` | `recording.set_monitor` for MIDI; audio tracks as TR8 finds |
-| `tracks.add` | `key`, `kind` (`tab`, `midi` or `audio`) | `track`, `tracks`, `undo` | "+ Add Track" and its Tab, Midi or Audio track (tracks.add/1) |
+| `tracks.add` | `key`, `kind` (`tab`, `midi`, `audio`, or `drums` with tab.drum/1) | `track`, `tracks`, `undo` | "+ Add Track" and its Tab, Midi or Audio track, or Tab with Drum ticked (tracks.add/1) |
 
 `tracks.add` adds a track as Tabber Studio's "+ Add Track" does, with what
 its chooser and its New Track dialog start with. Nothing opens on the
@@ -476,7 +483,11 @@ computer:
 - **`midi`** is a MIDI track for the piano roll, selected.
 - **`audio`** is an empty audio track to record on. When the computer shows
   Tab, it turns to Arrange to show the new track, as it does there.
-- **Names** are the computer's own: "Track 2", "MIDI Track 2", "Audio 3".
+- **`drums`** (tab.drum/1) is a drum track as the New Track dialog makes it
+  with Drum ticked: six lines of drum tab. It comes selected, so the phone
+  can write drums on it at once.
+- **Names** are the computer's own: "Track 2", "MIDI Track 2", "Audio 3",
+  "Drums".
 - **One undo step,** named in the result's `undo`, which Undo on either
   device takes back.
 - `track` is the new track as the `tracks` topic shows it. A song with as
@@ -603,8 +614,8 @@ Insert Plugin browser, which the strip's "＋ Plugin" opens.
 
 The selected track's tab, edited as Tabber Studio's Tab view edits it. The
 remote chooses the track with `tracks.select`; the tab follows. `tab` is
-null while the selected track has none (an audio track, a drum or a
-plain MIDI track).
+null while the selected track has none: an audio track, a plain MIDI track
+or a MIDI drum track, and a drum track before 1.11 (drum tab, below).
 
 | Verb | Params | Result | In Tabber Studio |
 |---|---|---|---|
@@ -642,8 +653,8 @@ plain MIDI track).
 - **`bars` holds the cursor's bar and its neighbours,** one before and three
   after, so an answer stays small whatever the song's length. `revision`
   changes whenever they do.
-- **No tab, no edits.** With no tab on the selected track (an audio, drum or
-  plain MIDI track), every verb but `tab.state` is refused with `no_tab`.
+- **No tab, no edits.** With no tab on the selected track, every verb but
+  `tab.state` is refused with `no_tab`.
 
 **MIDI tab (tab.midi/1).** When the Tab editor shows the selected melodic
 MIDI track as MIDI tab (`view.part.shows` is `midi_tab`), `tab` is that MIDI
@@ -668,6 +679,32 @@ tab, read and written as Tabber Studio's own MIDI Tab reads and writes it:
   track keeps its instrument.
 - The MIDI tab is there only while the computer's Tab editor shows it, as in
   Tabber Studio; otherwise `tab` is null and the verbs answer `no_tab`.
+
+**Drum tab (tab.drum/1).** A drum track is a tab track with Drum ticked in
+Tabber Studio: six lines, each note a GM percussion number on a line, as its
+Tab view shows it, with the numbers listed in its Drum Map. When the
+selected track is one, `tab` is its drum tab:
+
+- **`drum`** is true, `tuning` holds one 0 per line (a line has no pitch),
+  and each note's `fret` is its GM number. The track's row says `drum_tab`
+  and has no `tuning`.
+- **`tab.put_pitch` is a tap on the Drum Map:** `pitch` is the GM number. It
+  takes that drum off the cursor's beat when it is there, as the Delete key
+  on its line does. Otherwise it writes it on the cursor's line when that
+  line is free, else on the first free line, as Tabber Studio's staff
+  places a drum, and the cursor goes to that line. That is the number typed
+  on the line, one undo step with its label ("Set fret 38 on string 2"),
+  and Tabber Studio plays the beat. A beat with every line taken is refused
+  with `host_error`, in Tabber Studio's words.
+- **`tab.put`,** a fret on a string, is refused with `host_error`: drum tab
+  takes its drums from the Drum Map.
+- **`tab.set_cursor`, `tab.move`, `tab.set_duration`, `tab.rest` and
+  `tab.delete`** do what they do on tab, with the lines as its strings.
+- **The Drum Map** lists GM 35 to 59 with their General MIDI names, as
+  Tabber Studio's does.
+- **Before 1.11** a drum track's `tab` is null and its verbs answer
+  `no_tab`, as they always did, so an older remote never writes guitar
+  frets on drum lines.
 
 ### Routing (routing/1)
 

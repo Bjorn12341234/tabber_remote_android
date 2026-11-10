@@ -298,6 +298,10 @@
             "maximum": 127
           },
           "description": "A tab track's open strings as MIDI notes, highest first; absent when the track has no tab."
+        },
+        "drum_tab": {
+          "type": "boolean",
+          "description": "True on a drum track with drum tab (tab.drum/1): it is written with the Drum Map, and it has no tuning."
         }
       },
       "required": [
@@ -709,7 +713,7 @@
           "type": "integer",
           "minimum": -127,
           "maximum": 127,
-          "description": "0 to 36 on guitar tab; on MIDI tab (tab.midi/1) also beyond the strings' frets, then virtual."
+          "description": "0 to 36 on guitar tab; on MIDI tab (tab.midi/1) also beyond the strings' frets, then virtual; on drum tab (tab.drum/1) a GM percussion number."
         },
         "virtual": {
           "type": "boolean",
@@ -816,7 +820,8 @@
           }
         },
         "drum": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "True on a drum track's drum tab (tab.drum/1): tuning holds one 0 per line, and each fret is a GM percussion number."
         },
         "cursor": {
           "$ref": "#/$defs/tab_cursor"
