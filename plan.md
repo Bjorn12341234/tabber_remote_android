@@ -2819,6 +2819,11 @@ what was measured, and what changed in the plan.
     once the account's trader status is declared and verified (Business ›
     Agreements › Compliance › Digital Services Act). The owner declares it;
     the website's App Store link waits until Sweden's store lists the app.
+  - **EU stores, 2026-11-10 evening:** the owner declared the trader
+    status, and apps.apple.com/se and /de now show Tabber Spak by Viga
+    Works AB (404 before); Apple's lookup API still lists none there, as
+    its index lags. 1.1 goes for review with automatic release, which is
+    right now that the website offers 0.3.31.
   - **TestFlight is at build 21** (19 and 20 are the same code). Builds 17
     to 21 say 1.0, and App Store Connect takes no new 1.0 build now that
     1.0 is out, so the app says 1.1 from build 22 on (`MARKETING_VERSION`,
