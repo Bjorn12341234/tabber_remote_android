@@ -11,10 +11,15 @@ import Foundation
 ///   beat left with none is a rest;
 /// - moving on past the last beat fills the bar with a rest beat, or starts
 ///   the next bar, adding one at the end of the song.
+///
+/// A drum track's drum tab (tab.drum/1) has six lines and GM numbers for
+/// frets; the Drum Map writes on it as `putDrum` says.
 struct DemoTab: Equatable, Sendable {
     var tuning: [Int]
     var bars: [[TabBeat]]
     var timeSignature = TimeSignature(beats: 4, unit: 4)
+    /// A drum track's drum tab: lines without pitch, GM numbers for frets.
+    var drum = false
 
     static let maxFret = 24
 
@@ -105,6 +110,34 @@ struct DemoTab: Equatable, Sendable {
         return true
     }
 
+    /// What a Drum Map tap did (tab.drum/1).
+    enum DrumTap: Equatable { case wrote(line: Int), tookOff(line: Int), full }
+
+    /// A tap on the Drum Map, as Tabber Studio's remote host makes it
+    /// (remote_host/tablature.py _put_drum): the drum comes off the cursor's
+    /// beat when it is there; else it goes on the beat's first free line, as
+    /// Studio's staff places a drum; a beat with every line taken is full.
+    mutating func putDrum(_ gm: Int, at cursor: TabCursor, duration: NoteValue) -> DrumTap {
+        let i = beatIndex(cursor, duration)
+        var beat = bars[cursor.bar - 1][i]
+        if let same = beat.notes.firstIndex(where: { $0.fret == gm }) {
+            let line = beat.notes[same].string
+            beat.notes.remove(at: same)
+            beat.rest = beat.notes.isEmpty
+            bars[cursor.bar - 1][i] = beat
+            return .tookOff(line: line)
+        }
+        guard let line = (1...tuning.count).first(where: { l in !beat.notes.contains { $0.string == l } }) else {
+            return .full
+        }
+        if beat.rest && beat.notes.isEmpty { beat.duration = duration }   // an empty beat takes the chosen value
+        beat.notes.append(TabNote(string: line, fret: gm))
+        beat.notes.sort { $0.string < $1.string }
+        beat.rest = false
+        bars[cursor.bar - 1][i] = beat
+        return .wrote(line: line)
+    }
+
     /// The beat under the cursor, when the bar has it.
     func beat(at cursor: TabCursor) -> TabBeat? {
         guard bars.indices.contains(cursor.bar - 1), bars[cursor.bar - 1].indices.contains(cursor.beat - 1) else { return nil }
@@ -175,5 +208,25 @@ struct DemoTab: Equatable, Sendable {
         let bars = [bar(4, 0), bar(3, 3), bar(4, 3), bar(3, 5)]
         let empty = [TabBeat(duration: quarter, rest: true, notes: [])]
         return DemoTab(tuning: bass, bars: bars + bars + Array(repeating: empty, count: 8))
+    }
+
+    /// Six empty lines of drum tab, as a new drum track has them.
+    static func emptyDrums(bars count: Int) -> DemoTab {
+        let rest = [TabBeat(duration: NoteValue(value: 4), rest: true, notes: [])]
+        return DemoTab(tuning: Array(repeating: 0, count: 6), bars: Array(repeating: rest, count: count), drum: true)
+    }
+
+    /// A rock beat in eighths under the guitar: closed hi-hat (42) on line 1,
+    /// snare (38) on line 2 on two and four, bass drum (36) on line 3.
+    static func demoDrums() -> DemoTab {
+        let eighth = NoteValue(value: 8)
+        func hits(_ lines: [(Int, Int)]) -> TabBeat {
+            TabBeat(duration: eighth, rest: false, notes: lines.map { TabNote(string: $0.0, fret: $0.1) })
+        }
+        let groove = [hits([(1, 42), (3, 36)]), hits([(1, 42)]), hits([(1, 42), (2, 38)]), hits([(1, 42)]),
+                      hits([(1, 42), (3, 36)]), hits([(1, 42), (3, 36)]), hits([(1, 42), (2, 38)]), hits([(1, 42)])]
+        var tab = emptyDrums(bars: 16)
+        for bar in 0..<8 { tab.bars[bar] = groove }
+        return tab
     }
 }

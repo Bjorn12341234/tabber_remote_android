@@ -120,7 +120,7 @@ final class ScreenshotUITests: SpakUITestCase {
     /// TR39: Tabber Studio's "MIDI part" card on the phone, then answered.
     @MainActor
     func testTheMidiPartCard() throws {
-        launch(["-demo"])
+        launch(["-demo", "-demo-midi-drums"])
         tap("track-Drums")
         app.tabBars.buttons["Tab"].tap()
         XCTAssertTrue(appears("midi-part"))

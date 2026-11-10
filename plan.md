@@ -570,11 +570,13 @@ Checked on the owner's Mac Studio (M1 Max, macOS 26.6.2) on 2026-11-07.
   (`historia`) builds 56 and 57 went to TestFlight from this Mac on 6 and 7
   November. The current release is Xcode 27.2 (29 October 2026, iOS 27.2 SDK,
   Swift 6.4.2). Xcode 27 needs macOS 26.6 or later, which this Mac has.
-  - **Tabber Spak is built with Xcode 27.2,** installed next to 26.3 as
-    `/Applications/Xcode-27.2.app` (the owner, 2026-11-07, on condition that
-    historia is not affected). The app starts on the current SDK, so it never
-    needs a migration, and the iPhone Duo layout needs the iOS 27.1 SDK or
-    later (Known traps).
+  - **Tabber Spak is to be built with Xcode 27.2,** installed next to 26.3
+    as `/Applications/Xcode-27.2.app` (the owner, 2026-11-07, on condition
+    that historia is not affected). The app starts on the current SDK, so it
+    never needs a migration, and the iPhone Duo layout needs the iOS 27.1
+    SDK or later (Known traps). **Not downloaded yet** (TR9's record;
+    checked again 2026-11-09): until it is, every build and test uses 26.3,
+    which `release-ios.sh` falls back to.
   - **Nothing else changes.** `xcode-select` stays on 26.3, which is what
     historia's `release-ios.sh` and Tabber Studio's `build_engine.sh` use.
     Only this repository's builds set `DEVELOPER_DIR` to 27.2.
@@ -1040,14 +1042,20 @@ you have to go to the computer and click on it manually on the computer?"
 | TR43 | Wiring by hand in the phone's Flow, as Studio's Flow does it, and the computer's master fader following the phone | this repo, Studio | UI tests: a track's output to a bus and back, a send made by dragging and taken away from the card's menu, a looping bus refused in Studio's words; the accessibility audit; headless: the master strip follows mixer.set_master_gain and project.set_properties |
 | TR44 | Plug-ins on the phone's mixer strips: each strip's INSERTS as Studio's strip lists them, its "+ Plugin" opening Studio's Insert Plugin browser, and a slot's Open UI, Bypass and Remove | spec, Studio, this repo | Protocol 1.10 (plugins/1) with a vector of all five verbs; headless: the browser's rows and paging, the browser's own insert on the strip's chain, the strip menu's own Bypass and Remove, refusals in Studio's words, no undo steps; UI tests and the accessibility audit; a real insert on the owner's Mac |
 
-### M2, the Lock Screen and the Action Button (1.1)
+### Asked for 2026-11-10
+
+| # | Sprint | Where | Gate |
+|---|---|---|---|
+| TR45 | Drum tab from the phone: a drum track's drum tab, with Studio's Drum Map where the fretboard is, and a drum track from Add Track | spec, Studio, this repo | Protocol 1.11 (tab.drum/1) with a vector; headless: a Drum Map tap is the number typed on the beat's first free line, off again as Delete takes it, a full beat refused in Studio's words, a guitar fret refused, and an older phone sees no drum tab; UI tests and the accessibility audit |
+
+### M2, the Lock Screen and the Action Button (1.2)
 
 | # | Sprint | Where | Gate |
 |---|---|---|---|
 | TR10 | Controls and App Intents: start, stop, go again, discard, click; in Control Center, on the Lock Screen and Action Button, in Shortcuts and Siri | this repo | On a locked device the Action Button starts and stops a Tabber Studio recording; a repeated press never records twice; the app explains what happens without the permission |
 | TR11 | Live Activity while recording: self-updating time, stale date, Stop button | this repo | On a device it starts with the take; Stop from the Lock Screen stops the computer; the time matches the computer's within one second at stop; it goes stale when the computer is lost |
 
-### M3, the phone as a microphone (1.2)
+### M3, the phone as a microphone (1.3)
 
 | # | Sprint | Where | Gate |
 |---|---|---|---|
@@ -1055,7 +1063,7 @@ you have to go to the computer and click on it manually on the computer?"
 | TR13 | Mic screen: record on the phone (CAF, input choice, level), screen locked, interruptions, own indicator, outbox, upload during the take, Idea mode | this repo | On a device: a 10-minute take with the screen locked; a simulated call ends the take honestly and keeps the audio; the file reaches Tabber Studio's inbox with the same hash; nothing is deleted on the phone before confirmation |
 | TR14 | Takes recorded together with the computer: shared start, clock offset, drift; the chirp only if needed | Studio, this repo | 20 takes aligned against the computer's own recording of the same click: offset error and leftover drift recorded here; if the clock alone meets the owner's limit, the chirp is struck from the plan with the evidence |
 
-### M4, tab from the phone (1.3)
+### M4, tab from the phone (1.4)
 
 | # | Sprint | Where | Gate |
 |---|---|---|---|
@@ -1063,7 +1071,7 @@ you have to go to the computer and click on it manually on the computer?"
 | TR16 | One-bar tab editor: drawn tab for any string count and tuning, tap string and beat, fret pad, durations, rest, delete, next bar, play and loop the bar, undo | this repo | S3 on a device; UI tests against DemoHost; for a 20-bar fixture the phone shows the same notes as Tabber Studio (a data comparison) |
 | TR17 | Follow-along view, optional: the current bars scroll with playback | this repo | Decision 9; within one beat of the computer over a 3-minute song |
 
-### M5, tone (1.4)
+### M5, tone (1.5)
 
 | # | Sprint | Where | Gate |
 |---|---|---|---|
@@ -2680,6 +2688,37 @@ what was measured, and what changed in the plan.
     against, which speaks the phone's newest version.
   - RemoteKit 48 and 13 UI tests (tuner, take loop, Computer sheet,
     welcome) pass. On the phone with the next TestFlight build.
+- **Studio's reasons on the phone (2026-11-09), a fifth fault from the
+  Android port.** When Tabber Studio refuses with `host_error`, its remote
+  host says why in `detail`: a plug-in that is gone or cannot go in, a bus
+  or track not added, a tab edit refused. The phone showed only the general
+  "Tabber Studio could not do that.", the demo's refusals too, so TR44's
+  refusal "in Studio's words" never reached the screen.
+  - **Now:** `RemoteError.sentence` in RemoteKit is what the app says: a
+    `host_error`'s `detail` in place of the message, ended with a full stop
+    where Studio's words leave it off ("Insert this instrument on a
+    MIDI/score track."); the message when there is no detail, or only
+    spaces; a `routing_loop` still names its loop. The banner, the Insert
+    Plugin browser and a failed pairing all use it.
+  - **Spec 10 and `errors.json`** say what `detail` is: a sentence a
+    musician can read, in English, never an exception's text, a path or a
+    code, shown in place of the message; the schema refuses a blank one.
+    The field was already there, so no new version. Studio's pinned copy
+    (`tests/remote/protocol`, at cc67548) takes it with the host fix below.
+  - **Tests:** RemoteKit 55, 7 of them new: the mapping, every `host_error`
+    in the vectors, and DemoHost's two refusals through RemoteSession. A
+    new PluginsUITests test puts an instrument on an audio track and finds
+    the reason in the browser and on the Mixer; on the old code it fails.
+    With it, 13 UI tests (plug-ins, mixer, routing, Flow, a refused Record,
+    the browser's audit) and the vector validator pass.
+  - **For the Studio session:** these details are raw text, not words for
+    musicians: `remote_host/plugins.py:153` and `:167` (`str(error)` of
+    Bypass and Remove), `vocabulary.py:203` (a Control API failure's own
+    message, or "failed"), `vocabulary.py:496` (an insert's error, which
+    can be a ValueError's text), `midi_tab.py:93` (a refusal not in its
+    `_WORDS`, as raised) and `protocol.py:142` ("unknown reason ...").
+  - Built with Xcode 26.3: Xcode 27.2 is still not on this Mac (see
+    Development setup). On the phone with the next TestFlight build.
 
 - **Studio 0.3.27 (916000de), built 2026-11-08 and installed:** the release
   verifier passed; signed, notarized and stapled; the certified engine byte
@@ -2769,6 +2808,91 @@ what was measured, and what changed in the plan.
     did the Spak pages and the App Store privacy text; all now say
     Preferences. Build 16, in review, still says Settings; the next build
     carries the fix.
+- **2026-11-09: Tabber Spak 1.0 is in the App Store, outside the EU; the
+  next version is 1.1.**
+  - **Released** at 19:14 (18:14:02 UTC in Apple's lookup): version 1.0,
+    build 16, as submitted on 8 November. Apple's lookup lists it in the
+    US, the UK, Norway, Iceland, Switzerland, Canada, Australia and Japan,
+    and in none of the EU stores tried: Sweden, Germany, France, Denmark,
+    Finland, the Netherlands and Ireland (apps.apple.com/se answers 404).
+    That is the EU's Digital Services Act: Apple lists an app in the EU only
+    once the account's trader status is declared and verified (Business ›
+    Agreements › Compliance › Digital Services Act). The owner declares it;
+    the website's App Store link waits until Sweden's store lists the app.
+  - **EU stores, 2026-11-10 evening:** the owner declared the trader
+    status, and apps.apple.com/se and /de now show Tabber Spak by Viga
+    Works AB (404 before); Apple's lookup API still lists none there, as
+    its index lags. 1.1 goes for review with automatic release, which is
+    right now that the website offers 0.3.31.
+  - **TestFlight is at build 21** (19 and 20 are the same code). Builds 17
+    to 21 say 1.0, and App Store Connect takes no new 1.0 build now that
+    1.0 is out, so the app says 1.1 from build 22 on (`MARKETING_VERSION`,
+    app and UI test targets). 1.1 is the work since build 16: the
+    Preferences wording, TR43, TR44 and the Android port's five fixes. Its
+    What's New is `apple/AppStore/en-US/whats_new.txt`, and the description
+    now names plug-ins and wiring the Flow by hand.
+  - **The milestones' versions move up one:** M2 is 1.2, M3 1.3, M4 1.4 and
+    M5 1.5.
+  - **1.1 with the website's Studio:** a 1.9 host, such as 0.3.27, answers
+    the phone's 1.10 with 1.9 (`choose_version`: the shared major, the lower
+    minor), so 1.1 works with it and shows no plug-ins. Plug-ins need 0.3.29,
+    Studio's newest release; the website still offers 0.3.27. So the website
+    offers 0.3.29 or later before 1.1 is released.
+
+- **TR45 ✅ 2026-11-10: drum tab from the phone (protocol 1.11, d81e933;
+  Studio ca6580d9, 0.3.31).** The owner: "i hope spak now can write on drum
+  tracks too". A drum track in Tabber Studio is a tab track with Percussion
+  Track ticked: six lines, a GM number typed on a line, the numbers listed
+  in its Drum Map dock where the fretboard is. A MIDI track with a kit has
+  no tab there, and none here.
+  - **On the phone:** a drum track's Tab screen shows its drum tab and the
+    Drum Map, GM 35 to 59 by number and name, in place of the fretboard and
+    the piano. A tap writes the drum on the beat's first free line, as
+    Studio's staff places a drum (core/staff_percussion.py, which prefers no
+    line); a lit drum comes off again, as Delete on its line takes it. Each
+    is Studio's own undo step ("Set fret 38 on string 2"). Add Track, on
+    Tracks and on the Tab screen, adds a drum track: the New Track dialog
+    with Percussion Track ticked, accepted as it opens.
+  - **Older phones:** before 1.11 a drum track's `tab` is null in the
+    snapshot, the events and the answers, and its tab verbs answer
+    `no_tab`, so the App Store's 1.0 never writes guitar frets on drum
+    lines. Rows say `drum_tab` and carry no tuning for the same reason.
+  - **The demo:** Drums is now a drum track with a rock beat in eighths;
+    `-demo-midi-drums` keeps TR39's MIDI track with a kit for its tests.
+  - **Gate met:** Studio `test_tr45_drum_tab.py` (4, over a real
+    connection: the Add Track dialog's own track, the Drum Map's lines and
+    toggle, a full beat and a fret refused, the tab keys on drum lines, and
+    a 1.10 phone's view, refusals and null events); the remote suite 139 of
+    140 (test_tr36's track limit test failed once in the whole run and
+    passes alone). RemoteKit 56 with the demo's drum tab; the vector
+    validator; UI tests: the Tab screen's 10 (two new: the Drum Map writes,
+    lights and takes off a drum, Undo, and a drum track added to a song of
+    only audio), the Tracks screen's 9 with Add Track's Drum track, the
+    MIDI card with `-demo-midi-drums`, and the accessibility audit of the
+    Drum Map and of every screen. The Drum Map runs on under the transport,
+    as Routing's list does, so its audit leaves out contrast there; each
+    cell is one text, the number over the name, so both grow.
+  - **Studio 0.3.31** (ea525a5b), built 2026-11-10 from
+    build/release-0331, the 0.3.30 script with its engine and plug-in
+    inputs: signed, notarized and stapled; the smoke test requires 1.11 and
+    `tab.drum/1`; the engine is byte for byte the certified 3f6ad1fb, as in
+    0.3.30, signatures aside; the scan finds nothing of the owner's (its
+    three hits are Qt's own PEM header strings, as in every release);
+    parked at /Volumes/Data/tabber_work/rel0331/; installed, 0.3.30 to the
+    Trash, 0.3.18 kept. The website's 0.3.31 entry (en, sv, fo; the Faroese
+    unchecked by a native speaker) is committed as cdf1ab40, and
+    build/release-0331/deploy_0331.sh, for the owner to run, uploads the
+    DMG and publishes it. A live hello probe waits for Studio to be open.
+  - **Published 2026-11-10, about 20:15,** by the owner with deploy_0331.sh,
+    once the server took SSH again: its first run, at about 19:25, was
+    reset before the SSH greeting, as on 8 November, and so was one try of
+    mine; at 20:13 SSH answered, and the shared connection carried the
+    upload. The homepages in English, Swedish and Faroese link 0.3.31,
+    releases.json serves its SHA-256, and the download answers 200 with
+    486,667,857 bytes.
+  - **TestFlight build 22** (5e3cd5c), version 1.1, carries drum tab with
+    the rest of 1.1. Its first upload stopped at two timing tests while the
+    Mac was loaded (load 33 during the Studio build); the rerun passed.
 
 ## Sources
 

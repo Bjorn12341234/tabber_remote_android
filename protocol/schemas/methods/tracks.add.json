@@ -15,8 +15,10 @@
           "enum": [
             "tab",
             "midi",
-            "audio"
-          ]
+            "audio",
+            "drums"
+          ],
+          "description": "drums (tab.drum/1): Tabber Studio's Add Track with Percussion Track ticked."
         }
       },
       "required": [

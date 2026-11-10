@@ -97,8 +97,8 @@ public actor DemoHost {
     /// How each MIDI track shows in the Tab editor once its "MIDI part" card
     /// was answered: "midi_tab" or "notation" (view.part/1).
     private var partShows: [String: String] = [:]
-    /// Tracks that cannot show MIDI tab, as drums cannot in Tabber Studio.
-    private let drums: Set<String> = ["demo-drums"]
+    /// MIDI tracks with a drum kit, which cannot show MIDI tab in Tabber Studio.
+    private var drums: Set<String> = []
     private var preSplit = "tab"
     /// The Speed Trainer (trainer/1); its speed is the demo's tempo scale.
     private var trainer = TrainerState()
@@ -124,8 +124,11 @@ public actor DemoHost {
 
     /// `onlyAudio` starts with a song of only audio tracks, as one made from
     /// audio files is: no tab to write on until a tab track is added.
+    /// `midiDrums` makes Drums a MIDI track with a drum kit, as one from a MIDI
+    /// file is (TR39's card, no MIDI tab), instead of a drum track with drum
+    /// tab, as Tabber Studio's Percussion Track and a Guitar Pro file make it (TR45).
     public init(speaks: [String] = RemoteClient.protocolVersions, computerName: String = DemoHost.name,
-                onlyAudio: Bool = false) {
+                onlyAudio: Bool = false, midiDrums: Bool = false) {
         self.computerName = computerName
         self.speaks = speaks
         // Tabber Studio's own track colours (core/models.py TRACK_COLORS), in its strip order.
@@ -135,7 +138,8 @@ public actor DemoHost {
                      Track(id: "demo-bass", name: "Bass", kind: .midi, armed: false, monitor: .auto, selected: false,
                            color: "#64BE64", instrument: "Electric Bass (finger)", tuning: DemoTab.bass),
                      Track(id: "demo-drums", name: "Drums", kind: .midi, armed: false, monitor: .auto, selected: false,
-                           color: "#DCAA3C", instrument: "Standard Kit"),
+                           color: "#DCAA3C", instrument: midiDrums ? "Standard Kit" : "Drums",
+                           drumTab: midiDrums ? nil : true),
                      Track(id: "demo-lead", name: "Lead guitar", kind: .audio, armed: false, monitor: .auto, selected: false,
                            color: "#AA64D2"),
                      Track(id: "demo-vocals", name: "Vocals", kind: .audio, armed: false, monitor: .auto, selected: false,
@@ -146,11 +150,13 @@ public actor DemoHost {
                       Marker(id: "demo-solo", name: "Solo", bar: 41, beat: 1)],
             takes: [],
             project: ProjectState(title: "Demo Song", unsaved: false, hasFile: true),
-            tabs: ["demo-guitar": DemoTab.demoGuitar(), "demo-bass": DemoTab.demoBass()],
+            tabs: midiDrums ? ["demo-guitar": DemoTab.demoGuitar(), "demo-bass": DemoTab.demoBass()]
+                : ["demo-guitar": DemoTab.demoGuitar(), "demo-bass": DemoTab.demoBass(), "demo-drums": DemoTab.demoDrums()],
             sends: ["demo-lead>demo-bus-reverb", "demo-vocals>demo-bus-reverb"])
         sendLevels = ["demo-lead>demo-bus-reverb": (0.25, false), "demo-vocals>demo-bus-reverb": (0.5, false)]
         faders = ["demo-guitar": (0.7, -0.3), "demo-bass": (0.62, 0), "demo-drums": (0.66, 0),
                   "demo-lead": (0.7, 0.32), "demo-vocals": (0.74, 0), "demo-bus-reverb": (0.52, 0), "master": (0.7, 0)]
+        if midiDrums { drums = ["demo-drums"] }
         if onlyAudio {
             song.tracks.removeAll { $0.kind == .midi }
             song.tracks[0].selected = true
@@ -263,12 +269,12 @@ public actor DemoHost {
             }
             connection.challenge = Data((0..<32).map { _ in UInt8.random(in: 0...255) })
             return ["host": ["id": .string(Self.hostID), "name": .string(computerName), "app_version": "demo"],
-                    "protocol_version": "1.10",
+                    "protocol_version": "1.11",
                     "capabilities": ["transport/1", "record/1", "tempo_scale/1", "tracks/1", "tracks.monitor/1",
                                      "markers/1", "takes/1", "takes.discard/1", "takes.go_again/1", "undo/1",
                                      "save/1", "meters/1", "mixer/1", "tab/1", "routing/1", "chat/1", "view/1",
                                      "trainer/1", "tracks.add/1", "view.part/1", "tab.midi/1",
-                                     "mixer.add_bus/1", "plugins/1"],
+                                     "mixer.add_bus/1", "plugins/1", "tab.drum/1"],
                     "limits": ["max_frame_bytes": 65536, "requests_per_second": 20, "burst": 40,
                                "heartbeat_ms": 2000, "heartbeat_misses": 3, "connections_per_device": 2],
                     "challenge": .string(Base64URL.encode(connection.challenge))]
@@ -788,10 +794,11 @@ public actor DemoHost {
     }
 
     /// The selected track, when it has tab; a MIDI track's MIDI tab only while
-    /// the Tab editor shows it, as in Tabber Studio (tab.midi/1).
+    /// the Tab editor shows it, as in Tabber Studio (tab.midi/1); a drum
+    /// track's drum tab always (tab.drum/1).
     private func tabTrackID() -> String? {
         guard let track = song.tracks.first(where: \.selected), song.tabs[track.id] != nil else { return nil }
-        if track.tuning == nil, viewState().part?.shows != "midi_tab" { return nil }
+        if track.tuning == nil, track.drumTab != true, viewState().part?.shows != "midi_tab" { return nil }
         return track.id
     }
 
@@ -803,8 +810,8 @@ public actor DemoHost {
         let beat = doc.beat(at: cursor)
         let shown = beat.map { $0.notes.isEmpty ? NoteValue(value: tabDuration.value, dotted: $0.duration.dotted,
                                                             triplet: $0.duration.triplet) : $0.duration } ?? tabDuration
-        let midi = song.tracks.first { $0.id == id }?.tuning == nil
-        let state = TabState(trackID: id, revision: tabRevision, tuning: doc.tuning, drum: false, cursor: cursor,
+        let midi = !doc.drum && song.tracks.first { $0.id == id }?.tuning == nil
+        let state = TabState(trackID: id, revision: tabRevision, tuning: doc.tuning, drum: doc.drum, cursor: cursor,
                              duration: shown, barCount: doc.bars.count, bars: doc.window(around: cursor),
                              midi: midi ? true : nil)
         return (try? JSONCoding.value(state)) ?? .null
@@ -824,6 +831,23 @@ public actor DemoHost {
             let moved = doc.move(cursor, by: p["by"]?.intValue ?? 1, duration: tabDuration)
             if moved.changed { label = moved.cursor.bar > cursor.bar ? "Insert measure" : "Insert beat" }
             cursor = moved.cursor
+        case "tab.put" where doc.drum:
+            throw DemoErrors.make("host_error", ["detail": "On drum tab, choose a drum from the Drum Map."])
+        case "tab.put_pitch" where doc.drum:          // a tap on the Drum Map
+            guard let gm = p["pitch"]?.intValue, (0...127).contains(gm) else {
+                throw DemoErrors.make("invalid_params", ["field": "pitch"])
+            }
+            switch doc.putDrum(gm, at: cursor, duration: tabDuration) {
+            case .wrote(let line):
+                label = "Set fret \(gm) on string \(line)"                  // the number typed on that line
+                cursor.string = line
+            case .tookOff(let line):
+                label = "Delete note on string \(line)"
+                cursor.string = line
+            case .full:
+                // Tabber Studio's own words when its staff finds no line (core/staff_percussion.py).
+                throw DemoErrors.make("host_error", ["detail": "No free drum tab lane for the complete chord."])
+            }
         case "tab.put":
             guard let string = p["string"]?.intValue, let fret = p["fret"]?.intValue,
                   (1...doc.tuning.count).contains(string), (0...DemoTab.maxFret).contains(fret) else {
@@ -878,7 +902,8 @@ public actor DemoHost {
         var shown = view
         shown.hasPart = true
         shown.part = nil
-        if shown.editor == "tab", let track = song.tracks.first(where: \.selected), track.kind == .midi, track.tuning == nil {
+        if shown.editor == "tab", let track = song.tracks.first(where: \.selected), track.kind == .midi, track.tuning == nil,
+           track.drumTab != true {
             shown.part = ViewPart(trackID: track.id, shows: partShows[track.id] ?? "card", midiTab: !drums.contains(track.id))
         }
         return shown
@@ -911,6 +936,9 @@ public actor DemoHost {
         case .audio:
             track = Track(id: id, name: "Audio \(song.tracks.count - sequenced + 1)", kind: .audio, armed: false,
                           monitor: .auto, selected: false, color: color)
+        case .drums:                                            // the New Track dialog with Percussion Track ticked
+            track = Track(id: id, name: "Drums", kind: .midi, armed: false, monitor: .auto, selected: true,
+                          color: color, instrument: "Drums", drumTab: true)
         }
         let bars = song.tabs.values.map(\.bars.count).max() ?? 16
         faders[id] = (0.7, 0)                                   // its mixer strip, at Studio's default
@@ -924,10 +952,12 @@ public actor DemoHost {
             if kind == .tab {
                 let rest = [TabBeat(duration: NoteValue(value: 4), rest: true, notes: [])]
                 song.tabs[id] = DemoTab(tuning: DemoTab.standard, bars: Array(repeating: rest, count: bars))
+            } else if kind == .drums {
+                song.tabs[id] = DemoTab.emptyDrums(bars: bars)
             }
         }
         if kind == .audio, !view.split, view.editor == "tab" { view.editor = "arrange" }
-        if kind == .tab { tabRevision += 1 }
+        if kind == .tab || kind == .drums { tabRevision += 1 }
         return track
     }
 

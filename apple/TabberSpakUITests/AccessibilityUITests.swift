@@ -70,17 +70,31 @@ final class AccessibilityUITests: XCTestCase {
         try audit(app, "Tab, no tab tracks")
     }
 
-    /// The Tab screen with Tabber Studio's "MIDI part" card (TR39).
+    /// The Tab screen with Tabber Studio's "MIDI part" card (TR39), on a MIDI track with a kit.
     @MainActor
     func testTheMidiPartCard() throws {
         let app = XCUIApplication()
-        app.launchArguments = ["-demo", "-reset-input"]
+        app.launchArguments = ["-demo", "-demo-midi-drums", "-reset-input"]
         app.launch()
         XCTAssertTrue(element(app, "track-Drums").waitForExistence(timeout: 8))
         element(app, "track-Drums").tap()
         app.tabBars.buttons["Tab"].tap()
         XCTAssertTrue(element(app, "midi-part").waitForExistence(timeout: 8))
         try audit(app, "Tab, a MIDI part")
+    }
+
+    /// The Tab screen on a drum track: its drum tab and the Drum Map (TR45).
+    @MainActor
+    func testTheDrumMap() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo", "-reset-input"]
+        app.launch()
+        XCTAssertTrue(element(app, "track-Drums").waitForExistence(timeout: 8))
+        element(app, "track-Drums").tap()
+        app.tabBars.buttons["Tab"].tap()
+        XCTAssertTrue(element(app, "drum-38").waitForExistence(timeout: 8))
+        // The Drum Map runs on under the transport, as a long list does; the rest reads in full.
+        try audit(app, "Tab, drum tab", scrolls: true)
     }
 
     /// The Insert Plugin browser, on a strip's "＋ Plugin" (TR44).

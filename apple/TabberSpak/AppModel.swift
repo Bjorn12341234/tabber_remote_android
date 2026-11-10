@@ -105,10 +105,12 @@ final class AppModel {
         demoSpeaks = speaks
         book = nil
         // Screenshots: `-demo-name "Björn's Mac Studio"` names the demo computer as a real one is named;
-        // tests: `-demo-only-audio` starts with a song of only audio tracks.
+        // tests: `-demo-only-audio` starts with a song of only audio tracks, `-demo-midi-drums`
+        // makes Drums a MIDI track with a kit (TR39's card) instead of a drum track.
         let arguments = ProcessInfo.processInfo.arguments
         let name = arguments.firstIndex(of: "-demo-name").flatMap { arguments.dropFirst($0 + 1).first } ?? DemoHost.name
-        let host = DemoHost(speaks: speaks, computerName: name, onlyAudio: arguments.contains("-demo-only-audio"))
+        let host = DemoHost(speaks: speaks, computerName: name, onlyAudio: arguments.contains("-demo-only-audio"),
+                            midiDrums: arguments.contains("-demo-midi-drums"))
         attach(RemoteSession(credentials: .demo, app: Self.app) { _ in await host.connect() })
     }
 
@@ -168,7 +170,7 @@ final class AppModel {
     /// A pairing that did not work, in words that say what to do (spec 10).
     static func explainPairing(_ error: Error?, name: String) -> String {
         switch error {
-        case let refusal as RemoteError: return refusal.message
+        case let refusal as RemoteError: return refusal.sentence
         case TransportFailure.wrongKey?: return "The computer that answered is not the one that showed this code. Scan the code again."
         case TransportFailure.localNetworkDenied?: return "Tabber Spak may not use the local network. Turn on Local Network in Settings › Tabber Spak, then scan again."
         case TransportFailure.closed(.some(4002))?: return "\(name) runs a newer Tabber Studio. Update Tabber Spak, then scan again."
@@ -411,11 +413,14 @@ final class AppModel {
     /// Tabber Studio's "+ Add Track", on a computer that offers it to phones (tracks.add/1).
     var addTrackAvailable: Bool { state.capabilities.contains("tracks.add/1") }
 
+    /// Drum tab and drum tracks, on a computer that offers them to phones (tab.drum/1).
+    var drumTabAvailable: Bool { state.capabilities.contains("tab.drum/1") }
+
     /// The track just added from this phone, for the list to show it.
     private(set) var addedTrackID: String?
 
-    /// A tab, MIDI or audio track, as the chooser after "+ Add Track" makes
-    /// each on the computer; Undo for five seconds after.
+    /// A tab, drum, MIDI or audio track, as the chooser after "+ Add Track"
+    /// makes each on the computer; Undo for five seconds after.
     func addTrack(_ kind: NewTrackKind) {
         act("add-track", "tracks.add", ["kind": .string(kind.rawValue)]) { [weak self] result in
             guard let self, let value = result["track"], let track = try? JSONCoding.decode(Track.self, from: value) else { return }
@@ -772,12 +777,11 @@ final class AppModel {
         }
     }
 
+    /// A refusal in its words: Studio's own reason, or the loop a route would
+    /// close, else the message (`RemoteError.sentence`).
     static func explain(_ error: Error?) -> String {
         switch error {
-        case let failure as RemoteError where failure.reason == "routing_loop":
-            let path = failure.data["path"]?.arrayValue?.compactMap(\.stringValue) ?? []
-            return path.isEmpty ? failure.message : "\(failure.message) \(path.joined(separator: " → "))."
-        case let failure as RemoteError: return failure.message
+        case let failure as RemoteError: return failure.sentence
         case TransportFailure.wrongKey?: return "This is not the computer you paired with."
         case TransportFailure.closed?: return "Tabber Studio closed the connection."
         case .some(let other): return "Could not reach Tabber Studio (\(other.localizedDescription))."

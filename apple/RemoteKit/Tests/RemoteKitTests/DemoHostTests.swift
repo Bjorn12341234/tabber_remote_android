@@ -400,9 +400,10 @@ struct DemoHostTests {
 
     /// TR39 on the demo computer: a MIDI track chosen in the Tab editor waits
     /// on Tabber Studio's "MIDI part" card until the phone answers it; drums
-    /// offer only notation, and a card that is gone is refused.
+    /// on a MIDI track with a kit offer only notation, and a card that is gone
+    /// is refused.
     @Test func theMidiPartCardWaitsForTheChoice() async throws {
-        let session = session(DemoHost())
+        let session = session(DemoHost(midiDrums: true))
         let start = try await connected(session)
         #expect(start.view?.part == nil, "Guitar has tab: no part")
         let added = try JSONCoding.decode(Track.self, from: try await session.perform("tracks.add", ["kind": "midi"])["track"]!)
@@ -423,6 +424,52 @@ struct DemoHostTests {
         _ = try await session.perform("view.set", ["editor": "arrange"])
         let arrange = try await eventually(session) { $0.view?.editor == "arrange" }
         #expect(arrange.view?.part == nil, "Arrange shows no card")
+        await session.stop()
+    }
+
+    /// TR45 on the demo computer: Drums is a drum track with drum tab, written
+    /// with the Drum Map as Tabber Studio's host writes it: a drum goes on the
+    /// beat's first free line, the same drum again comes off, a full beat and
+    /// a guitar fret are refused in words, and Add Track makes a drum track.
+    @Test func drumsAreWrittenWithTheDrumMap() async throws {
+        let session = session(DemoHost())
+        let start = try await connected(session)
+        let row = try #require(start.tracks.first { $0.id == "demo-drums" })
+        #expect(row.drumTab == true && row.tuning == nil && row.hasTab)
+        _ = try await session.perform("tracks.select", ["track_id": "demo-drums"])
+        let shown = try await eventually(session) { $0.tab?.trackID == "demo-drums" }
+        let tab = try #require(shown.tab)
+        #expect(tab.drum && tab.tuning == [0, 0, 0, 0, 0, 0] && tab.midi == nil)
+        #expect(shown.view?.part == nil, "a drum track has no MIDI part card")
+        #expect(tab.bars.first?.beats.first?.notes == [TabNote(string: 1, fret: 42), TabNote(string: 3, fret: 36)])
+
+        let snare = try await session.perform("tab.put_pitch", ["pitch": 38])
+        let written = try JSONCoding.decode(TabState.self, from: snare["tab"]!)
+        #expect(written.bars.first?.beats.first?.notes.map(\.fret) == [42, 38, 36], "on the first free line, 2")
+        #expect(written.cursor.string == 2)
+        #expect(try JSONCoding.decode(UndoState.self, from: snare["undo"]!).undo?.label == "Set fret 38 on string 2")
+        let kick = try await session.perform("tab.put_pitch", ["pitch": 36])
+        #expect(try JSONCoding.decode(TabState.self, from: kick["tab"]!).bars.first?.beats.first?.notes.map(\.fret) == [42, 38])
+        #expect(try JSONCoding.decode(UndoState.self, from: kick["undo"]!).undo?.label == "Delete note on string 3")
+
+        for gm in [36, 49, 51, 46] { _ = try await session.perform("tab.put_pitch", ["pitch": .number(Double(gm))]) }
+        do {
+            _ = try await session.perform("tab.put_pitch", ["pitch": 57])
+            Issue.record("a full beat takes no seventh drum")
+        } catch let error as RemoteError {
+            #expect(error.sentence == "No free drum tab lane for the complete chord.")
+        }
+        do {
+            _ = try await session.perform("tab.put", ["string": 1, "fret": 3])
+            Issue.record("drum tab takes no guitar fret")
+        } catch let error as RemoteError {
+            #expect(error.sentence == "On drum tab, choose a drum from the Drum Map.")
+        }
+
+        let added = try JSONCoding.decode(Track.self, from: try await session.perform("tracks.add", ["kind": "drums"])["track"]!)
+        #expect(added.name == "Drums" && added.drumTab == true && added.selected)
+        let empty = try await eventually(session) { $0.tab?.trackID == added.id }
+        #expect(empty.tab?.drum == true && empty.tab?.bars.first?.beats.first?.rest == true)
         await session.stop()
     }
 

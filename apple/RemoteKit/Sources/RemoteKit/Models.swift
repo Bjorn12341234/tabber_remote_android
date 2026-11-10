@@ -92,7 +92,8 @@ public enum TrackKind: String, Codable, Sendable { case audio, midi }
 
 /// What Tabber Studio's "+ Add Track" chooser makes (tracks.add/1): a tab
 /// track arrives as a MIDI track with a tuning; a MIDI track has none.
-public enum NewTrackKind: String, CaseIterable, Sendable { case tab, midi, audio }
+/// What "+ Add Track" makes; `drums` is Tab with Percussion Track ticked (tab.drum/1).
+public enum NewTrackKind: String, CaseIterable, Sendable { case tab, midi, audio, drums }
 public enum MonitorMode: String, Codable, Sendable { case off, auto, on }
 
 public struct Track: Codable, Sendable, Hashable, Identifiable {
@@ -107,12 +108,19 @@ public struct Track: Codable, Sendable, Hashable, Identifiable {
     public var instrument: String?
     /// A tab track's open strings as MIDI notes, highest first; nil when it has no tab (tab/1).
     public var tuning: [Int]?
+    /// A drum track with drum tab, written with the Drum Map (tab.drum/1); it has no tuning.
+    public var drumTab: Bool?
+
+    enum CodingKeys: String, CodingKey {
+        case id, name, kind, armed, monitor, selected, color, instrument, tuning
+        case drumTab = "drum_tab"
+    }
 
     public init(id: String, name: String, kind: TrackKind, armed: Bool, monitor: MonitorMode,
-                selected: Bool, color: String?, instrument: String? = nil, tuning: [Int]? = nil) {
+                selected: Bool, color: String?, instrument: String? = nil, tuning: [Int]? = nil, drumTab: Bool? = nil) {
         self.id = id; self.name = name; self.kind = kind; self.armed = armed
         self.monitor = monitor; self.selected = selected; self.color = color
-        self.instrument = instrument; self.tuning = tuning
+        self.instrument = instrument; self.tuning = tuning; self.drumTab = drumTab
     }
     public func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
@@ -121,10 +129,11 @@ public struct Track: Codable, Sendable, Hashable, Identifiable {
         try c.encode(selected, forKey: .selected); try c.encode(color, forKey: .color)
         try c.encodeIfPresent(instrument, forKey: .instrument)       // absent from 1.0 hosts, and kept absent
         try c.encodeIfPresent(tuning, forKey: .tuning)
+        try c.encodeIfPresent(drumTab, forKey: .drumTab)
     }
 
-    /// A track the phone can write tab on.
-    public var hasTab: Bool { tuning != nil }
+    /// A track the phone can write tab on: a tab track, or a drum track's drum tab.
+    public var hasTab: Bool { tuning != nil || drumTab == true }
 }
 
 public struct Marker: Codable, Sendable, Hashable, Identifiable {
@@ -272,6 +281,31 @@ public struct RemoteError: Error, Sendable, Hashable {
         guard let code = json["code"]?.intValue, let message = json["message"]?.stringValue else { return nil }
         self.init(code: code, message: message, reason: json["data"]?["reason"]?.stringValue ?? "",
                   data: json["data"] ?? [:])
+    }
+
+    /// What the phone says about this refusal (spec 10). A `host_error` with
+    /// a `detail` is Tabber Studio's own reason ("That plug-in is not on the
+    /// computer any more. Open the list again."), shown in place of the
+    /// general "Tabber Studio could not do that."; a `routing_loop` names
+    /// the loop. Anything else is its message.
+    public var sentence: String {
+        switch reason {
+        case "host_error":
+            let detail = data["detail"]?.stringValue?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            return detail.isEmpty ? message : Self.withFullStop(detail)
+        case "routing_loop":
+            let path = data["path"]?.arrayValue?.compactMap(\.stringValue) ?? []
+            return path.isEmpty ? message : "\(message) \(path.joined(separator: " → "))."
+        default:
+            return message
+        }
+    }
+
+    /// The app's sentences end with a full stop, and some of Studio's reasons
+    /// leave it off ("Insert this instrument on a MIDI/score track").
+    static func withFullStop(_ text: String) -> String {
+        let last = text.reversed().first { !"\"')]\u{201D}\u{2019}".contains($0) }
+        return last.map { ".!?…".contains($0) } == true ? text : text + "."
     }
 }
 
