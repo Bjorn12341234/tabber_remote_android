@@ -303,3 +303,34 @@ Proposed; the owner schedules them, one per session (plan.md, Rules for every sp
   which opens recording through its Linux audio layer): paired and connected in 3.5 s, the take
   loop read back (1, then 0 after the delete, 1 after Undo), and a reconnect 9.1 s after Studio
   restarted. That time includes Studio's own relaunch.
+
+### iOS build 22 and Linux Tabber Studio 0.3.31: drum tab, 2026-11-11
+
+- **From the iPhone repo** (merged at `c1afb1e`): protocol 1.11 with `tab.drum/1`, its schemas
+  and the `tab_drum` vector; TR45 (drum tab with Tabber Studio's Drum Map, in iOS build 22);
+  `RemoteError.sentence` (`458a7b2`); Tabber Spak 1.1, which the version name follows from the
+  Xcode project; builds 21 and 22 themselves are build numbers, nothing to port.
+- **Drum tab (TR45):** RemoteKit offers 1.11 only, as the iPhone does, and reads a track's
+  `drum_tab` (a drum track has drum tab and no tuning); `NewTrackKind.DRUMS`; `DrumMap`, GM 35
+  to 59 with every GM percussion name. On a drum track the Tab screen shows "Drum Map" where
+  Write with is and the Drum Map where the fretboard is: each drum a cell with its number over
+  its name, lit on the cursor's beat; a tap writes it on the beat's first free line or takes it
+  off. Delete says "the drum on this line", the staff speaks "line 1, 42 Closed Hi-Hat", and
+  "+ Add Drum Track" and Add Track's "Drum track" appear on a computer that offers
+  `tab.drum/1`. The demo's Drums is a drum track with a rock groove; the `demo_midi_drums`
+  launch extra keeps TR39's MIDI kit and its card for those tests.
+- **Refusals:** `RemoteError.sentence`, as the iPhone's: Studio's `host_error` reason, trimmed
+  and given its full stop, the loop a `routing_loop` would close, else the message; every
+  refusal and pairing failure says it. Android had shown the reason since build 18.
+- **Different from the iPhone, on purpose:** the Drum Map's rows take their tallest name's
+  height, so "Acoustic Bass Drum" does not leave its neighbours shorter.
+- **Tests:** RemoteKit 91 on the JVM (RefusalTests 7, the demo's drum map, every vector
+  including `tab_drum`), the app's 38, lint with no errors; 58 UI tests on the emulator, among
+  them two new Tab screen tests and the Drum Map's accessibility audit, both new tests seen to
+  fail with the Drum Map hidden; interop 3 of 3 against Tabber Studio Linux's own 1.11 host
+  (synced to macOS 0.3.31, its Part 13).
+- **The Studio check gains drum tab** (its step 4): against Linux Tabber Studio 0.3.31 (built
+  from its `1ec00969`), paired and connected in 2.7 s, the take loop read back (1, 0, 1), then
+  "+ Add Drum Track" from the phone and the Drum Map's snare written and taken off, each read
+  back from the drum track's first measure over the Control API, and a reconnect 8.8 s after
+  Studio restarted.

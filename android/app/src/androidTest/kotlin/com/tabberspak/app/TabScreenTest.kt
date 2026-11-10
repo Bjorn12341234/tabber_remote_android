@@ -95,12 +95,11 @@ class TabScreenTest {
             compose.waitForWords("screen-title", "Drums")
             val groove = "beat 1: line 1, 42 Closed Hi-Hat, line 3, 36 Bass Drum 1, cursor"
             compose.waitForWords("bar-1", groove)
-            compose.reveal("drum-38")
-            compose.onNodeWithTag("drum-38").performClick()
+            compose.onNodeWithTag("drum-38").performScrollTo().performClick() // the Tab editor is one scrolling column
             // the snare on the first free line
             compose.waitForWords("bar-1", "beat 1: line 1, 42 Closed Hi-Hat, line 2, 38 Acoustic Snare, line 3, 36 Bass Drum 1")
             compose.waitSelected("drum-38") // lit on this beat
-            compose.onNodeWithTag("drum-38").performClick()
+            compose.onNodeWithTag("drum-38").performScrollTo().performClick()
             compose.waitForWords("bar-1", groove) // a lit drum comes off again
             compose.onNodeWithTag("undo").performClick()
             compose.waitForWords("bar-1", "line 2, 38 Acoustic Snare") // Undo brings it back
@@ -113,8 +112,7 @@ class TabScreenTest {
             compose.waitForTag("add-drum-track").performClick()
             compose.waitForTag("drum-36") // the new drum track's drum tab, at once
             compose.waitForWords("screen-title", "Drums")
-            compose.reveal("drum-36")
-            compose.onNodeWithTag("drum-36").performClick()
+            compose.onNodeWithTag("drum-36").performScrollTo().performClick()
             compose.waitForWords("bar-1", "line 1, 36 Bass Drum 1")
         }
     }

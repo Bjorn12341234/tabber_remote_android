@@ -14,7 +14,10 @@ output are silent. Run it from this repository's root, with the emulator up:
    (the route rewritten to 10.0.2.2, the emulator's name for this laptop) and connects.
 3. S1 on the phone, read back from Tabber Studio over the Control API after each step: arm
    Vocals, record, stop, the take card, Delete, Undo.
-4. Tabber Studio quits and starts again in the same home (the same key and paired phones),
+4. Drum tab (TR45, tab.drum/1, from Tabber Studio 0.3.31): the Tab screen's "+ Add Drum Track"
+   makes a drum track, a tap on the Drum Map's snare writes 38 on the beat and a second takes it
+   off, each read back from the track's first measure over the Control API.
+5. Tabber Studio quits and starts again in the same home (the same key and paired phones),
    the remote goes back on, and the phone reconnects by itself (TA2).
 
 Screens: android/shots/studio-*.png. Prints one JSON line of evidence; exits 1 on a failure.
@@ -117,6 +120,18 @@ def shot(name: str) -> None:
     (SHOTS / f"studio-{name}.png").write_bytes(subprocess.run([ADB, "exec-out", "screencap", "-p"], capture_output=True, timeout=60).stdout)
 
 
+def drums_on_first_beat(client) -> list[int] | None:
+    """The GM numbers on the first beat of the drum track's first measure, as Tabber Studio holds
+    them (tabs.get_measure); None while the song has no drum track."""
+    tracks = client.call("tracks.list").get("tracks", [])
+    drums = next((track for track in tracks if track.get("is_drum") and not track.get("is_audio")), None)
+    if drums is None:
+        return None
+    # tabs.* count the score tracks only: the row's domain_index, not its strip index.
+    beats = client.call("tabs.get_measure", track=drums["domain_index"], measure=0).get("beats", [])
+    return sorted(int(note["fret"]) for note in (beats[0].get("notes", []) if beats else []))
+
+
 def take_count(client) -> int:
     """The passes Tabber Studio holds: one linear recording on an audio track is one pass, which
     is what the phone calls a take (takes.passes, the read the remote's own take list uses)."""
@@ -196,6 +211,18 @@ def main() -> None:
         tap_node(undo)
         wait_for("the take back in Tabber Studio", lambda: take_count(client) == 1, timeout=10)
         evidence["takes_after_undo"] = 1
+
+        # TR45: drum tab from the phone, on a song whose only track is audio.
+        tap("tab-tab")
+        tap("add-drum-track")
+        wait_for("the Drum Map", lambda: find("drum-38"), timeout=20)
+        wait_for("the drum track in Tabber Studio", lambda: drums_on_first_beat(client) == [], timeout=10)
+        tap("drum-38")
+        wait_for("the snare on the first beat in Tabber Studio", lambda: drums_on_first_beat(client) == [38], timeout=10)
+        shot("drum-map")
+        tap("drum-38")
+        wait_for("the snare off again in Tabber Studio", lambda: drums_on_first_beat(client) == [], timeout=10)
+        evidence["drum_tab"] = "added, 38 written and taken off"
 
         lrc._quit_packaged(process, client, log)
         restarted = time.monotonic()

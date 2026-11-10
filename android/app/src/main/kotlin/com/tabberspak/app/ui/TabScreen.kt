@@ -9,6 +9,8 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -241,8 +243,10 @@ private fun DrumMapPad(model: AppModel, tab: TabState) {
         val columns = max(1, (maxWidth / least).toInt())
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             for (row in DrumMap.numbers.chunked(columns)) {
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    for (number in row) DrumCell(number, on = number in lit, Modifier.weight(1f)) {
+                // One height a row, the tallest name's, so a long name ("Acoustic Bass Drum") does not
+                // leave its neighbours shorter.
+                Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    for (number in row) DrumCell(number, on = number in lit, Modifier.weight(1f).fillMaxHeight()) {
                         model.tab("tab.put_pitch", jsonObject { put("pitch", number) })
                     }
                     repeat(columns - row.size) { Box(Modifier.weight(1f)) } // the last row keeps the cells' width
