@@ -2867,8 +2867,20 @@ what was measured, and what changed in the plan.
     Drum Map and of every screen. The Drum Map runs on under the transport,
     as Routing's list does, so its audit leaves out contrast there; each
     cell is one text, the number over the name, so both grow.
-  - **Studio 0.3.31** (ea525a5b) is built from build/release-0331, the
-    0.3.30 script with its engine and plug-in inputs.
+  - **Studio 0.3.31** (ea525a5b), built 2026-11-10 from
+    build/release-0331, the 0.3.30 script with its engine and plug-in
+    inputs: signed, notarized and stapled; the smoke test requires 1.11 and
+    `tab.drum/1`; the engine is byte for byte the certified 3f6ad1fb, as in
+    0.3.30, signatures aside; the scan finds nothing of the owner's (its
+    three hits are Qt's own PEM header strings, as in every release);
+    parked at /Volumes/Data/tabber_work/rel0331/; installed, 0.3.30 to the
+    Trash, 0.3.18 kept. The website's 0.3.31 entry (en, sv, fo; the Faroese
+    unchecked by a native speaker) is committed as cdf1ab40, and
+    build/release-0331/deploy_0331.sh, for the owner to run, uploads the
+    DMG and publishes it. A live hello probe waits for Studio to be open.
+  - **TestFlight build 22** (5e3cd5c), version 1.1, carries drum tab with
+    the rest of 1.1. Its first upload stopped at two timing tests while the
+    Mac was loaded (load 33 during the Studio build); the rerun passed.
 
 ## Sources
 
