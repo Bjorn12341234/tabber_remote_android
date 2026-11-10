@@ -2878,6 +2878,13 @@ what was measured, and what changed in the plan.
     unchecked by a native speaker) is committed as cdf1ab40, and
     build/release-0331/deploy_0331.sh, for the owner to run, uploads the
     DMG and publishes it. A live hello probe waits for Studio to be open.
+  - **Published 2026-11-10, about 20:15,** by the owner with deploy_0331.sh,
+    once the server took SSH again: its first run, at about 19:25, was
+    reset before the SSH greeting, as on 8 November, and so was one try of
+    mine; at 20:13 SSH answered, and the shared connection carried the
+    upload. The homepages in English, Swedish and Faroese link 0.3.31,
+    releases.json serves its SHA-256, and the download answers 200 with
+    486,667,857 bytes.
   - **TestFlight build 22** (5e3cd5c), version 1.1, carries drum tab with
     the rest of 1.1. Its first upload stopped at two timing tests while the
     Mac was loaded (load 33 during the Studio build); the rerun passed.
