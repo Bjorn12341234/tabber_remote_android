@@ -38,12 +38,16 @@ import kotlin.math.truncate
  *   bars fit a real computer's name.
  * @param onlyAudio starts with a song of only audio tracks, as one made from audio files is: no tab
  *   to write on until a tab track is added.
+ * @param midiDrums makes Drums a MIDI track with a drum kit, as one from a MIDI file is (TR39's card,
+ *   no MIDI tab), instead of a drum track with drum tab, as Tabber Studio's Percussion Track and a
+ *   Guitar Pro file make it (TR45).
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class DemoHost(
     val speaks: List<String> = RemoteClient.PROTOCOL_VERSIONS,
     val computerName: String = NAME,
     onlyAudio: Boolean = false,
+    midiDrums: Boolean = false,
 ) {
     private class Step(val id: String, val label: String, val before: Song, val after: Song)
 
@@ -130,8 +134,8 @@ class DemoHost(
     private var view = ViewState(editor = "tab", split = false)
     /** How each MIDI track shows in the Tab editor once its "MIDI part" card was answered: "midi_tab" or "notation" (view.part/1). */
     private val partShows = HashMap<String, String>()
-    /** Tracks that cannot show MIDI tab, as drums cannot in Tabber Studio. */
-    private val drums = setOf("demo-drums")
+    /** MIDI tracks with a drum kit, which cannot show MIDI tab in Tabber Studio. */
+    private val drums: Set<String> = if (midiDrums) setOf("demo-drums") else emptySet()
     private var preSplit = "tab"
     /** The Speed Trainer (trainer/1); its speed is the demo's tempo scale. */
     private var trainer = TrainerState()
@@ -156,7 +160,8 @@ class DemoHost(
                 Track("demo-bass", "Bass", TrackKind.MIDI, armed = false, monitor = MonitorMode.AUTO, selected = false,
                     color = "#64BE64", instrument = "Electric Bass (finger)", tuning = DemoTab.BASS),
                 Track("demo-drums", "Drums", TrackKind.MIDI, armed = false, monitor = MonitorMode.AUTO, selected = false,
-                    color = "#DCAA3C", instrument = "Standard Kit"),
+                    color = "#DCAA3C", instrument = if (midiDrums) "Standard Kit" else "Drums",
+                    drumTab = if (midiDrums) null else true),
                 Track("demo-lead", "Lead guitar", TrackKind.AUDIO, armed = false, monitor = MonitorMode.AUTO, selected = false,
                     color = "#AA64D2"),
                 Track("demo-vocals", "Vocals", TrackKind.AUDIO, armed = false, monitor = MonitorMode.AUTO, selected = false,
@@ -170,7 +175,8 @@ class DemoHost(
             ),
             takes = emptyList(),
             project = ProjectState(title = "Demo Song", unsaved = false, hasFile = true),
-            tabs = mapOf("demo-guitar" to DemoTab.demoGuitar(), "demo-bass" to DemoTab.demoBass()),
+            tabs = mapOf("demo-guitar" to DemoTab.demoGuitar(), "demo-bass" to DemoTab.demoBass()) +
+                (if (midiDrums) emptyMap() else mapOf("demo-drums" to DemoTab.demoDrums())),
             sends = setOf("demo-lead>demo-bus-reverb", "demo-vocals>demo-bus-reverb"),
         )
         sendLevels["demo-lead>demo-bus-reverb"] = SendValue(0.25, false)
@@ -330,7 +336,7 @@ class DemoHost(
                 connection.challenge = ByteArray(32).also(random::nextBytes)
                 return jsonObject {
                     put("host", jsonObject { put("id", HOST_ID); put("name", computerName); put("app_version", "demo") })
-                    put("protocol_version", "1.10")
+                    put("protocol_version", "1.11")
                     put("capabilities", Json.strings(CAPABILITIES))
                     put("limits", jsonObject {
                         put("max_frame_bytes", 65536); put("requests_per_second", 20); put("burst", 40)
@@ -887,12 +893,12 @@ class DemoHost(
 
     /**
      * The selected track, when it has tab; a MIDI track's MIDI tab only while the Tab editor shows
-     * it, as in Tabber Studio (tab.midi/1).
+     * it, as in Tabber Studio (tab.midi/1); a drum track's drum tab always (tab.drum/1).
      */
     private fun tabTrackId(): String? {
         val track = song.tracks.firstOrNull { it.selected } ?: return null
         if (song.tabs[track.id] == null) return null
-        if (track.tuning == null && viewState().part?.shows != "midi_tab") return null
+        if (track.tuning == null && track.drumTab != true && viewState().part?.shows != "midi_tab") return null
         return track.id
     }
 
@@ -906,9 +912,9 @@ class DemoHost(
         val shown = beat?.let {
             if (it.notes.isEmpty()) NoteValue(tabDuration.value, it.duration.dotted, it.duration.triplet) else it.duration
         } ?: tabDuration
-        val midi = song.tracks.firstOrNull { it.id == id }?.tuning == null
+        val midi = !doc.drum && song.tracks.firstOrNull { it.id == id }?.tuning == null
         val state = TabState(
-            trackId = id, revision = tabRevision, tuning = doc.tuning, drum = false, cursor = cursor, duration = shown,
+            trackId = id, revision = tabRevision, tuning = doc.tuning, drum = doc.drum, cursor = cursor, duration = shown,
             barCount = doc.bars.size, bars = doc.window(cursor), midi = if (midi) true else null,
         )
         return state.toJson()
@@ -930,6 +936,7 @@ class DemoHost(
                 cursor = moved.cursor
             }
             "tab.put" -> {
+                if (doc.drum) throw DemoErrors.make("host_error", mapOf("detail" to Json.Str("On drum tab, choose a drum from the Drum Map.")))
                 val string = p["string"]?.int
                 val fret = p["fret"]?.int
                 if (string == null || fret == null || string !in 1..doc.tuning.size || fret !in 0..DemoTab.MAX_FRET) {
@@ -943,6 +950,29 @@ class DemoHost(
             }
             "tab.put_pitch" -> {
                 val pitch = p["pitch"]?.int ?: throw DemoErrors.make("invalid_params", mapOf("field" to Json.Str("pitch")))
+                if (doc.drum) { // a tap on the Drum Map
+                    if (pitch !in 0..127) throw DemoErrors.make("invalid_params", mapOf("field" to Json.Str("pitch")))
+                    when (val tap = doc.putDrum(pitch, at = cursor, duration = tabDuration)) {
+                        is DemoTab.DrumTap.Wrote -> {
+                            label = "Set fret $pitch on string ${tap.line}" // the number typed on that line
+                            cursor = cursor.copy(string = tap.line)
+                        }
+                        is DemoTab.DrumTap.TookOff -> {
+                            label = "Delete note on string ${tap.line}"
+                            cursor = cursor.copy(string = tap.line)
+                        }
+                        // Tabber Studio's own words when its staff finds no line (core/staff_percussion.py).
+                        DemoTab.DrumTap.Full -> throw DemoErrors.make(
+                            "host_error", mapOf("detail" to Json.Str("No free drum tab lane for the complete chord.")),
+                        )
+                    }
+                    if (label != null) {
+                        edit(label) { s -> s.copy(tabs = s.tabs + (id to doc)) }
+                        tabRevision += 1
+                    }
+                    tabCursors[id] = doc.clamp(cursor)
+                    return
+                }
                 val before = doc.copy()
                 val put = doc.put(pitch = pitch, at = cursor, duration = tabDuration)
                 if (put.changed) {
@@ -992,7 +1022,9 @@ class DemoHost(
      */
     private fun viewState(): ViewState {
         val track = song.tracks.firstOrNull { it.selected }
-        val part = if (view.editor == "tab" && track != null && track.kind == TrackKind.MIDI && track.tuning == null) {
+        val part = if (view.editor == "tab" && track != null && track.kind == TrackKind.MIDI && track.tuning == null &&
+            track.drumTab != true
+        ) {
             ViewPart(track.id, partShows[track.id] ?: "card", midiTab = track.id !in drums)
         } else {
             null
@@ -1026,6 +1058,10 @@ class DemoHost(
                 id, "Audio ${song.tracks.size - sequenced + 1}", TrackKind.AUDIO, armed = false,
                 monitor = MonitorMode.AUTO, selected = false, color = color,
             )
+            NewTrackKind.DRUMS -> Track( // the New Track dialog with Percussion Track ticked
+                id, "Drums", TrackKind.MIDI, armed = false, monitor = MonitorMode.AUTO, selected = true,
+                color = color, instrument = "Drums", drumTab = true,
+            )
         }
         val bars = song.tabs.values.maxOfOrNull { it.bars.size } ?: 16
         faders[id] = Fader(0.7, 0.0) // its mixer strip, at Studio's default
@@ -1037,11 +1073,13 @@ class DemoHost(
             if (kind == NewTrackKind.TAB) {
                 val rest = listOf(TabBeat(NoteValue(4), rest = true, notes = emptyList()))
                 tabs = tabs + (id to DemoTab(DemoTab.STANDARD, List(bars) { rest }))
+            } else if (kind == NewTrackKind.DRUMS) {
+                tabs = tabs + (id to DemoTab.emptyDrums(bars))
             }
             s.copy(tracks = tracks, tabs = tabs)
         }
         if (kind == NewTrackKind.AUDIO && !view.split && view.editor == "tab") view = view.copy(editor = "arrange")
-        if (kind == NewTrackKind.TAB) tabRevision += 1
+        if (kind == NewTrackKind.TAB || kind == NewTrackKind.DRUMS) tabRevision += 1
         return track
     }
 
@@ -1324,7 +1362,7 @@ class DemoHost(
             "markers/1", "takes/1", "takes.discard/1", "takes.go_again/1", "undo/1",
             "save/1", "meters/1", "mixer/1", "tab/1", "routing/1", "chat/1", "view/1",
             "trainer/1", "tracks.add/1", "view.part/1", "tab.midi/1",
-            "mixer.add_bus/1", "plugins/1",
+            "mixer.add_bus/1", "plugins/1", "tab.drum/1",
         )
 
         /** The fader law: 0 dB at 70 % of the travel, +2.1 dB at the top, as Tabber Studio's fader. */

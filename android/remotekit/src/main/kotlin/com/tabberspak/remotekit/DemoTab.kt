@@ -24,12 +24,14 @@ internal class DemoTab(
     val tuning: List<Int>,
     bars: List<List<TabBeat>>,
     val timeSignature: TimeSignature = TimeSignature(4, 4),
+    /** A drum track's drum tab (tab.drum/1): six lines without pitch, GM numbers for frets, written as [putDrum] says. */
+    val drum: Boolean = false,
 ) {
     var bars: List<List<TabBeat>> = bars
         private set
 
     /** The same tab, to edit without changing this one. */
-    fun copy(): DemoTab = DemoTab(tuning, bars, timeSignature)
+    fun copy(): DemoTab = DemoTab(tuning, bars, timeSignature, drum)
 
     val capacity: Double get() = timeSignature.beats * 4.0 / timeSignature.unit
 
@@ -172,6 +174,35 @@ internal class DemoTab(
     }
 
     /** The cursor's bar and its neighbours, as the phone shows them. */
+    /** What a Drum Map tap did (tab.drum/1). */
+    sealed interface DrumTap {
+        data class Wrote(val line: Int) : DrumTap
+        data class TookOff(val line: Int) : DrumTap
+        data object Full : DrumTap
+    }
+
+    /**
+     * A tap on the Drum Map, as Tabber Studio's remote host makes it (remote_host/tablature.py
+     * _put_drum): the drum comes off the cursor's beat when it is there; else it goes on the
+     * beat's first free line, as Studio's staff places a drum; a beat with every line taken is full.
+     */
+    fun putDrum(gm: Int, at: TabCursor, duration: NoteValue): DrumTap {
+        val i = beatIndex(at, duration)
+        val beat = bars[at.bar - 1][i]
+        val same = beat.notes.indexOfFirst { it.fret == gm }
+        if (same >= 0) {
+            val line = beat.notes[same].string
+            val notes = beat.notes.filterIndexed { index, _ -> index != same }
+            setBeat(at.bar, i, beat.copy(notes = notes, rest = notes.isEmpty()))
+            return DrumTap.TookOff(line)
+        }
+        val line = (1..tuning.size).firstOrNull { l -> beat.notes.none { it.string == l } } ?: return DrumTap.Full
+        val value = if (beat.rest && beat.notes.isEmpty()) duration else beat.duration // an empty beat takes the chosen value
+        val notes = (beat.notes + TabNote(line, gm)).sortedBy { it.string }
+        setBeat(at.bar, i, beat.copy(duration = value, notes = notes, rest = false))
+        return DrumTap.Wrote(line)
+    }
+
     fun window(around: TabCursor): List<TabBar> {
         val first = max(1, around.bar - 1)
         val last = min(bars.size, around.bar + 3)
@@ -180,9 +211,10 @@ internal class DemoTab(
     }
 
     override fun equals(other: Any?): Boolean =
-        other is DemoTab && other.tuning == tuning && other.bars == bars && other.timeSignature == timeSignature
+        other is DemoTab && other.tuning == tuning && other.bars == bars && other.timeSignature == timeSignature &&
+            other.drum == drum
 
-    override fun hashCode(): Int = listOf(tuning, bars, timeSignature).hashCode()
+    override fun hashCode(): Int = listOf(tuning, bars, timeSignature, drum).hashCode()
 
     companion object {
         const val MAX_FRET = 24
@@ -213,6 +245,24 @@ internal class DemoTab(
             val bars = listOf(bar(4, 0), bar(3, 3), bar(4, 3), bar(3, 5))
             val empty = listOf(TabBeat(quarter, rest = true, notes = emptyList()))
             return DemoTab(BASS, bars + bars + List(8) { empty })
+        }
+
+        /** Six empty lines of drum tab, as a new drum track has them. */
+        fun emptyDrums(bars: Int): DemoTab {
+            val rest = listOf(TabBeat(NoteValue(4), rest = true, notes = emptyList()))
+            return DemoTab(List(6) { 0 }, List(bars) { rest }, drum = true)
+        }
+
+        /** A rock beat in eighths under the guitar: closed hi-hat (42) on line 1, snare (38) on line 2 on two and four, bass drum (36) on line 3. */
+        fun demoDrums(): DemoTab {
+            val eighth = NoteValue(8)
+            fun hits(vararg lines: Pair<Int, Int>) = TabBeat(eighth, rest = false, notes = lines.map { (line, gm) -> TabNote(line, gm) })
+            val groove = listOf(
+                hits(1 to 42, 3 to 36), hits(1 to 42), hits(1 to 42, 2 to 38), hits(1 to 42),
+                hits(1 to 42, 3 to 36), hits(1 to 42, 3 to 36), hits(1 to 42, 2 to 38), hits(1 to 42),
+            )
+            val rest = listOf(TabBeat(NoteValue(4), rest = true, notes = emptyList()))
+            return DemoTab(List(6) { 0 }, List(8) { groove } + List(8) { rest }, drum = true)
         }
     }
 }

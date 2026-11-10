@@ -152,13 +152,15 @@ class AppModel(private val context: Context, private val scope: CoroutineScope =
     private var demoSpeaks = RemoteClient.PROTOCOL_VERSIONS
     private var demoName = DemoHost.NAME
     private var demoOnlyAudio = false
+    private var demoMidiDrums = false
 
     val app = AppInfo(version = BuildConfig.VERSION_NAME, build = BuildConfig.VERSION_CODE.toString())
 
     /**
      * Launch options for tests, screenshots and scripts, as the iPhone's launch arguments:
      * `reset` (a fresh install), `known_host` (paired with that computer, JSON), `demo`,
-     * `demo_speaks`, `demo_name`, `demo_only_audio`, `screen`, `pair_link`.
+     * `demo_speaks`, `demo_name`, `demo_only_audio`, `demo_midi_drums` (Drums a MIDI track with a
+     * kit, TR39's card, instead of a drum track), `screen`, `pair_link`.
      */
     fun launch(extras: Bundle?) {
         extras ?: return
@@ -178,6 +180,7 @@ class AppModel(private val context: Context, private val scope: CoroutineScope =
         extras.getString("screen")?.let { name -> Screen.entries.firstOrNull { it.name.equals(name, ignoreCase = true) }?.let { screen = it } }
         extras.getString("demo_name")?.let { demoName = it }
         demoOnlyAudio = extras.getBoolean("demo_only_audio")
+        demoMidiDrums = extras.getBoolean("demo_midi_drums")
         val pairLink = extras.getString("pair_link")?.let(PairingLink::parse)
         when {
             pairLink != null -> scope.launch { pair(pairLink) }
@@ -217,7 +220,7 @@ class AppModel(private val context: Context, private val scope: CoroutineScope =
         isDemo = true
         demoSpeaks = speaks
         book = null
-        val host = DemoHost(speaks = speaks, computerName = demoName, onlyAudio = demoOnlyAudio)
+        val host = DemoHost(speaks = speaks, computerName = demoName, onlyAudio = demoOnlyAudio, midiDrums = demoMidiDrums)
         attach(RemoteSession(RemoteSession.Credentials.Demo, app) { host.connect() })
         demoHost = host
     }
@@ -547,6 +550,9 @@ class AppModel(private val context: Context, private val scope: CoroutineScope =
 
     /** Tabber Studio's "+ Add Track", on a computer that offers it to phones (tracks.add/1). */
     val addTrackAvailable: Boolean get() = "tracks.add/1" in state.capabilities
+
+    /** Drum tab and drum tracks, on a computer that offers them to phones (tab.drum/1). */
+    val drumTabAvailable: Boolean get() = "tab.drum/1" in state.capabilities
 
     fun addTrack(kind: NewTrackKind) {
         act("add-track", "tracks.add", jsonObject { put("kind", kind.wire) }) { result ->
@@ -897,21 +903,16 @@ class AppModel(private val context: Context, private val scope: CoroutineScope =
     companion object {
         /** A pairing that did not work, in words that say what to do (spec 10). */
         fun explainPairing(error: Throwable?, name: String): String = when {
-            error is RemoteError -> error.message
+            error is RemoteError -> error.sentence
             error is TransportFailure.WrongKey -> "The computer that answered is not the one that showed this code. Scan the code again."
             error is TransportFailure.Closed && error.code == 4002 -> "$name runs a newer Tabber Studio. Update Tabber Spak, then scan again."
             else -> "Can't reach $name. Check that this phone is on the same Wi-Fi as the computer, or that Tailscale is on, on both, and that Tabber Studio is open, then scan again."
         }
 
         fun explain(error: Throwable?): String = when {
-            error is RemoteError && error.reason == "routing_loop" -> {
-                val path = error.data["path"]?.array?.mapNotNull { it.string } ?: emptyList()
-                if (path.isEmpty()) error.message else "${error.message} ${path.joinToString(" → ")}."
-            }
-            // A refusal in Tabber Studio's own words, when it gives them (spec 10: host_error's detail).
-            error is RemoteError && error.reason == "host_error" && !error.data["detail"]?.string.isNullOrBlank() ->
-                error.data["detail"]!!.string!!
-            error is RemoteError -> error.message
+            // A refusal in its words: Studio's own reason, or the loop a route would close, else the
+            // message (RemoteError.sentence, spec 10).
+            error is RemoteError -> error.sentence
             error is TransportFailure.WrongKey -> "This is not the computer you paired with."
             error is TransportFailure.Closed -> "Tabber Studio closed the connection."
             error != null -> "Could not reach Tabber Studio (${error.message})."

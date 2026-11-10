@@ -13,10 +13,10 @@ import java.util.UUID
 class DemoHostTests {
     private val app = AppInfo(version = "1.0", build = "1")
 
-    private fun session(host: DemoHost) =
+    internal fun session(host: DemoHost) =
         RemoteSession(credentials = RemoteSession.Credentials.Demo, app = app) { host.connect() }
 
-    private suspend fun connected(session: RemoteSession): SessionState {
+    internal suspend fun connected(session: RemoteSession): SessionState {
         session.start()
         repeat(200) {
             val state = session.state
@@ -424,11 +424,11 @@ class DemoHostTests {
 
     /**
      * TR39 on the demo computer: a MIDI track chosen in the Tab editor waits on Tabber Studio's
-     * "MIDI part" card until the phone answers it; drums offer only notation, and a card that is
-     * gone is refused.
+     * "MIDI part" card until the phone answers it; drums on a MIDI track with a kit offer only
+     * notation, and a card that is gone is refused.
      */
     @Test fun theMidiPartCardWaitsForTheChoice() = runBlocking<Unit> {
-        val session = session(DemoHost())
+        val session = session(DemoHost(midiDrums = true))
         val start = connected(session)
         assertNull("Guitar has tab: no part", start.view?.part)
         val added = Track.from(JsonReader(session.perform("tracks.add", jsonObject { put("kind", "midi") })["track"]!!))
@@ -449,6 +449,48 @@ class DemoHostTests {
         session.perform("view.set", jsonObject { put("editor", "arrange") })
         val arrange = eventually(session) { it.view?.editor == "arrange" }
         assertNull("Arrange shows no card", arrange.view?.part)
+        session.stop()
+    }
+
+    /**
+     * TR45 on the demo computer: Drums is a drum track with drum tab, written with the Drum Map as
+     * Tabber Studio's host writes it: a drum goes on the beat's first free line, the same drum
+     * again comes off, a full beat and a guitar fret are refused in words, and Add Track makes a
+     * drum track.
+     */
+    @Test fun drumsAreWrittenWithTheDrumMap() = runBlocking<Unit> {
+        val session = session(DemoHost())
+        val start = connected(session)
+        val row = required(start.tracks.firstOrNull { it.id == "demo-drums" })
+        assertTrue(row.drumTab == true && row.tuning == null && row.hasTab)
+        session.perform("tracks.select", jsonObject { put("track_id", "demo-drums") })
+        val shown = eventually(session) { it.tab?.trackId == "demo-drums" }
+        val tab = required(shown.tab)
+        assertTrue(tab.drum && tab.tuning == List(6) { 0 } && tab.midi == null)
+        assertNull("a drum track has no MIDI part card", shown.view?.part)
+        assertEquals(listOf(TabNote(1, 42), TabNote(3, 36)), tab.bars.firstOrNull()?.beats?.firstOrNull()?.notes)
+
+        val snare = session.perform("tab.put_pitch", jsonObject { put("pitch", 38) })
+        val written = TabState.from(JsonReader(snare["tab"]!!))
+        assertEquals("on the first free line, 2", listOf(42, 38, 36), written.bars.firstOrNull()?.beats?.firstOrNull()?.notes?.map { it.fret })
+        assertEquals(2, written.cursor.string)
+        assertEquals("Set fret 38 on string 2", snare["undo"]?.get("undo")?.get("label")?.string)
+        val kick = session.perform("tab.put_pitch", jsonObject { put("pitch", 36) })
+        assertEquals(listOf(42, 38), TabState.from(JsonReader(kick["tab"]!!)).bars.firstOrNull()?.beats?.firstOrNull()?.notes?.map { it.fret })
+        assertEquals("Delete note on string 3", kick["undo"]?.get("undo")?.get("label")?.string)
+
+        for (gm in listOf(36, 49, 51, 46)) session.perform("tab.put_pitch", jsonObject { put("pitch", gm) })
+        val full = refused("a full beat takes no seventh drum") { session.perform("tab.put_pitch", jsonObject { put("pitch", 57) }) }
+        assertEquals("No free drum tab lane for the complete chord.", full.sentence)
+        val fret = refused("drum tab takes no guitar fret") {
+            session.perform("tab.put", jsonObject { put("string", 1); put("fret", 3) })
+        }
+        assertEquals("On drum tab, choose a drum from the Drum Map.", fret.sentence)
+
+        val added = Track.from(JsonReader(session.perform("tracks.add", jsonObject { put("kind", "drums") })["track"]!!))
+        assertTrue(added.name == "Drums" && added.drumTab == true && added.selected)
+        val empty = eventually(session) { it.tab?.trackId == added.id }
+        assertTrue(empty.tab?.drum == true && empty.tab?.bars?.firstOrNull()?.beats?.firstOrNull()?.rest == true)
         session.stop()
     }
 

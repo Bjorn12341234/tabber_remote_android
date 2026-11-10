@@ -9,6 +9,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -75,6 +76,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tabberspak.app.AppModel
+import com.tabberspak.remotekit.DrumMap
 import com.tabberspak.remotekit.Json
 import com.tabberspak.remotekit.NewTrackKind
 import com.tabberspak.remotekit.NoteValue
@@ -152,7 +154,10 @@ private fun TabEditor(model: AppModel, tab: TabState) {
                 }
             },
             { EditChip("Rest", Modifier.weight(1f).testTag("rest"), spoken = "Rest, on or off for this beat") { model.tab("tab.rest") } },
-            { EditChip("Delete", Modifier.weight(1f).testTag("delete-note"), spoken = "Delete the note on this string") { model.tab("tab.delete") } },
+            {
+                val spoken = if (tab.drum) "Delete the drum on this line" else "Delete the note on this string"
+                EditChip("Delete", Modifier.weight(1f).testTag("delete-note"), spoken = spoken) { model.tab("tab.delete") }
+            },
         )
         FitsOr(
             wide = { Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) { edits.forEach { it() } } },
@@ -189,13 +194,13 @@ private fun TabEditor(model: AppModel, tab: TabState) {
             wide = {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                     previous()
-                    InputChoice(input, Modifier.weight(1f), choose)
+                    if (tab.drum) DrumMapTitle(Modifier.weight(1f)) else InputChoice(input, Modifier.weight(1f), choose)
                     next(Modifier)
                 }
             },
             narrow = {
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    InputChoice(input, Modifier.fillMaxWidth(), choose)
+                    if (tab.drum) DrumMapTitle(Modifier.fillMaxWidth()) else InputChoice(input, Modifier.fillMaxWidth(), choose)
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         previous()
                         next(Modifier.weight(1f))
@@ -203,7 +208,70 @@ private fun TabEditor(model: AppModel, tab: TabState) {
                 }
             },
         )
-        if (input == "Piano") Piano(model, tab) else Fretboard(model, tab)
+        when {
+            tab.drum -> DrumMapPad(model, tab)
+            input == "Piano" -> Piano(model, tab)
+            else -> Fretboard(model, tab)
+        }
+    }
+}
+
+/** Where Fretboard and Piano are on tab: the computer's dock title for a drum track. */
+@Composable
+private fun DrumMapTitle(modifier: Modifier) {
+    Text(
+        "Drum Map", color = Studio.text2, fontWeight = FontWeight.SemiBold, fontSize = 15.sp, textAlign = TextAlign.Center,
+        modifier = modifier.semantics { heading() }.testTag("drum-map-title"),
+    )
+}
+
+/**
+ * Tabber Studio's Drum Map (ui/fretboard_widget.py DrumGuideCanvas), which it docks where the
+ * fretboard is for a drum track: the common kit sounds, GM 35 to 59, by number and name, the
+ * cursor beat's drums lit. There one types the number; here a tap writes it on the beat's first
+ * free line, as Studio's staff places a drum, and a lit drum comes off again (tab.drum/1), as
+ * apple/TabberSpak/TabScreen.swift DrumMapPad.
+ */
+@Composable
+private fun DrumMapPad(model: AppModel, tab: TabState) {
+    val lit = tab.cursorBeat?.notes?.map { it.fret }?.toSet() ?: emptySet()
+    // Each cell's least width grows with the text size: three a row on a phone, fewer at the largest text.
+    val least = 104.dp * LocalDensity.current.fontScale
+    BoxWithConstraints(Modifier.fillMaxWidth().padding(top = 4.dp).testTag("drum-map")) {
+        val columns = max(1, (maxWidth / least).toInt())
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            for (row in DrumMap.numbers.chunked(columns)) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    for (number in row) DrumCell(number, on = number in lit, Modifier.weight(1f)) {
+                        model.tab("tab.put_pitch", jsonObject { put("pitch", number) })
+                    }
+                    repeat(columns - row.size) { Box(Modifier.weight(1f)) } // the last row keeps the cells' width
+                }
+            }
+        }
+    }
+}
+
+/** One drum of the Drum Map: its number over its name, lit while the cursor's beat has it. */
+@Composable
+private fun DrumCell(number: Int, on: Boolean, modifier: Modifier, onClick: () -> Unit) {
+    val name = DrumMap.name(number)
+    Column(
+        modifier
+            .sizeIn(minHeight = 52.dp)
+            .clip(RoundedCornerShape(Studio.radiusControl))
+            .background(if (on) Studio.accent else Studio.bg3)
+            .clickable(role = Role.Button, onClickLabel = if (on) "Take it off this beat" else "Write it on this beat", onClick = onClick)
+            .semantics(mergeDescendants = true) {
+                contentDescription = "$number, $name"
+                selected = on
+            }
+            .padding(horizontal = 8.dp, vertical = 6.dp)
+            .testTag("drum-$number"),
+    ) {
+        val colour = if (on) Studio.onAccent else Studio.text1
+        Text("$number", color = colour, style = Studio.counter(15, FontWeight.SemiBold))
+        Text(name, color = colour, fontSize = 12.sp)
     }
 }
 
@@ -308,6 +376,15 @@ private fun ChooseTabTrack(model: AppModel) {
                     .testTag("add-tab-track"),
                 enabled = "add-track" !in model.pending && !model.state.record.recording,
             )
+            if (model.drumTabAvailable) {
+                GhostButton(
+                    "+ Add Drum Track", onClick = { model.addTrack(NewTrackKind.DRUMS) },
+                    modifier = Modifier.fillMaxWidth()
+                        .semantics { contentDescription = "Add Drum Track. Adds a drum track to the song on the computer, to write drums on here." }
+                        .testTag("add-drum-track"),
+                    enabled = "add-track" !in model.pending && !model.state.record.recording,
+                )
+            }
         }
     }
 }
@@ -408,7 +485,9 @@ private fun BarView(model: AppModel, tab: TabState, bar: TabBar, height: Float) 
     val widths = bar.beats.map(Staff::width)
     val strings = max(1, tab.strings)
     val spoken = bar.beats.withIndex().joinToString("; ") { (index, beat) ->
-        val notes = if (beat.notes.isEmpty()) "rest" else beat.notes.joinToString(", ") { "string ${it.string} fret ${it.fret}" }
+        val notes = if (beat.notes.isEmpty()) "rest" else beat.notes.joinToString(", ") {
+            if (tab.drum) "line ${it.string}, ${it.fret} ${DrumMap.name(it.fret)}" else "string ${it.string} fret ${it.fret}"
+        }
         val here = if (tab.cursor.bar == bar.bar && tab.cursor.beat == index + 1) ", cursor" else ""
         "beat ${index + 1}: $notes$here"
     }

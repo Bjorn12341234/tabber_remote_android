@@ -118,14 +118,26 @@ class AccessibilityTest {
         }
     }
 
-    /** The Tab screen with Tabber Studio's "MIDI part" card (TR39). */
+    /** The Tab screen with Tabber Studio's "MIDI part" card (TR39), on a MIDI track with a kit. */
     @Test fun theMidiPartCard() {
-        launchDemo().use { scenario ->
+        launchDemo("demo_midi_drums" to true).use { scenario ->
             tap("track-Drums")
             compose.waitSelected("track-Drums")
             compose.show("Tab")
             compose.waitForTag("midi-part")
             audit(scenario, "Tab, a MIDI part")
+            report()
+        }
+    }
+
+    /** The Tab screen on a drum track: its drum tab and the Drum Map (TR45). */
+    @Test fun theDrumMap() {
+        launchDemo().use { scenario ->
+            tap("track-Drums")
+            compose.waitSelected("track-Drums")
+            compose.show("Tab")
+            compose.waitForTag("drum-38")
+            audit(scenario, "Tab, drum tab")
             report()
         }
     }

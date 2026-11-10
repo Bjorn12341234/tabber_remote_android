@@ -47,10 +47,10 @@ class TabScreenTest {
     /**
      * TR39 and TR40: a MIDI track chosen while the computer shows Tab waits on Tabber Studio's "MIDI
      * part" card; the phone answers it, so the computer is never left waiting, and then writes on
-     * the MIDI tab. Drums offer only standard notation.
+     * the MIDI tab. Drums on a MIDI track with a kit offer only standard notation.
      */
     @Test fun theMidiPartCardFromThePhone() {
-        launchDemo("screen" to "tab").use {
+        launchDemo("demo_midi_drums" to true, "screen" to "tab").use {
             compose.waitForTag("tab-tracks")
             compose.show("Tracks")
             compose.reveal("add-track")
@@ -74,6 +74,48 @@ class TabScreenTest {
             compose.waitForNoTag("show-midi-tab") // drums cannot show MIDI tab
             compose.onNodeWithTag("show-notation").performClick()
             compose.waitForWords("part-shows", "in standard notation")
+        }
+    }
+
+    /**
+     * TR45: Drums is a drum track. The Tab screen shows its drum tab with Tabber Studio's Drum Map
+     * where the fretboard is; a drum goes on the beat's first free line, and a lit drum comes off
+     * again. Undo takes it back.
+     */
+    @Test fun theDrumMapWritesDrumTab() {
+        launchDemo().use {
+            compose.show("Tracks")
+            compose.reveal("track-Drums")
+            compose.onNodeWithTag("track-Drums").performClick()
+            compose.waitSelected("track-Drums")
+            compose.show("Tab")
+            compose.waitForTag("drum-38") // the Drum Map, where the fretboard is
+            compose.waitForNoTag("fretboard")
+            compose.waitForNoTag("input")
+            compose.waitForWords("screen-title", "Drums")
+            val groove = "beat 1: line 1, 42 Closed Hi-Hat, line 3, 36 Bass Drum 1, cursor"
+            compose.waitForWords("bar-1", groove)
+            compose.reveal("drum-38")
+            compose.onNodeWithTag("drum-38").performClick()
+            // the snare on the first free line
+            compose.waitForWords("bar-1", "beat 1: line 1, 42 Closed Hi-Hat, line 2, 38 Acoustic Snare, line 3, 36 Bass Drum 1")
+            compose.waitSelected("drum-38") // lit on this beat
+            compose.onNodeWithTag("drum-38").performClick()
+            compose.waitForWords("bar-1", groove) // a lit drum comes off again
+            compose.onNodeWithTag("undo").performClick()
+            compose.waitForWords("bar-1", "line 2, 38 Acoustic Snare") // Undo brings it back
+        }
+    }
+
+    /** TR45: the Tab screen adds a drum track, as Add Track with Percussion Track ticked makes it, and writes on it at once. */
+    @Test fun aSongOfOnlyAudioGetsADrumTrack() {
+        launchDemo("demo_only_audio" to true, "screen" to "tab").use {
+            compose.waitForTag("add-drum-track").performClick()
+            compose.waitForTag("drum-36") // the new drum track's drum tab, at once
+            compose.waitForWords("screen-title", "Drums")
+            compose.reveal("drum-36")
+            compose.onNodeWithTag("drum-36").performClick()
+            compose.waitForWords("bar-1", "line 1, 36 Bass Drum 1")
         }
     }
 

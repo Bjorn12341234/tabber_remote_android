@@ -214,7 +214,10 @@ private fun TrackCard(model: AppModel, track: Track, index: Int) {
     }
 }
 
-/** Studio's "+ Add Track" and its chooser: a tab, MIDI or audio track, as the computer makes each. */
+/**
+ * Studio's "+ Add Track" and its chooser: a tab, MIDI or audio track, as the computer makes each,
+ * and a drum track (Tab with Percussion Track ticked) on a computer that offers drum tab (tab.drum/1).
+ */
 @Composable
 private fun AddTrackButton(model: AppModel) {
     var choosing by remember { mutableStateOf(false) }
@@ -225,7 +228,13 @@ private fun AddTrackButton(model: AppModel) {
             enabled = "add-track" !in model.pending && !model.state.record.recording,
         )
         DropdownMenu(expanded = choosing, onDismissRequest = { choosing = false }, containerColor = Studio.bg2) {
-            for ((label, kind) in listOf("Tab track" to NewTrackKind.TAB, "MIDI track" to NewTrackKind.MIDI, "Audio track" to NewTrackKind.AUDIO)) {
+            val kinds = listOfNotNull(
+                "Tab track" to NewTrackKind.TAB,
+                ("Drum track" to NewTrackKind.DRUMS).takeIf { model.drumTabAvailable },
+                "MIDI track" to NewTrackKind.MIDI,
+                "Audio track" to NewTrackKind.AUDIO,
+            )
+            for ((label, kind) in kinds) {
                 DropdownMenuItem(text = { Text(label, color = Studio.text1) }, onClick = { choosing = false; model.addTrack(kind) })
             }
         }

@@ -119,8 +119,8 @@ enum class TrackKind(val wire: String) {
     }
 }
 
-/** What Tabber Studio's "+ Add Track" chooser makes (tracks.add/1). */
-enum class NewTrackKind(val wire: String) { TAB("tab"), MIDI("midi"), AUDIO("audio") }
+/** What Tabber Studio's "+ Add Track" chooser makes (tracks.add/1); [DRUMS] is Tab with Percussion Track ticked (tab.drum/1). */
+enum class NewTrackKind(val wire: String) { TAB("tab"), MIDI("midi"), AUDIO("audio"), DRUMS("drums") }
 
 enum class MonitorMode(val wire: String) {
     OFF("off"), AUTO("auto"), ON("on");
@@ -142,9 +142,11 @@ data class Track(
     val instrument: String? = null,
     /** A tab track's open strings as MIDI notes, highest first; null when it has no tab (tab/1). */
     val tuning: List<Int>? = null,
+    /** A drum track with drum tab, written with the Drum Map (tab.drum/1); it has no tuning. */
+    val drumTab: Boolean? = null,
 ) {
-    /** A track the phone can write tab on. */
-    val hasTab: Boolean get() = tuning != null
+    /** A track the phone can write tab on: a tab track, or a drum track's drum tab. */
+    val hasTab: Boolean get() = tuning != null || drumTab == true
 
     fun toJson(): Json = jsonObject {
         put("id", id); put("name", name); put("kind", kind.wire)
@@ -152,6 +154,7 @@ data class Track(
         put("selected", selected); putNullable("color", color)
         putIfPresent("instrument", instrument) // absent from 1.0 hosts, and kept absent
         putIfPresent("tuning", tuning?.let(Json::ints))
+        putIfPresent("drum_tab", drumTab)
     }
 
     companion object {
@@ -165,6 +168,7 @@ data class Track(
             color = r.stringOrNull("color"),
             instrument = r.stringOrNull("instrument"),
             tuning = r.intsOrNull("tuning"),
+            drumTab = r.boolOrNull("drum_tab"),
         )
     }
 }
@@ -348,7 +352,32 @@ data class Event(val topic: String, val seq: Int, val t: Double, val data: Json)
 /** A protocol error: [reason] is the stable code the app acts on, [message] a sentence a musician reads. */
 class RemoteError(val code: Int, override val message: String, val reason: String, val data: Json = Json.Obj(emptyMap())) :
     Exception(message) {
+    /**
+     * What the phone says about this refusal (spec 10), as apple/RemoteKit's `sentence`. A
+     * `host_error` with a `detail` is Tabber Studio's own reason ("That plug-in is not on the
+     * computer any more. Open the list again."), shown in place of the general "Tabber Studio
+     * could not do that."; a `routing_loop` names the loop. Anything else is its message.
+     */
+    val sentence: String
+        get() = when (reason) {
+            "host_error" -> {
+                val detail = data["detail"]?.string?.trim().orEmpty()
+                if (detail.isEmpty()) message else withFullStop(detail)
+            }
+            "routing_loop" -> {
+                val path = data["path"]?.array?.mapNotNull { it.string }.orEmpty()
+                if (path.isEmpty()) message else "$message ${path.joinToString(" → ")}."
+            }
+            else -> message
+        }
+
     companion object {
+        /** The app's sentences end with a full stop, and some of Studio's reasons leave it off ("Insert this instrument on a MIDI/score track"). */
+        internal fun withFullStop(text: String): String {
+            val last = text.reversed().firstOrNull { it !in "\"')]\u201D\u2019" }
+            return if (last != null && last in ".!?…") text else "$text."
+        }
+
         fun from(json: Json): RemoteError? {
             val code = json["code"]?.int ?: return null
             val message = json["message"]?.string ?: return null
